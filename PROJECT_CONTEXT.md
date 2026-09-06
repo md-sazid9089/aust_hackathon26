@@ -57,7 +57,7 @@ aust_hackathon26/
 ├── data/seed-data/               # labelled sample dataset (63 tables, 25 planted flaws) used by POST /demo/seed
 ├── docs/multiagentOrchas.md      # QA loop instructions for agents
 ├── frontend/                     # React + Vite SPA (FE owner; in progress)
-└── backend/                      # FastAPI backend (Tier 0 done) — see backend/README.md
+└── backend/                      # FastAPI backend (Tier 0–2 done, 96 tests) — see backend/README.md
     ├── pyproject.toml · requirements.txt · alembic.ini · .env.example · README.md
     ├── alembic/versions/         # 20260906_..._initial_schema.py (15 tables)
     ├── app/
@@ -72,6 +72,7 @@ aust_hackathon26/
     │   ├── runs/{orchestrator,export}.py   # asyncio runner + run_events; Markdown export
     │   ├── demo/{router,service}.py        # seeds data/seed-data
     │   └── health/router.py                # /health, /readyz
+    ├── scripts/seed_production.py · seed_content.py   # real multi-user showcase data (D-030); audit_auth_flow.py
     └── tests/ conftest.py · unit/ · api/  (96 tests, SQLite + MockProvider)
 ```
 
@@ -89,6 +90,9 @@ alembic upgrade head
 uvicorn app.main:app --reload                            # http://localhost:8000/docs
 pytest                                                   # 96 tests
 # demo: POST /api/v1/demo/seed → POST /api/v1/courses/{id}/runs {module: exam_audit, inputs:{draft_artefact_id, past_artefact_ids}} → GET /runs/{id}/findings
+# showcase data (prod): .venv/bin/python scripts/seed_production.py [--replace] [--credentials FILE] [--run-api http://localhost:8000]
+#   → 6 accounts + 8 courses; passwords land in backend/.seed-credentials.json (gitignored). Run alembic first; use the :5432 session
+#   pooler URL for the script (DATABASE_URL=… env override) — the :6543 transaction pooler is for the app.
 # frontend: cd frontend && npm i && npm run dev           (port 5173; VITE_API_BASE_URL=http://localhost:8000/api/v1)
 # frontend on Vercel: import repo, Root Directory = frontend (vercel.json there: SPA rewrite, asset caching, security headers);
 #   env vars: VITE_API_BASE_URL=https://<backend-host>/api/v1, VITE_AUTH_MODE, VITE_SUPABASE_URL, VITE_SUPABASE_ANON_KEY;
@@ -140,6 +144,7 @@ pytest                                                   # 96 tests
 | D-027 | 2026-09-06 | Backend hosted on Render free tier via root `render.yaml` Blueprint (Python 3.12 pinned, `rootDir: backend`, migrations chained into `startCommand`, `--workers 1`, health `/api/v1/health`); DB stays on Supabase; uploads on ephemeral local disk                                                                                                                                                                                                                                | Zero-cost git-push deploy; `preDeployCommand` is paid-only so `alembic upgrade head` runs before uvicorn; one worker required by in-process runs + rate limiter |
 | D-028 | 2026-09-06 | Frontend `VITE_AUTH_MODE` gains `local` (alongside `dev`, `supabase`) and must match backend `AUTH_MODE`. Local mode: `POST /auth/login` → HS256 JWT held in `sessionStorage`, sent as Bearer; no Supabase client involved | Backend already ran `AUTH_MODE=local` with seeded accounts; FE only knew dev/supabase so `/me` returned 401 |
 | D-029 | 2026-09-06 | Removed the in-browser `MockApi` / fixtures and `VITE_API_MODE`; the frontend always uses `HttpApi` against the backend. Demo data exists only in the database (via `POST /demo/seed`) | User request: all data must come from the DB; two data paths drifted and confused demos |
+| D-030 | 2026-09-06 | Showcase/production data comes from `backend/scripts/seed_production.py` + `seed_content.py` (4 faculty + 2 admin accounts, 8 real CSE courses with COs/CO–PO map/syllabus/topics, past + draft papers, marks sheets, rubric + graded scripts; `is_demo=false`, no "demo" labels). Rows are inserted directly with `status=done` (no LLM at seed time); `--run-api URL` then exercises every module through the real API so run history exists. Passwords are never in git: generated to gitignored `backend/.seed-credentials.json` (mode 600) or supplied via `--credentials`. `SEED_FACULTY_*`/`SEED_ADMIN_*` startup accounts are commented out in `.env` and the legacy dev/demo accounts deactivated in Supabase | User request: production-ready multi-user showcase, nothing labelled demo; deterministic and idempotent (`--replace` rebuilds) so the venue DB can be reset in one command |
 
 ## 7. Conventions
 
@@ -161,6 +166,7 @@ pytest                                                   # 96 tests
 - [x] `.vscode/mcp.json` with Supabase + Context7 MCP servers
 - [x] Backend Supabase auth: `AUTH_MODE=supabase` verifies ES256/RS256 tokens via JWKS (HS256 fallback); `backend/.env` has `SUPABASE_URL`/`SUPABASE_PUBLISHABLE_KEY`/`SUPABASE_JWKS_URL` filled for project `etzxqeilgohiavdeybbw`, `SUPABASE_SECRET_KEY` left for the developer to paste locally
 - [x] **Backend Tier 0** (`backend/`): FastAPI app, config, structlog + request ids, error envelope, SQLite/Postgres ORM (20 tables) + Alembic migrations (3 revisions), auth (dev/Supabase JWT), courses CRUD, COs/POs/CO–PO map/topics replace-all, artefact upload (pdf/docx/txt/paste, magic-byte + size validation) with background extraction, faculty confirm/edit of questions + CO map, `exam_audit` pipeline (embed → map & Bloom → duplicate confirm → deterministic stats → findings), runs + SSE events + idempotency, findings accept/dismiss/reopen, Markdown export, demo seed from `data/seed-data`, `/health` `/readyz`, Swagger/ReDoc. tests green (now 96 incl. Tier 1); live smoke test on demo data reproduces planted flaws (CO6 uncovered, 58 vs 60 marks, 3 duplicate pairs, Bloom skew).
+- [x] **Supabase production DB seeded** (D-030): Alembic at head `b2d4f6a8c0e2`; accounts `rezwana.karim@`, `mahmudul.hasan@`, `farhana.islam@`, `tanvir.ahmed@aust.edu` (faculty) and `head.cse@`, `obe.cell@aust.edu` (admin); courses CSE 3103 (from `data/seed-data`), 4101, 2201, 3201, 3105, 4103, 4105, 1101; 23 completed runs across all four modules with one accepted + one dismissed finding per exam audit; browser-verified sign-in for faculty (`/courses`) and admin (`/admin`, `/admin/department`). Passwords in `backend/.seed-credentials.json` (local only).
 
 ## 9. Next Steps / TODO
 
@@ -170,7 +176,7 @@ pytest                                                   # 96 tests
 - [x] Phase 1 foundation: BE skeleton + `/me` (done); FE scaffold + auth (in progress, FE owner)
 - [x] Phase 2–3 (Tier 0): ingestion/extraction, P1 Exam Auditor, findings + accept/dismiss, demo seed
 - [ ] Verify real-LLM path end-to-end with an OpenRouter key in `backend/.env` (`LLM_PROVIDER=openrouter`) — mock path verified only
-- [ ] Run Alembic against the Supabase Postgres (`DATABASE_URL=postgresql+asyncpg://…`) and smoke-test; verify JWT alg (HS256 vs ES256/JWKS) once Supabase Auth is enabled
+- [x] Run Alembic against the Supabase Postgres and smoke-test (done via session pooler :5432; head `b2d4f6a8c0e2`); verify JWT alg (HS256 vs ES256/JWKS) only if Supabase Auth is ever enabled (current prod auth is `AUTH_MODE=local`)
 - [x] Tier 1: P4 attainment, P3 syllabus_check, P2 calibration, question suggestion, run compare (`GET /runs/compare`); PDF export still `503 EXPORT_PDF_UNAVAILABLE` without WeasyPrint libs
 - [x] Tier 2: admin panel routes (`/admin/users|runs|usage|demo/reset|department/*`), `/dashboard/summary`
 - [ ] Bangla prompts verified with a real model
@@ -179,7 +185,8 @@ pytest                                                   # 96 tests
 - [x] FE Vercel-ready: `vercel.json`, `npm ci` installs cleanly (plugin-react ^5.2), build + tests green (D-026)
 - [ ] Deploy backend to a public host, add the Vercel origin (`https://aust-hackathon26.vercel.app`) to `CORS_ORIGINS`, then set Vercel env vars (`VITE_API_BASE_URL`, `VITE_AUTH_MODE`, `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`) and add the Vercel URL to Supabase Auth redirect URLs
 - [x] Render Blueprint (`render.yaml`, `backend/.python-version`, README deploy section) — D-027; actual Render service creation + secrets still manual
-- [ ] Unblock Supabase DB: pooler connections hang (project likely paused) — restore in dashboard, then `alembic upgrade head`
+- [x] Unblock Supabase DB: reachable again; migrated and seeded (D-030)
+- [ ] Before judging: re-run `scripts/seed_production.py --replace --run-api <backend>` with `LLM_PROVIDER=openrouter` so CO mappings/rationales come from a real model (current run history was produced with `mock`); remove `SEED_FACULTY_*`/`SEED_ADMIN_*` from the Render env too
 
 ## 10. Known Issues & Gotchas
 
@@ -207,6 +214,7 @@ pytest                                                   # 96 tests
 - Render free tier: instance sleeps after 15 min idle (cold start 30–60 s — warm it before the pitch); disk is ephemeral so files under `STORAGE_DIR` vanish on redeploy while DB rows persist. Attach a Render Disk + set `STORAGE_DIR` to its mount if needed. Render pins Python 3.12; local dev is 3.14.
 - Frontend uses Vite 8 → `@vitejs/plugin-react` must be `^5.2.0` (v4 peer range excluded Vite 8 and made `npm ci` fail with ERESOLVE, which breaks Vercel installs). Vite env vars are baked in at build time — redeploy after changing them.
 - Vite dev server: after adding Tailwind colours in `tailwind.config.ts` or new deps, restart `npm run dev` — otherwise new utility classes don't render and lazy imports 504 with "Outdated Optimize Dep". Run npm from `frontend/` (or `npm --prefix frontend …`).
+- `seed_production.py`: `--replace` deletes runs before the course because `run_inputs.artefact_id` is `ON DELETE RESTRICT`. With `LLM_PROVIDER=mock` the CO mapping on draft papers is lexical, so coverage % in exam audits is only indicative — re-run with a real key before judging. Playwright's `click()` times out on the login button (hover transition never "stable"); use `force: true` or press Enter.
 
 ## 12. Locked Product Scope (Prompt 1 output, 2026-09-06)
 
@@ -261,3 +269,4 @@ pytest                                                   # 96 tests
 | 2026-09-06 | Copilot | Added root `summary.md` (user-requested): end-to-end rationale + implementation narrative across process, architecture, DB, ingestion, AI layer, module pipelines, auth, FE, demo data, testing, deploy, and deliberately-dropped items |
 | 2026-09-06 | Copilot | Removed frontend demo/mock data layer (`src/lib/api/mock/`, `VITE_API_MODE`, mock login role picker, "Demo mode" badge); FE now always calls the backend API, so all data comes from the database (D-029). Typecheck, 5 vitest tests and build green |
 | 2026-09-06 | Copilot | QA loop on backend (3 independent QA agents, 2 rounds): fixed soft-delete leak, idempotency scope + race, code-swap 409, blank-code/number 422, LIKE escaping, decompression-bomb cap, number charset, prod/dev-auth guard, limiter eviction; +8 regression tests (96 total); README + PROJECT_CONTEXT drift corrected (D-018b, D-021, §1/§4/§5/§8/§9/§10) |
+| 2026-09-06 | Copilot | Production showcase seed (D-030): `backend/scripts/seed_production.py` + `seed_content.py` — 4 faculty + 2 admin accounts, 8 CSE courses (CSE 3103 from `data/seed-data`, 7 authored), all four modules run through the live API (23 runs); Supabase migrated to `b2d4f6a8c0e2` and seeded; legacy dev/demo accounts deactivated, `SEED_*` startup accounts disabled in `.env`; `.seed-credentials.json` gitignored |

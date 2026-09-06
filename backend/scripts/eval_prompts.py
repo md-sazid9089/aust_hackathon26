@@ -122,12 +122,14 @@ async def eval_mapping(provider, questions, cos, topics):
     }
 
 
-# Hand-labelled pairs from the seed set: (draft label, other label, expected duplicate?)
+# Hand-labelled pairs from the seed set (the planted repeats plus hard negatives): (draft, other, expected duplicate?)
 DUP_GOLD = [
-    ("QP-2026-DRAFT-01", "2(a)", "QP-2024-MID-01", "1(a)", True),   # physical vs logical independence, reworded
-    ("QP-2026-DRAFT-01", "2(b)", "QP-2025-FIN-01", "1(b)", True),   # ER diagram, same scenario
-    ("QP-2026-DRAFT-01", "1(a)", "QP-2024-MID-01", "2(a)", False),  # same topic, different task
-    ("QP-2026-DRAFT-01", "4(a)", "QP-2025-FIN-01", "3(a)", False),
+    ("QP-2026-DRAFT-01", "3(a)", "QP-2024-MID-01", "1(a)", True),   # physical vs logical independence, reworded
+    ("QP-2026-DRAFT-01", "2(b)", "QP-2024-MID-01", "3(a)", True),   # SQL: salary above average
+    ("QP-2026-DRAFT-01", "4(a)", "QP-2025-FIN-01", "1(b)", True),   # SQL: GROUP BY/HAVING departments > 5
+    ("QP-2026-DRAFT-01", "2(a)", "QP-2024-MID-01", "2(a)", False),  # ER diagram, different scenario → same_concept
+    ("QP-2026-DRAFT-01", "3(b)", "QP-2025-FIN-01", "3", False),     # normalisation, different FD set → same_concept
+    ("QP-2026-DRAFT-01", "1(a)", "QP-2025-FIN-01", "1(a)", False),  # data independence vs data models → distinct
 ]
 
 
