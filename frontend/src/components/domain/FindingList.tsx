@@ -21,8 +21,13 @@ const sevBorder: Record<FindingSeverity, string> = {
   info: 'border-l-sev-info-fg',
 };
 
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
 function payloadNumbers(p: Record<string, unknown>) {
-  return Object.entries(p).filter(([, v]) => typeof v === 'number' || typeof v === 'string' && v.length < 40).slice(0, 6) as [string, number | string][];
+  // Internal identifiers are provenance, not evidence — keep them out of the faculty-facing chips.
+  return Object.entries(p)
+    .filter(([k, v]) => !/(^|_)ids?$/.test(k) && (typeof v === 'number' || (typeof v === 'string' && v.length < 40 && !UUID_RE.test(v))))
+    .slice(0, 6) as [string, number | string][];
 }
 
 export function FindingCard({

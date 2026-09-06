@@ -10,11 +10,11 @@ Faculty Copilot — what the product does and how faculty use it
   syllabus topics, uploaded artefacts, and run history.
 - Artefact kinds: `question_paper`, `syllabus`, `marks_sheet`, `rubric`, `answer_set`. Upload PDF/DOCX/TXT/MD or paste
   text. Extraction runs in the background (status pending → extracting → done/failed) and produces questions/topics/etc.
-- Exam Paper Audit (module `exam_audit`, page `/courses/:id/exam-audit/new`, results `/courses/:id/exam-audit/:runId`):
-  input = one draft question paper (+ optional past papers). Requires the course to have at least one CO.
-  Output findings: coverage_gap (CO never assessed), overweight, bloom_imbalance, duplicate (vs past papers),
-  fairness, marks_total_mismatch, untagged_question, suggestion.
-- Other modules (attainment, syllabus_check, calibration) have pages but their pipelines may not be available yet.
+- Modules:
+  * Exam Paper Audit (`exam_audit`, `/courses/:id/exam-audit/new`): input = draft question paper (+ optional past papers). Findings: coverage_gap, overweight, bloom_imbalance, duplicate, fairness, marks_total_mismatch, untagged_question, suggestion.
+  * Attainment (`attainment`, `/courses/:id/attainment/new`): input = marks sheet CSV + question paper. Deterministic CO/PO attainment computation + AI explanation of missed outcome targets.
+  * Syllabus Check (`syllabus_check`, `/courses/:id/syllabus-check/new`): input = draft syllabus (+ comparison courses). Embeddings + AI evaluate topic overlap and prerequisites.
+  * Calibration (`calibration`, `/courses/:id/calibration/new`): input = rubric + student answers with multi-grader marks. Computes inter-grader divergence, explains discrepancies, pre-scores answers, and proposes Rubric v2.
 - Findings have status open/accepted/dismissed; accepted findings can be exported as a Markdown report
   (`GET /runs/:id/export`).
 - Dashboard (`/dashboard`) summarises courses, runs and findings. Admins have `/admin` (users, runs, usage, demo data).

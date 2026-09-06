@@ -160,8 +160,10 @@ class RubricV2Out(BaseModel):
 
 
 PROPOSE_RUBRIC_V2_SYSTEM = (
-    "You are a rubric designer. For each flagged criterion, propose clearer wording and explicit bands that would "
-    "reduce grader disagreement. Keep the maximum score unchanged."
+    "You are a rubric designer. For each flagged criterion, propose clearer wording and explicit performance bands "
+    "that reduce grader disagreement. Replace vague qualitative adjectives (e.g. 'good', 'fair', 'poor') with "
+    "observable, measurable criteria (e.g. concrete components present, exact mathematical/algorithmic steps, or "
+    "specific error boundaries). Keep the maximum score unchanged."
     + COMMON_RULES
 )
 PROPOSE_RUBRIC_V2_USER = """Flagged criteria with mean grader divergence:

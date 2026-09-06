@@ -53,7 +53,7 @@ export function AppShell() {
       <a href="#main" className="skip-link">
         Skip to main content
       </a>
-      <aside className="hidden w-64 shrink-0 flex-col border-r bg-card md:flex" aria-label="Primary">
+      <aside className="sticky top-0 hidden h-dvh w-64 shrink-0 flex-col self-start border-r bg-card md:flex" aria-label="Primary">
         <div className="flex h-16 items-center gap-2 border-b px-5">
           <div className="flex h-8 w-8 items-center justify-center rounded-md bg-primary text-primary-foreground">
             <ClipboardCheck className="h-4 w-4" aria-hidden />
@@ -140,7 +140,7 @@ export function AppShell() {
             </Button>
           </div>
         </header>
-        <nav aria-label="Main (mobile)" className="flex gap-1 overflow-x-auto border-b bg-card px-2 py-1 md:hidden">
+        <nav aria-label="Main (mobile)" className="no-scrollbar flex gap-1 overflow-x-auto border-b bg-card px-2 py-1 md:hidden">
           {isAdmin ? (
             <>
               <NavLink to="/admin" end className={linkCls}>Users</NavLink>

@@ -27,6 +27,8 @@ def _build_engine(url: str) -> AsyncEngine:
         @event.listens_for(engine.sync_engine, "connect")
         def _fk_on(dbapi_conn, _record):  # noqa: ANN001
             dbapi_conn.execute("PRAGMA foreign_keys=ON")
+            dbapi_conn.execute("PRAGMA journal_mode=WAL")
+            dbapi_conn.execute("PRAGMA busy_timeout=10000")
 
     return engine
 

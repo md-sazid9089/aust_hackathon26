@@ -206,13 +206,13 @@ export function AdminSeedPage() {
   const [confirm, setConfirm] = useState('');
   return (
     <>
-      <PageHeader title="Demo data" description="Restore the CSE 2201 demo course, artefacts and runs to their seeded state. Everything created since is deleted." />
+      <PageHeader title="Demo data" description="Restore the CSE 3103 demo course, artefacts and runs to their seeded state. Everything created in it since is deleted." />
       <div className="max-w-xl rounded-lg border border-destructive/40 bg-card p-6">
         <div className="flex items-start gap-3">
           <DatabaseZap className="mt-0.5 h-5 w-5 text-destructive" aria-hidden />
           <div className="flex flex-col gap-3">
             <p className="font-semibold">Reset demo dataset</p>
-            <p className="text-sm text-muted-foreground">Removes all courses, artefacts, runs and findings for every user, then re-inserts the seed. Accounts are kept. This cannot be undone.</p>
+            <p className="text-sm text-muted-foreground">Deletes the demo courses owned by this admin account (artefacts, runs and findings included) and re-inserts the seed dataset. Faculty workspaces are untouched. This cannot be undone.</p>
             <AlertDialog onOpenChange={() => setConfirm('')}>
               <AlertDialogTrigger asChild><Button variant="destructive" className="self-start">Reset demo data…</Button></AlertDialogTrigger>
               <AlertDialogContent>

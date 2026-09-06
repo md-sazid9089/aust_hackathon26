@@ -27,13 +27,13 @@ export function AttainmentResults({ run, findings, readOnly }: { run: Run; findi
             title="CO attainment (% of students at or above threshold)"
             valueLabel="Attained"
             secondaryLabel="Target"
-            reference={att.data.threshold}
+            reference={att.data.cos[0]?.target_pct ?? s.target_pct ?? 60}
             data={att.data.cos.map((c) => ({ label: c.co_code, value: c.attained_pct, secondary: c.target_pct, tone: c.met ? 'ok' : c.attained_pct < c.target_pct - 20 ? 'bad' : 'warn' }))}
           />
           <BarWithTable
             title="PO attainment (weighted)"
             valueLabel="Attained"
-            reference={att.data.threshold}
+            reference={att.data.cos[0]?.target_pct ?? s.target_pct ?? 60}
             data={att.data.pos.map((p) => ({ label: p.po_code, value: p.attained_pct, tone: p.met ? 'ok' : 'warn' }))}
           />
         </div>

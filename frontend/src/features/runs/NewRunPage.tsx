@@ -156,7 +156,8 @@ export function NewRunPage({ module }: { module: RunModule }) {
               </>
             )}
 
-            <div className="sticky bottom-0 -mx-4 flex items-center justify-between gap-3 border-t bg-background/95 px-4 py-3 md:-mx-8 md:px-8">
+            {/* pr-44 keeps the primary action clear of the fixed Assistant button (bottom-right) */}
+            <div className="sticky bottom-0 -mx-4 flex items-center justify-between gap-3 border-t bg-background/95 px-4 py-3 pr-44 md:-mx-8 md:px-8 md:pr-48">
               <p className="text-sm text-muted-foreground">{body ? 'Ready. The run takes about 10–20 seconds.' : 'Select the required inputs above to start.'}</p>
               <Button size="lg" disabled={!body} loading={create.isPending} onClick={start}>
                 <Play aria-hidden /> Run analysis

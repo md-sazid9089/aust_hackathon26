@@ -83,10 +83,13 @@ async def eval_mapping(provider, questions, cos, topics):
     outcomes_txt = "\n".join(f"- {c['code']}: {c['statement']}" for c in cos)
     topics_txt = "\n".join(f"- {t['topic_id']}: {t.get('title') or t.get('name')}" for t in topics) or "- (none provided)"
     labelled = [q for q in questions if q.get("co_id") and q.get("bloom_id")]
+    # Labels repeat across papers (every paper has a 1(a)); give the model unique labels per batch.
+    for q in labelled:
+        q["_eval_label"] = f"{q['paper_id'][-6:]}-{q['display_label']}"
     rows, verbatim, conf_err = [], 0, []
     for i in range(0, len(labelled), 15):
         batch = labelled[i : i + 15]
-        qtxt = "\n".join(f"{q['display_label']} :: {wrap_untrusted(q['text'], f'q{q['display_label']}', 2000)}" for q in batch)
+        qtxt = "\n".join(f"{q['_eval_label']} :: {wrap_untrusted(q['text'], f'q{i}', 2000)}" for i, q in enumerate(batch))
         res = await structured_call(
             purpose="map_and_bloom", usage_purpose=UsagePurpose.exam_audit, system=MP.MAP_AND_BLOOM_SYSTEM,
             user=MP.MAP_AND_BLOOM_USER.format(outcomes=outcomes_txt, topics=topics_txt, questions=qtxt),
@@ -96,7 +99,7 @@ async def eval_mapping(provider, questions, cos, topics):
             return {"ok": False, "error": res.error, "mode": res.response_mode}
         by_num = {"".join(it.number.split()).lower(): it for it in res.value.items}
         for q in batch:
-            it = by_num.get(q["display_label"].replace(" ", "").lower())
+            it = by_num.get(q["_eval_label"].replace(" ", "").lower())
             if it is None:
                 rows.append({"q": q["display_label"], "missing": True})
                 continue
@@ -108,7 +111,7 @@ async def eval_mapping(provider, questions, cos, topics):
             conf_err.append(abs(it.confidence - (1.0 if co_ok else 0.0)))
             rows.append({"q": q["display_label"], "co_ok": co_ok, "got_co": it.co_codes, "gold_co": q["co_id"],
                          "bloom_ok": bloom_dist == 0, "bloom_dist": bloom_dist, "got_bloom": it.bloom_level.value, "gold_bloom": gold_bloom,
-                         "evidence_verbatim": vb, "confidence": it.confidence})
+                         "evidence_verbatim": vb, "evidence_quote": it.evidence_quote, "confidence": it.confidence})
     scored = [r for r in rows if not r.get("missing")]
     n = max(1, len(scored))
     return {
