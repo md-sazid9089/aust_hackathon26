@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import re
 
-MAX_DOC_CHARS = 12_000
+MAX_DOC_CHARS = 60_000
 
 _FENCE_OPEN = "<<<UNTRUSTED_DOCUMENT id={id}>>>"
 _FENCE_CLOSE = "<<<END_UNTRUSTED_DOCUMENT id={id}>>>"

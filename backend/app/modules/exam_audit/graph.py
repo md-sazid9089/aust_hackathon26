@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import re
 import uuid
 from dataclasses import dataclass, field
 from typing import Any
@@ -18,6 +19,7 @@ from sqlalchemy.orm import selectinload
 from app.ai.client import CallContext, get_provider, structured_call
 from app.ai.embeddings import cosine, embed_texts
 from app.ai.guard import wrap_untrusted
+from app.artefacts.parsers import normalize_qnum
 from app.config import get_settings
 from app.db.enums import BloomLevel, FindingSeverity, FindingType, MapSource, TargetKind, UsagePurpose
 from app.db.models import Artefact, CourseOutcome, Question, QuestionCoMap, QuestionTopicMap, Run, RunInput, Topic
@@ -77,8 +79,16 @@ def _norm(s: str) -> str:
 
 def quote_is_verbatim(quote: str, source: str, *, min_len: int = 4) -> bool:
     """Whitespace/case-insensitive containment; guards against the model paraphrasing its 'verbatim' evidence."""
-    q = _norm(quote)
-    return len(q) >= min_len and q in _norm(source)
+    q = _norm(quote).strip(".,;:?!'\"“”‘’`()")
+    if len(q) < min_len:
+        return False
+    s = _norm(source)
+    if q in s:
+        return True
+    # Inner punctuation fallback: strips punctuation so trailing sentence dots or internal dashes still match
+    clean_q = re.sub(r"[^\w\s]", "", q)
+    clean_s = re.sub(r"[^\w\s]", "", s)
+    return len(clean_q) >= min_len and clean_q in clean_s
 
 
 async def run_exam_audit(ctx: RunContext) -> dict[str, Any]:
@@ -214,12 +224,17 @@ async def _map_and_bloom(ctx: RunContext, state: State) -> None:
             ctx.model_used = res.model
             out: MapAndBloomOut = res.value  # type: ignore[assignment]
             by_number = {q.number: q for q in batch}
+            for q in batch:
+                norm_num = normalize_qnum(q.number)
+                if norm_num not in by_number:
+                    by_number[norm_num] = q
             prov = {
                 "model": res.model, "prompt_version": P.PROMPT_VERSIONS["MAP_AND_BLOOM"], "input_hash": _hash(context),
                 "prompt_hash": res.prompt_hash, "response_mode": res.response_mode, "repaired": res.repaired,
             }
             for item in out.items:
-                q = by_number.get("".join(item.number.split()))
+                raw_num = "".join(item.number.split())
+                q = by_number.get(raw_num) or by_number.get(normalize_qnum(raw_num))
                 if q is None:
                     continue
                 valid_cos = [c for c in dict.fromkeys(item.co_codes) if c in co_by_code][:2]
@@ -298,9 +313,14 @@ async def _find_duplicates(ctx: RunContext, state: State, params: dict[str, Any]
         "input_hash": _hash([p["draft_id"] + p["other_question_id"] for p in pairs]),
         "prompt_hash": res.prompt_hash, "response_mode": res.response_mode,
     }
-    verdicts = {(v.draft_number, v.other_question_id): v for v in res.value.items}  # type: ignore[union-attr]
+    verdicts = {}
+    for v in res.value.items:
+        verdicts[(v.draft_number, v.other_question_id)] = v
+        verdicts[(normalize_qnum(v.draft_number), v.other_question_id)] = v
     for p in pairs:
-        v = verdicts.get((p["draft_number"], p["other_question_id"]))
+        v = verdicts.get((p["draft_number"], p["other_question_id"])) or verdicts.get(
+            (normalize_qnum(p["draft_number"]), p["other_question_id"])
+        )
         if v is None or not v.is_duplicate:
             continue
         d, o = by_id[p["draft_id"]], by_id[p["other_question_id"]]

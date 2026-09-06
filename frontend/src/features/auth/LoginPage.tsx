@@ -21,8 +21,12 @@ export function LoginPage() {
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!email.trim() || !password) {
+      setErr(!email.trim() ? 'Enter your email address.' : 'Enter your password.');
+      return;
+    }
     setBusy(true);
-    setErr(await signInWithPassword(email, password));
+    setErr(await signInWithPassword(email.trim(), password));
     setBusy(false);
   };
 

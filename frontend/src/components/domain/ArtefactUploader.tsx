@@ -195,7 +195,7 @@ export function ArtefactUploader({
                     <p className="truncate font-medium">{a.label}</p>
                     <p className="text-xs text-muted-foreground">
                       {a.year ?? ''} {a.lang !== 'unknown' ? `· ${a.lang.toUpperCase()}` : ''} · {relTime(a.created_at)}
-                      {a.counts && Object.entries(a.counts).map(([k, v]) => ` · ${v} ${k}`)}
+                      {a.counts && Object.entries(a.counts).filter(([, v]) => v > 0).map(([k, v]) => ` · ${v} ${k}`)}
                     </p>
                     {a.status === 'failed' && a.error && <p className="mt-1 text-xs text-destructive">{a.error}</p>}
                   </div>

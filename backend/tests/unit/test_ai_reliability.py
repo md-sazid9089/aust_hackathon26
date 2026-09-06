@@ -134,6 +134,33 @@ async def test_final_errors_stop_fallback_chain(mock_provider):
     assert res.value is None and res.attempts == 1 and "refused" in res.error
 
 
+@respx.mock
+async def test_truncated_output_raises_max_tokens_then_gives_up(provider):
+    route = respx.post("https://llm.test/v1/chat/completions")
+    route.mock(return_value=httpx.Response(200, json={"model": "m", "choices": [{"message": {"content": '{"items": ['}, "finish_reason": "length"}]}))
+    res = await structured_call(purpose="p", usage_purpose=UsagePurpose.exam_audit, system="s", user="u", schema=Out, ctx=CallContext(), provider=provider)
+    assert res.value is None and "truncated" in res.error
+    bodies = [json.loads(c.request.content) for c in route.calls]
+    # first call uses the estimated cap, the retry after truncation raises it to 8000, then the model is abandoned
+    assert 2 <= len(bodies) <= 3 and bodies[0]["max_tokens"] < 8000 and bodies[1]["max_tokens"] == 8000
+
+
+@respx.mock
+async def test_seed_rejection_retries_without_seed(provider):
+    route = respx.post("https://llm.test/v1/chat/completions")
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        body = json.loads(request.content)
+        if "seed" in body:
+            return httpx.Response(400, json={"error": {"message": "Unknown parameter: seed", "type": "invalid_request_error"}})
+        return httpx.Response(200, json={"model": "m", "choices": [{"message": {"content": '{"items": [], "score": 0, "rationale": "ok"}'}, "finish_reason": "stop"}]})
+
+    route.mock(side_effect=handler)
+    res = await structured_call(purpose="p", usage_purpose=UsagePurpose.exam_audit, system="s", user="u", schema=Out, ctx=CallContext(), provider=provider)
+    assert res.value is not None and res.attempts == 1 and res.response_mode == "json_schema"
+    assert route.call_count == 2 and "seed" not in json.loads(route.calls.last.request.content)
+
+
 async def test_prompt_hash_is_stable_and_prompt_sensitive(mock_provider):
     mock_provider.queue("p", '{"items": [], "score": 0, "rationale": "a"}')
     mock_provider.queue("p", '{"items": [], "score": 0, "rationale": "b"}')

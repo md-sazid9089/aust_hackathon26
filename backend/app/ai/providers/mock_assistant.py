@@ -139,7 +139,8 @@ def _render(results: list[dict[str, Any]]) -> str:
             s = run["summary"]
             mt = s.get("marks_total")
             if isinstance(mt, dict):
-                lines.append(f"\nMarks: computed {mt.get('computed')} vs declared {mt.get('declared')}" + (" — **mismatch**" if mt.get("mismatch") else ""))
+                declared = f" vs declared {mt.get('declared')}" if mt.get("declared") is not None else ""
+                lines.append(f"\nMarks: computed {mt.get('computed')}{declared}" + (" — **mismatch**" if mt.get("mismatch") else ""))
         if not ok and "details" in data and data["details"]:
             lines.append(f"  details: {json.dumps(data['details'])[:300]}")
         navigate_hint = navigate_hint or ("Open the highlighted page to review the details." if ok else None)

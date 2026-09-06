@@ -203,7 +203,9 @@ class OpenAICompatibleProvider(AIProvider):
         if r.status_code in (401, 403):
             raise ProviderError(f"Gateway rejected credentials ({r.status_code})", retryable=False, status=r.status_code, kind="auth")
         if r.status_code >= 400:
-            raise ProviderError(f"Gateway rejected request ({r.status_code})", retryable=False, status=r.status_code, kind="bad_request")
+            raise ProviderError(
+                f"Gateway rejected request ({r.status_code}): {_error_message(r)}", retryable=False, status=r.status_code, kind="bad_request"
+            )
         if len(r.content) > MAX_RESPONSE_BYTES:
             raise ProviderError("Gateway response too large", retryable=True, kind="server")
         try:
@@ -227,8 +229,17 @@ _CAPABILITY_ERROR_TYPES = {"no_providers", "unsupported_parameter", "invalid_req
 def _error_type(r: httpx.Response) -> str | None:
     try:
         err = r.json().get("error")
-    except ValueError:
+    except (ValueError, AttributeError):
         return None
     if isinstance(err, dict):
         return err.get("type") or err.get("code")
     return None
+
+
+def _error_message(r: httpx.Response) -> str:
+    try:
+        err = r.json().get("error")
+    except (ValueError, AttributeError):
+        return ""
+    msg = err.get("message") if isinstance(err, dict) else err
+    return str(msg or "")[:200]

@@ -62,8 +62,9 @@ def get_provider() -> AIProvider:
 
 def set_provider(provider: AIProvider | None) -> None:
     """Override the process-wide provider (tests / startup)."""
-    global _provider
+    global _provider, _llm_gate
     _provider = provider
+    _llm_gate = None  # semaphores are bound to the loop that created them; tests use a fresh loop
     breaker.reset()
 
 
@@ -235,6 +236,7 @@ async def structured_call(
     p_hash = prompt_hash(system, user)
     max_tokens = _estimate_max_tokens(user)
     mode: ResponseMode = _preferred_mode(provider)
+    seed = settings.llm_seed
 
     last_error: str | None = None
     attempt = 0
@@ -268,11 +270,13 @@ async def structured_call(
                     result = await provider.chat_json(
                         purpose=purpose, system=eff_system, user=user, json_schema=json_schema,
                         schema_name=schema.__name__, model=model, temperature=0.0, timeout_s=timeout_s,
-                        context=context, max_completion_tokens=max_tokens, seed=settings.llm_seed,
+                        context=context, max_completion_tokens=max_tokens, seed=seed,
                         response_mode=mode, repair=repair,
                     )
                 used_model = result.model or model_key
                 raw_content = result.content or ""
+                if result.truncated:
+                    raise ProviderError("Output truncated (finish_reason=length)", retryable=False, kind="truncated")
                 value = schema.model_validate(_recover_json(raw_content, expected_keys=expected_keys))
                 breaker.record_success(model_key)
                 _remember_mode(provider, mode)
@@ -293,6 +297,11 @@ async def structured_call(
             except ProviderError as exc:
                 last_error = f"provider_error: {exc}"
                 log.warning("llm.provider_error", purpose=purpose, attempt=attempt, mode=mode, kind=exc.kind, error=str(exc))
+                if exc.kind == "bad_request" and seed is not None and "seed" in str(exc).lower():
+                    seed = None  # gateway rejects the seed parameter; retry without it
+                    tries -= 1
+                    attempt -= 1
+                    continue
                 if exc.kind == "bad_request" and mode != "prompt":
                     # Request shape rejected (almost always response_format): step down without spending a retry.
                     mode = _next_mode(mode)
@@ -300,9 +309,11 @@ async def structured_call(
                     tries -= 1
                     attempt -= 1
                     continue
-                if exc.kind == "truncated" and max_tokens < 8000:
-                    max_tokens = 8000
-                    continue
+                if exc.kind == "truncated":
+                    if max_tokens < 8000:
+                        max_tokens = 8000
+                        continue
+                    return done(None, None)
                 if exc.final:
                     await _log_usage(db, ctx=ctx, purpose=usage_purpose, model=str(used_model), tokens_in=None, tokens_out=None, latency_ms=int((time.perf_counter() - started) * 1000), status="failed")
                     return done(None, None)

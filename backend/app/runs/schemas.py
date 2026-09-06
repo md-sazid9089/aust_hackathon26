@@ -4,7 +4,7 @@ import uuid
 from datetime import datetime
 from typing import Any
 
-from pydantic import Field, model_validator
+from pydantic import Field, field_validator, model_validator
 
 from app.db.enums import FindingSeverity, FindingStatus, FindingType, RunModule, RunStatus, TargetKind
 from app.schemas import ApiModel
@@ -34,7 +34,12 @@ class ExamAuditParams(ApiModel):
 class AttainmentInputs(ApiModel):
     marks_artefact_id: uuid.UUID
     paper_artefact_id: uuid.UUID
-    threshold: float = Field(0.60, ge=0.1, le=1.0, description="Fraction of a CO's marks a student must score to attain it")
+    threshold: float = Field(0.60, gt=0, le=100, description="Share of a CO's marks a student must score to attain it; 0–1 fraction or 1–100 percent")
+
+    @field_validator("threshold")
+    @classmethod
+    def _to_fraction(cls, v: float) -> float:
+        return v / 100 if v > 1 else v
 
 
 class AttainmentParams(ApiModel):
