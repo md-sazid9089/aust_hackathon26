@@ -1,6 +1,17 @@
 # Database Implementation Plan — aust_hackathon26
 
-**Owner:** Engineer 3 (DB) · **Source of truth:** `architecture.md` §20–23, §36, §38, §39, ADR-13/14 · **Status:** ready to execute · **Date:** 2026-09-06
+**Owner:** Engineer 3 (DB) · **Source of truth:** `architecture.md` §20–23, §36, §38, §39, ADR-13/14 · **Status:** implemented in `database/` (2026-09-06); pending first apply to hosted Supabase · **Date:** 2026-09-06
+
+Implementation notes (deviations from the original plan, all reflected in the SQL):
+- `normalize_qnum()` rule: lowercase, drop leading `q`/`question`, strip whitespace and `( ) . - _` → `"Q2 (B)" → "2b"`, `"3(a)(ii)" → "3aii"`. Defined in `0005` (needed by CHECKs), not `0011`.
+- RLS uses `ENABLE` only (no `FORCE`): Supabase `postgres` has BYPASSRLS, so migrations/seeds/tests run unimpeded; `app_backend` is not the table owner, so ENABLE is sufficient.
+- Extra RLS helpers: `artefact_owner`, `question_owner`, `answer_owner`, `co_owner`, `run_owner` (all SECURITY INVOKER) so every policy is a one-liner.
+- `seed_demo()` inserts fully structured children (`status='done'`, questions, CO/topic maps, 280 marks rows, rubric, answers, grader scores) so the demo never depends on LLM extraction; `seeds/fixtures/*` mirror the content. It is applied by `apply.*` after `0012`, not inside a migration.
+- `reset_demo()` returns the number of courses deleted; admin callers have `app.user_id` switched to the owner for the rest of the transaction (call in its own tx).
+- `run_inputs` got a surrogate `id` (IDENTITY) plus two partial unique indexes, since a PK over nullable columns is impossible.
+- `0001` also creates the `artefacts` storage bucket when the `storage` schema exists, and grants `app_backend` membership to the migrating role so tests can `SET ROLE app_backend` on PG15.
+- `0003` creates a stub `auth.users` when absent (plain-Postgres CI); a no-op on Supabase.
+- Windows wrappers `apply.ps1` / `run_tests.ps1` added next to the bash scripts.
 
 This file turns the approved schema into an ordered, checkable build sequence. If anything here conflicts with `architecture.md`, `architecture.md` wins — fix this file.
 

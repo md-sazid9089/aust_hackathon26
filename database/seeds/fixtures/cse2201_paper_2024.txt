@@ -1,0 +1,17 @@
+CSE 2201 Design and Analysis of Algorithms
+Final Examination, Fall 2024
+Time: 3 hours | Full marks: 100
+
+1. Define Big-O and Big-Theta notation. Show that 3n^2 + 2n + 7 = Theta(n^2). [10]
+
+2. (a) Solve the recurrence T(n) = 2T(n/2) + n using the Master theorem and state which case applies. [10]
+   (b) Describe the merge sort algorithm and derive its recurrence relation. [10]
+
+3. Consider the 0/1 knapsack instance with weights {2, 3, 4, 5}, values {3, 4, 5, 6} and capacity 5. Fill in the dynamic programming table and find the optimal value. [15]
+
+4. Prove that the greedy activity-selection algorithm, which always picks the compatible activity with the earliest finish time, produces an optimal solution. [15]
+
+5. (a) Run Dijkstra's algorithm from source A on the given weighted graph and show the distance table after each iteration. [10]
+   (b) Compare Prim's and Kruskal's algorithms for minimum spanning trees in terms of approach and complexity. [10]
+
+6. Define the classes NP and NP-complete. Show that Vertex Cover is NP-complete by giving a polynomial-time reduction from Independent Set. [20]

@@ -52,7 +52,14 @@ aust_hackathon26/
 ├── CLAUDE.md                     # Claude entry point, imports AGENTS.md
 ├── PROJECT_CONTEXT.md            # this file — single source of truth
 ├── architecture.md               # approved architecture: API §19, schema §21, contracts §38, plan §39, ADRs §42
-└── database_implementation_plan.md  # DB engineer's ordered build plan: migrations 0001–0012, RLS matrix, seeds, tests, gates
+├── database_implementation_plan.md  # DB engineer's ordered build plan: migrations 0001–0012, RLS matrix, seeds, tests, gates
+└── database/                     # IMPLEMENTED — see database/README.md
+    ├── migrations/0001–0012_*.sql # extensions+role, enums, profiles+trigger, workspace, artefacts/questions, marks/rubric/answers, runs/findings, results/usage, indexes, RLS, functions, views
+    ├── seeds/seed_demo.sql       # seed_demo(owner): CSE2201 full demo + CSE2101 comparison course, structured rows, idempotent
+    ├── seeds/seed_admin.sql      # promote email → admin
+    ├── seeds/fixtures/*.txt|csv  # syllabus ×2, papers 2024/2025/draft, marks.csv (40 students), rubric, answers
+    ├── tests/test_{constraints,rls,functions}.sql
+    └── scripts/apply.{sh,ps1}, run_tests.{sh,ps1}, reset_local.sh
 ```
 
 Planned, not yet created (`architecture.md` §9–10): `frontend/`, `backend/`, `database/`, `docker-compose.yml`, `.env.example`, `.github/workflows/ci.yml`.
@@ -60,12 +67,14 @@ Planned, not yet created (`architecture.md` §9–10): `frontend/`, `backend/`, 
 ## 5. How to Run
 
 ```bash
-# planned (architecture.md §31, §5) — not yet scaffolded
-# database: supabase start (or linked project) && database/scripts/apply.sh && psql -f database/seeds/seed_admin.sql
-# backend:  cd backend && uv sync && uvicorn app.main:app --reload   (port 8000)
-# frontend: cd frontend && npm i && npm run dev                      (port 5173)
+# database (implemented) — needs psql; superuser URL (port 5432), NOT the pooler
+#   $env:SUPABASE_DB_URL="postgresql://postgres:<pw>@db.<ref>.supabase.co:5432/postgres"; $env:APP_BACKEND_PASSWORD="<pw>"
+#   .\database\scripts\apply.ps1        # or ./database/scripts/apply.sh   (idempotent)
+#   .\database\scripts\run_tests.ps1    # constraints, functions, RLS (each rolls back)
+#   psql $env:SUPABASE_DB_URL -v email='you@aust.edu' -f database/seeds/seed_admin.sql
+# backend:  cd backend && uv sync && uvicorn app.main:app --reload   (port 8000)   — not yet scaffolded
+# frontend: cd frontend && npm i && npm run dev                      (port 5173)   — not yet scaffolded
 # all:      docker compose up   (optional profile `free` starts freellmpool on 127.0.0.1:8080)
-# test:     npm test / pytest / database/scripts/run_tests.sh
 ```
 
 **MCP server setup (once per machine, VS Code + Copilot Chat):**
@@ -98,6 +107,7 @@ Planned, not yet created (`architecture.md` §9–10): `frontend/`, `backend/`, 
 | D-016 | 2026-09-06 | Findings first-class table; module aggregates in `runs.summary` jsonb; numeric results in `attainment_results` / `answer_prescores` tables                                                   | Queryable for views, flexible per module (ADR-07)                                                                   |
 | D-017 | 2026-09-06 | Merge audit vs an external "versioned assessment platform" design: adopted copy-at-write + provenance columns (`runs.context_snapshot`, `runs.model`, `runs.prompt_versions`, `findings.provenance`, `findings.decided_by`, `questions/topics.embedding_model`, `artefacts.declared_total_marks`, finding `marks_total_mismatch`, `409 SCORES_EXCEED_RUBRIC`); rejected paper/CLO versioning tables, persisted similarity-match table, SIS/sections/released results/blind grading | Reproducible, defensible findings at column-level cost; rejected items violate §2 non-goals and would re-introduce the only partition-scale table (ADR-13) |
 | D-018 | 2026-09-06 | Three-lens DB review (security / integrity / pragmatist) → ADR-14: `course_owner()` hides soft-deleted courses; functions SECURITY INVOKER, `seed_demo`/`reset_demo` assert owner-or-admin; explicit `run_events`/`usage_logs` RLS; `run_inputs` → nullable artefact/course + `run_input_role` enum; `attainment_results.target_code` copied; `normalize_qnum()` on both `questions.number` and `marks_rows.question_number` + `marks_question_mismatch` finding; IDENTITY not bigserial; final run stage single tx; RLS lands Phase 1 (app-layer ownership checks mandatory from Phase 0); hosted Supabase only (no local Docker); demo fixtures TXT/CSV-first + second course `CSE 2101`, authored in Phase 0; `0006` P2 tables may slip to Phase 4 | Fixes 3 High security findings (deleted-course leak, demo-fn abuse, cross-owner vector search), the silent marks-join drop, and the two biggest schedule risks (RLS in Phase 0, fixtures in Phase 2) without dropping the DB-as-authz principle |
+| D-019 | 2026-09-06 | `seed_demo()` inserts fully structured demo rows (questions, CO/topic maps, 280 marks rows, rubric, answers, grader scores) with `status='done'`; fixture files mirror them. Backend `POST /demo/seed` only pushes bytes to Storage and pre-runs P1/P4. `normalize_qnum` = lowercase, drop leading q/question, strip whitespace and `().-_` | Demo must not depend on LLM extraction succeeding; one normalisation rule shared by DB CHECK and backend |
 
 ## 7. Conventions
 
@@ -114,14 +124,17 @@ Planned, not yet created (`architecture.md` §9–10): `frontend/`, `backend/`, 
 - [x] `AGENTS.md` + `CLAUDE.md` added for non-Copilot agents
 - [x] Requirements locked (§12)
 - [x] `architecture.md` written: stack, 45 sections, API contract, DB schema (24 tables, RLS, functions, views), file-level plan for 3 engineers; merge-audit amendments applied (ADR-13 / D-017)
+- [x] `database/` implemented: 12 migrations, RLS on 21 tables, 8 helper fns, `similar_questions/topics`, `compute_co_attainment`, `reset_demo`, `seed_demo` (2 courses, planted defects), 4 views, 3 SQL test files, apply/test scripts (sh + ps1). **Not yet applied to a Supabase project or run in CI.**
 - [x] `.vscode/mcp.json` with Supabase + Context7 MCP servers
 
 ## 9. Next Steps / TODO
 
 - [x] Lock requirements (Prompt 1)
 - [x] Architecture design (Prompt 2) → `architecture.md`
-- [ ] Phase 0 contracts: hosted Supabase project (Auth providers, `artefacts` bucket), `database/migrations/0001–0005, 0007–0008` (+`0006` if P2 stays in T0), backend Pydantic schemas + `openapi.json`, **demo fixtures authored (TXT/CSV, 2 courses)**
-- [ ] Phase 1 foundation: FE scaffold + auth, BE skeleton + `/me` + ORM parity + service-layer ownership checks, DB indexes/RLS/functions/views + `seed_demo` idempotency test
+- [ ] Phase 0 contracts: hosted Supabase project (Auth providers, `artefacts` bucket), **apply `database/` (DB-00, DB-01…DB-05 done as code)**, backend Pydantic schemas + `openapi.json`
+- [x] Demo fixtures authored (TXT/CSV, 2 courses) — `database/seeds/fixtures/`
+- [ ] Run `database/scripts/run_tests.*` against the hosted project; fix anything Supabase-specific (`auth.users` insert in tests, `SET ROLE app_backend` membership)
+- [ ] Phase 1 foundation: FE scaffold + auth, BE skeleton + `/me` + ORM parity + service-layer ownership checks; DB: CI job (`pgvector/pgvector:pg15`, `reset_local.sh`)
 - [ ] Phase 2–3 (Tier 0): ingestion/extraction, P1 Exam Auditor, findings + accept/dismiss, demo seed → W1 live
 - [ ] Tier 1: P4, P3, P2, export, question suggestion
 - [ ] Tier 2: SSE progress, Bangla support, system-admin panel (users, runs, LLM usage)
@@ -136,6 +149,9 @@ Planned, not yet created (`architecture.md` §9–10): `frontend/`, `backend/`, 
 - `grader_scores.score ≤ rubric_criteria.max_score` cannot be a DB CHECK (rubric and answers are separate artefacts) — enforced in backend at calibration run start (`409 SCORES_EXCEED_RUBRIC`). Same for `marks_rows.question_number` → `questions.number`: no FK possible; both sides pass through `normalize_qnum()` and unmatched numbers become a `marks_question_mismatch` finding.
 - Doc nits still open in `architecture.md`: IDs `AI-005/006`, `DATA-002`, `NF-005`, `OPT-*` referenced there are not defined in §12 below.
 - Migrations `0001` (role creation) and `0003` (trigger on `auth.users`) need the superuser `SUPABASE_DB_URL`, not `app_backend`.
+- `reset_demo`/`seed_demo` called by an admin switch `app.user_id` to the target owner for the rest of the transaction — backend must call them in a dedicated transaction.
+- `test_rls.sql` inserts directly into `auth.users` and does `SET ROLE app_backend`; both work on plain Postgres, verify on Supabase (auth.users NOT NULL columns; membership granted in `0001`).
+- Backend must normalise question numbers exactly like `normalize_qnum()` (`lower`, drop leading `q`/`question`, strip whitespace and `().-_`) or the CHECK rejects inserts.
 - Transaction pooler (6543): use `SET LOCAL` (never `SET`) for RLS vars; asyncpg `statement_cache_size=0`.
 - Supabase JWT may be ES256 (JWKS) or HS256 (legacy secret) — verify in Phase 1.
 - WeasyPrint needs system libs; run backend in Docker or accept md-only export locally.
@@ -174,4 +190,5 @@ Planned, not yet created (`architecture.md` §9–10): `frontend/`, `backend/`, 
 | 2026-09-06 | Copilot | Merge audit vs external versioned-assessment design: provenance/copy-at-write columns, `marks_total_mismatch`, `SCORES_EXCEED_RUBRIC` (D-017, ADR-13); filled §3 stack table + env names; added `architecture.md` to §4 |
 | 2026-09-06 | Copilot | Multi-agent DB review (security/integrity/pragmatist) → ADR-14 / D-018: RLS hardening, `run_inputs` redesign, `normalize_qnum`, `target_code`, IDENTITY, phase re-sequencing, fixture plan; fixed `compute_co_attainment` signature + removed `alembic/` |
 | 2026-09-06 | Copilot | Added `database_implementation_plan.md` (user-requested): per-migration contents, RLS policy matrix, seed spec, SQL test list, phase gates, BE contracts |
+| 2026-09-06 | Copilot | Implemented `database/`: migrations 0001–0012, seed_demo + fixtures (2 courses), seed_admin, 3 SQL test suites, apply/test scripts; D-019 |
 | 2026-09-06 | Copilot | `edge_cases.md`: added §14 access-pattern queries Q1–Q16 with volume/latency budgets and per-query edge cases |

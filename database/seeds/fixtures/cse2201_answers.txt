@@ -1,0 +1,32 @@
+Question: Explain why merge sort runs in O(n log n) time in the worst case.
+Graders: A, B | Scores per criterion C1..C4 (max 5 each)
+
+--- Answer 1 | Student S101
+Merge sort splits the array into two halves, sorts each half recursively and merges them in linear time. The recurrence is T(n) = 2T(n/2) + cn. Using the recursion tree there are log2 n levels and each level does cn work, so T(n) = O(n log n). This holds for every input because the split does not depend on the data.
+A: C1=5 C2=5 C3=5 C4=5
+B: C1=5 C2=4 C3=5 C4=5
+
+--- Answer 2 | Student S102
+Merge sort divides and conquers. Merging takes n steps. Because you divide by two each time you get log n divisions. So it is n log n.
+A: C1=4 C2=3 C3=3 C4=2
+B: C1=2 C2=1 C3=2 C4=1
+
+--- Answer 3 | Student S103
+T(n) = 2T(n/2) + n. By the Master theorem a = 2, b = 2, f(n) = n = Theta(n^(log_b a)), which is case 2, so T(n) = Theta(n log n). The merge step is linear because each element is copied once.
+A: C1=5 C2=4 C3=4 C4=5
+B: C1=5 C2=4 C3=4 C4=5
+
+--- Answer 4 | Student S104
+Merge sort is fast because it uses recursion. Recursion is usually log n and there are n elements so the total is n log n.
+A: C1=2 C2=2 C3=2 C4=1
+B: C1=2 C2=1 C3=2 C4=1
+
+--- Answer 5 | Student S105
+Each level of recursion processes all n elements during merging. The depth of recursion is log2 n since the size halves each time. Therefore total work is n times log n. Worst, best and average cases are the same because merge always compares all remaining elements.
+A: C1=5 C2=5 C3=4 C4=4
+B: C1=3 C2=3 C3=4 C4=2
+
+--- Answer 6 | Student S106
+Merge sort has complexity O(n log n) because the merge is O(n) and there are O(log n) levels. Quicksort can be O(n^2) but merge sort cannot.
+A: C1=4 C2=3 C3=4 C4=3
+B: C1=4 C2=3 C3=3 C4=3

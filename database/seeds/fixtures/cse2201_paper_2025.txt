@@ -1,0 +1,17 @@
+CSE 2201 Design and Analysis of Algorithms
+Final Examination, Fall 2025
+Time: 3 hours | Full marks: 100
+
+1. Using the definition of Big-O, prove that n log n = O(n^2) and that n^2 is not O(n log n). [10]
+
+2. Trace quicksort on the array [7, 2, 9, 4, 3, 8] using the last element as pivot. Give the worst-case recurrence and solve it. [15]
+
+3. Construct the dynamic programming table for the longest common subsequence of X = ABCBDAB and Y = BDCABA. State the length of the LCS and recover one LCS. [15]
+
+4. Build the Huffman code for the characters a, b, c, d, e with frequencies 45, 13, 12, 16, 9. Explain why the greedy merge step is safe. [15]
+
+5. Perform BFS and DFS from vertex 1 on the given undirected graph. Give the discovery order for each traversal and the DFS tree. [15]
+
+6. Apply Kruskal's algorithm to the given weighted graph. List the edges in the order they are added and give the total weight of the MST. [10]
+
+7. Define the class NP-complete. Describe a polynomial-time reduction from 3-SAT to Clique and explain why it proves Clique is NP-hard. [20]

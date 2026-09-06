@@ -1,0 +1,24 @@
+CSE 2201 Design and Analysis of Algorithms
+Credits: 3.0 | Prerequisite: CSE 2101 Data Structures
+
+Course Outcomes
+CO1 Analyse the asymptotic time and space complexity of iterative and recursive algorithms.
+CO2 Apply divide-and-conquer and comparison-based sorting algorithms to solve problems.
+CO3 Design dynamic-programming solutions for optimisation problems and justify optimal substructure.
+CO4 Apply greedy algorithms and evaluate the correctness of greedy choices.
+CO5 Apply graph algorithms (BFS, DFS, shortest paths, minimum spanning trees) to model and solve problems.
+CO6 Explain the classes P, NP and NP-complete and describe polynomial-time reductions.
+
+Topics
+T01 Asymptotic notation: Big-O, Big-Omega, Big-Theta; growth of functions
+T02 Recurrence relations, substitution method, recursion tree, Master theorem
+T03 Divide and conquer: binary search, maximum subarray, Strassen's matrix multiplication
+T04 Sorting: merge sort, quicksort, heap sort, lower bound for comparison sorting
+T05 Dynamic programming: rod cutting, 0/1 knapsack, longest common subsequence, matrix-chain
+T06 Greedy algorithms: activity selection, fractional knapsack, Huffman coding
+T07 Graph traversal: BFS, DFS, topological sort, strongly connected components
+T08 Shortest paths: Dijkstra, Bellman-Ford, Floyd-Warshall
+T09 Minimum spanning trees: Prim's and Kruskal's algorithms, union-find
+T10 NP-completeness: P vs NP, reductions, Vertex Cover, SAT, Hamiltonian cycle
+
+Assessment: Midterm 20%, Final 50%, Quizzes 10%, Assignments 20%

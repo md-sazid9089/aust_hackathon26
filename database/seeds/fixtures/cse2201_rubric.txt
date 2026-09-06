@@ -1,0 +1,21 @@
+Rubric: Written algorithm-analysis answer (max 20)
+
+C1 Correctness (max 5)
+  5 Excellent: result and reasoning fully correct
+  3 Adequate: minor slip that does not change the conclusion
+  1 Weak: major error or unsupported claim
+
+C2 Completeness (max 5)
+  5 Excellent: all required steps and cases covered
+  3 Adequate: one required step missing
+  1 Weak: most steps missing
+
+C3 Clarity (max 5)
+  5 Excellent: well structured, precise notation
+  3 Adequate: readable but loosely organised
+  1 Weak: hard to follow
+
+C4 Complexity analysis (max 5)
+  5 Excellent: tight bound derived and justified
+  3 Adequate: correct bound stated without derivation
+  1 Weak: bound missing or wrong
