@@ -1,0 +1,35 @@
+[
+  {
+    "thread_id": "TH-001",
+    "entity_type": "paper",
+    "entity_id": "QP-2026-DRAFT-01",
+    "subject": "CO6 not assessed",
+    "opened_by": "F-002",
+    "opened_at": "2026-09-06T10:02:00+06:00",
+    "status": "resolved",
+    "linked_finding_id": "FND-001",
+    "resolved_at": "2026-09-06T10:22:00+06:00"
+  },
+  {
+    "thread_id": "TH-002",
+    "entity_type": "paper",
+    "entity_id": "QP-2026-DRAFT-01",
+    "subject": "Repeat of the 2024 SQL question",
+    "opened_by": "F-005",
+    "opened_at": "2026-09-06T10:05:00+06:00",
+    "status": "resolved",
+    "linked_finding_id": "FND-003",
+    "resolved_at": "2026-09-06T10:30:00+06:00"
+  },
+  {
+    "thread_id": "TH-003",
+    "entity_type": "proposal",
+    "entity_id": "PROP-001",
+    "subject": "Overlap with CSE 4101",
+    "opened_by": "F-005",
+    "opened_at": "2026-09-06T11:10:00+06:00",
+    "status": "open",
+    "linked_finding_id": "PFND-001",
+    "resolved_at": null
+  }
+]

@@ -1,0 +1,21 @@
+[
+  {
+    "summary_id": "ITMS-001",
+    "paper_id": "QP-2025-FIN-01",
+    "generated_at": "2026-09-06T09:26:10+06:00",
+    "n_students": 30,
+    "upper_lower_group_size": 8,
+    "mean_facility": 0.654,
+    "mean_discrimination": 0.314,
+    "reliability_kr20_estimate": 0.74,
+    "reliability_band": "acceptable",
+    "items_to_revise": [
+      "Q-2025F-1A",
+      "Q-2025F-4"
+    ],
+    "hardest_item": "Q-2025F-6",
+    "weakest_discriminator": "Q-2025F-1A",
+    "narrative": "The paper separates students reasonably overall, with mean discrimination 0.314. The hardest item is 6 at a facility index of 0.503, well below the comfortable band, which is consistent with the low CO4 attainment. Items flagged for revision are not necessarily bad questions, but they measure less than the marks assigned to them suggest.",
+    "caveat": "Facility and discrimination indices are descriptive, not verdicts. A hard item that discriminates well may be exactly the item a final examination needs."
+  }
+]

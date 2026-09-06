@@ -1,0 +1,110 @@
+[
+  {
+    "bank_id": "QB-001",
+    "course_id": "C-CSE3103",
+    "text": "For each department, list the department name together with the number of employees whose salary is above the median salary of that department, ordered by that count descending.",
+    "marks": 7,
+    "co_id": "CO3",
+    "bloom_id": "L3",
+    "tags": [
+      "sql-aggregate"
+    ],
+    "origin": "REC-002",
+    "times_used": 0,
+    "last_used_session": null,
+    "created_by": "ai",
+    "approved_by": "F-002",
+    "status": "available",
+    "max_similarity_to_past_papers": 0.31
+  },
+  {
+    "bank_id": "QB-002",
+    "course_id": "C-CSE3103",
+    "text": "A report joins orders (2.4 million rows) with customers (5,200 rows) filtering on order_date. Assess a composite, a covering and a partial index, and recommend one with justification.",
+    "marks": 6,
+    "co_id": "CO6",
+    "bloom_id": "L5",
+    "tags": [
+      "index-selection"
+    ],
+    "origin": "REC-001",
+    "times_used": 0,
+    "last_used_session": null,
+    "created_by": "ai",
+    "approved_by": "F-002",
+    "status": "available",
+    "max_similarity_to_past_papers": 0.31
+  },
+  {
+    "bank_id": "QB-003",
+    "course_id": "C-CSE3103",
+    "text": "Given the interleaved schedule S over T1, T2 and T3, determine whether S is conflict serialisable, then evaluate whether strict two-phase locking or timestamp ordering would have prevented the anomaly.",
+    "marks": 9,
+    "co_id": "CO5",
+    "bloom_id": "L5",
+    "tags": [
+      "concurrency"
+    ],
+    "origin": "REC-003",
+    "times_used": 0,
+    "last_used_session": null,
+    "created_by": "ai",
+    "approved_by": "F-002",
+    "status": "available",
+    "max_similarity_to_past_papers": 0.31
+  },
+  {
+    "bank_id": "QB-004",
+    "course_id": "C-CSE3103",
+    "text": "Given R(A,B,C,D,E,F) with F = {A->BC, CD->EF, B->D}, compute the attribute closure of A and determine every candidate key. Show your working.",
+    "marks": 5,
+    "co_id": "CO4",
+    "bloom_id": "L4",
+    "tags": [
+      "closure"
+    ],
+    "origin": "manual",
+    "times_used": 0,
+    "last_used_session": null,
+    "created_by": "F-004",
+    "approved_by": "F-002",
+    "status": "available",
+    "max_similarity_to_past_papers": 0.22
+  },
+  {
+    "bank_id": "QB-005",
+    "course_id": "C-CSE3103",
+    "text": "Two designers propose different ER models for the same requirement. Compare them on redundancy, extensibility and query cost, and recommend one.",
+    "marks": 8,
+    "co_id": "CO2",
+    "bloom_id": "L5",
+    "tags": [
+      "er-evaluation"
+    ],
+    "origin": "manual",
+    "times_used": 0,
+    "last_used_session": null,
+    "created_by": "F-004",
+    "approved_by": "F-002",
+    "status": "available",
+    "max_similarity_to_past_papers": 0.22
+  },
+  {
+    "bank_id": "QB-006",
+    "course_id": "C-CSE3103",
+    "text": "Explain why a dirty read can occur under read-uncommitted isolation, and give a concrete two-transaction schedule that demonstrates it.",
+    "marks": 6,
+    "co_id": "CO5",
+    "bloom_id": "L4",
+    "tags": [
+      "isolation"
+    ],
+    "origin": "manual",
+    "times_used": 0,
+    "last_used_session": null,
+    "created_by": "F-004",
+    "approved_by": "F-002",
+    "status": "available",
+    "max_similarity_to_past_papers": 0.22
+  }
+]

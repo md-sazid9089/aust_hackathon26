@@ -1,0 +1,39 @@
+[
+  {
+    "exemplar_id": "EX-001",
+    "rubric_id": "RUB-001",
+    "band": "full (18-20)",
+    "anchor_marks": 19,
+    "text": "All three anomalies named with tuples from the given relation; complete minimal FD set; decomposition into Course(course_code, course_title, instructor) and Enrollment(student_id, course_code, grade); every step justified and losslessness argued from the fact that course_code is a key of Course.",
+    "approved_by": "F-001",
+    "purpose": "calibration_anchor"
+  },
+  {
+    "exemplar_id": "EX-002",
+    "rubric_id": "RUB-001",
+    "band": "middle (11-14)",
+    "anchor_marks": 12,
+    "text": "Two anomalies named without examples; FDs mostly correct; correct two-relation decomposition; justification asserted rather than argued.",
+    "approved_by": "F-001",
+    "purpose": "calibration_anchor"
+  },
+  {
+    "exemplar_id": "EX-003",
+    "rubric_id": "RUB-001",
+    "band": "low (4-8)",
+    "anchor_marks": 6,
+    "text": "General statement that normalisation removes redundancy; one FD identified; decomposition described in words without relations or keys.",
+    "approved_by": "F-001",
+    "purpose": "calibration_anchor"
+  },
+  {
+    "exemplar_id": "EX-004",
+    "rubric_id": "RUB-001",
+    "band": "alternative-route full (16-18)",
+    "anchor_marks": 17,
+    "text": "A three-relation decomposition that is lossless, dependency preserving and in 3NF. Added after the Spring 2025 divergences to settle whether a non-model but valid decomposition earns full marks under R3. It does.",
+    "approved_by": "F-005",
+    "purpose": "dispute_precedent",
+    "created_from_script_id": "ANS-05"
+  }
+]

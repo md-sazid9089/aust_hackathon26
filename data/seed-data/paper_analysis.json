@@ -1,0 +1,305 @@
+[
+  {
+    "analysis_id": "AN-001",
+    "paper_id": "QP-2026-DRAFT-01",
+    "run_id": "EXT-RUN-001",
+    "generated_at": "2026-09-06T09:17:22+06:00",
+    "policy_id": "POL-AUST-CSE-01",
+    "model": "claude-sonnet-4-6",
+    "engine_version": "1.0.0",
+    "declared_total_marks": 60,
+    "computed_total_marks": 58,
+    "marks_mismatch": 2,
+    "question_count": 9,
+    "quality_score": 54,
+    "quality_band": "needs_revision",
+    "sub_scores": {
+      "co_coverage": 48,
+      "bloom_balance": 45,
+      "originality": 52,
+      "structural_integrity": 62,
+      "tagging_completeness": 66
+    },
+    "co_coverage": [
+      {
+        "co_id": "CO1",
+        "marks": 18,
+        "percent_of_paper": 31.0,
+        "target_percent": 15,
+        "deviation": 16.0,
+        "question_ids": [
+          "Q-2026D-1A",
+          "Q-2026D-1B",
+          "Q-2026D-3A"
+        ],
+        "status": "over_weighted",
+        "severity": "medium"
+      },
+      {
+        "co_id": "CO2",
+        "marks": 6,
+        "percent_of_paper": 10.3,
+        "target_percent": 20,
+        "deviation": -9.7,
+        "question_ids": [
+          "Q-2026D-2A"
+        ],
+        "status": "under_weighted",
+        "severity": "high"
+      },
+      {
+        "co_id": "CO3",
+        "marks": 14,
+        "percent_of_paper": 24.1,
+        "target_percent": 20,
+        "deviation": 4.1,
+        "question_ids": [
+          "Q-2026D-2B",
+          "Q-2026D-4A"
+        ],
+        "status": "balanced",
+        "severity": "none"
+      },
+      {
+        "co_id": "CO4",
+        "marks": 10,
+        "percent_of_paper": 17.2,
+        "target_percent": 20,
+        "deviation": -2.8,
+        "question_ids": [
+          "Q-2026D-3B"
+        ],
+        "status": "balanced",
+        "severity": "none"
+      },
+      {
+        "co_id": "CO5",
+        "marks": 5,
+        "percent_of_paper": 8.6,
+        "target_percent": 15,
+        "deviation": -6.4,
+        "question_ids": [
+          "Q-2026D-4B"
+        ],
+        "status": "under_weighted",
+        "severity": "high"
+      },
+      {
+        "co_id": "CO6",
+        "marks": 0,
+        "percent_of_paper": 0.0,
+        "target_percent": 10,
+        "deviation": -10.0,
+        "question_ids": [],
+        "status": "not_assessed",
+        "severity": "critical"
+      }
+    ],
+    "untagged_marks": 5,
+    "bloom_distribution": [
+      {
+        "bloom_id": "L1",
+        "name": "Remember",
+        "order_class": "lower",
+        "marks": 6,
+        "percent_of_paper": 10.3,
+        "question_ids": [
+          "Q-2026D-1B"
+        ]
+      },
+      {
+        "bloom_id": "L2",
+        "name": "Understand",
+        "order_class": "lower",
+        "marks": 22,
+        "percent_of_paper": 37.9,
+        "question_ids": [
+          "Q-2026D-1A",
+          "Q-2026D-3A",
+          "Q-2026D-4B",
+          "Q-2026D-5"
+        ]
+      },
+      {
+        "bloom_id": "L3",
+        "name": "Apply",
+        "order_class": "middle",
+        "marks": 20,
+        "percent_of_paper": 34.5,
+        "question_ids": [
+          "Q-2026D-2A",
+          "Q-2026D-2B",
+          "Q-2026D-4A"
+        ]
+      },
+      {
+        "bloom_id": "L4",
+        "name": "Analyze",
+        "order_class": "higher",
+        "marks": 10,
+        "percent_of_paper": 17.2,
+        "question_ids": [
+          "Q-2026D-3B"
+        ]
+      },
+      {
+        "bloom_id": "L5",
+        "name": "Evaluate",
+        "order_class": "higher",
+        "marks": 0,
+        "percent_of_paper": 0.0,
+        "question_ids": []
+      },
+      {
+        "bloom_id": "L6",
+        "name": "Create",
+        "order_class": "higher",
+        "marks": 0,
+        "percent_of_paper": 0.0,
+        "question_ids": []
+      }
+    ],
+    "bloom_summary": {
+      "lower_order_marks": 28,
+      "lower_order_percent": 48.3,
+      "middle_order_marks": 20,
+      "middle_order_percent": 34.5,
+      "higher_order_marks": 10,
+      "higher_order_percent": 17.2,
+      "policy_max_lower_percent": 40,
+      "policy_min_higher_percent": 30,
+      "lower_order_violation": true,
+      "higher_order_violation": true
+    },
+    "topic_coverage": [
+      {
+        "topic_id": "T-01",
+        "week": 1,
+        "title": "Introduction to database systems, file system vs DBMS",
+        "co_id": "CO1",
+        "covered": true,
+        "marks": 6
+      },
+      {
+        "topic_id": "T-02",
+        "week": 2,
+        "title": "Three-schema architecture, data independence, DBMS components",
+        "co_id": "CO1",
+        "covered": true,
+        "marks": 12
+      },
+      {
+        "topic_id": "T-03",
+        "week": 3,
+        "title": "Data models: hierarchical, network, relational, object-relational",
+        "co_id": "CO1",
+        "covered": false,
+        "marks": 0
+      },
+      {
+        "topic_id": "T-04",
+        "week": 4,
+        "title": "Entity-relationship model: entities, attributes, relationships, cardinality",
+        "co_id": "CO2",
+        "covered": true,
+        "marks": 6
+      },
+      {
+        "topic_id": "T-05",
+        "week": 5,
+        "title": "Enhanced ER: specialisation, generalisation, aggregation",
+        "co_id": "CO2",
+        "covered": false,
+        "marks": 0
+      },
+      {
+        "topic_id": "T-06",
+        "week": 6,
+        "title": "ER-to-relational mapping, integrity constraints",
+        "co_id": "CO2",
+        "covered": false,
+        "marks": 0
+      },
+      {
+        "topic_id": "T-07",
+        "week": 7,
+        "title": "Relational algebra; SQL DDL and DML; joins",
+        "co_id": "CO3",
+        "covered": false,
+        "marks": 0
+      },
+      {
+        "topic_id": "T-08",
+        "week": 8,
+        "title": "Nested subqueries, aggregate functions, GROUP BY, HAVING, views",
+        "co_id": "CO3",
+        "covered": true,
+        "marks": 14
+      },
+      {
+        "topic_id": "T-09",
+        "week": 9,
+        "title": "Functional dependencies, closure, candidate keys, 1NF-2NF-3NF",
+        "co_id": "CO4",
+        "covered": true,
+        "marks": 10
+      },
+      {
+        "topic_id": "T-10",
+        "week": 10,
+        "title": "BCNF, lossless-join and dependency-preserving decomposition",
+        "co_id": "CO4",
+        "covered": false,
+        "marks": 0
+      },
+      {
+        "topic_id": "T-11",
+        "week": 11,
+        "title": "Transactions, ACID properties, schedules, serialisability",
+        "co_id": "CO5",
+        "covered": true,
+        "marks": 5
+      },
+      {
+        "topic_id": "T-12",
+        "week": 12,
+        "title": "Concurrency control: two-phase locking, timestamp ordering, deadlock",
+        "co_id": "CO5",
+        "covered": false,
+        "marks": 0
+      },
+      {
+        "topic_id": "T-13",
+        "week": 13,
+        "title": "Recovery: logging, checkpointing, ARIES overview",
+        "co_id": "CO5",
+        "covered": false,
+        "marks": 0
+      },
+      {
+        "topic_id": "T-14",
+        "week": 14,
+        "title": "Indexing: B+ tree, hashing; query processing and optimisation",
+        "co_id": "CO6",
+        "covered": false,
+        "marks": 0
+      }
+    ],
+    "duplicate_pair_ids": [
+      "SIM-001",
+      "SIM-002",
+      "SIM-003",
+      "SIM-004"
+    ],
+    "uncovered_topic_ids": [
+      "T-03",
+      "T-05",
+      "T-06",
+      "T-07",
+      "T-10",
+      "T-12",
+      "T-13",
+      "T-14"
+    ]
+  }
+]

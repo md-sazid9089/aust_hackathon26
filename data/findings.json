@@ -1,0 +1,187 @@
+[
+  {
+    "finding_id": "FND-001",
+    "analysis_id": "AN-001",
+    "paper_id": "QP-2026-DRAFT-01",
+    "category": "co_coverage",
+    "severity": "critical",
+    "rule_id": "R-CO-NOT-ASSESSED",
+    "title": "CO6 is not assessed anywhere in the paper",
+    "detail": "CO6 (assess indexing and query-optimisation strategies) carries 10% of the course weight but receives 0 of 58 marks. Weeks 13-14 of the syllabus are therefore untested.",
+    "evidence_question_ids": [],
+    "evidence_topic_ids": [
+      "T-14"
+    ],
+    "suggested_action": "Add a 6-8 mark question on index selection or query-plan comparison; take the marks from the redundant question 3(a)."
+  },
+  {
+    "finding_id": "FND-002",
+    "analysis_id": "AN-001",
+    "paper_id": "QP-2026-DRAFT-01",
+    "category": "bloom_balance",
+    "severity": "high",
+    "rule_id": "R-BLOOM-LOWER-EXCESS",
+    "title": "Lower-order questions occupy 48.3% of marks (policy limit 40%)",
+    "detail": "Remember and Understand levels account for 28 of 58 marks, while Analyze/Evaluate/Create account for only 10 marks (17.2%, policy minimum 30%).",
+    "evidence_question_ids": [
+      "Q-2026D-1B",
+      "Q-2026D-4B",
+      "Q-2026D-5",
+      "Q-2026D-1A",
+      "Q-2026D-3A"
+    ],
+    "evidence_topic_ids": [],
+    "suggested_action": "Convert 4(b) from a definition of ACID into an evaluation of an interleaved schedule, and add a CO6 evaluation question."
+  },
+  {
+    "finding_id": "FND-003",
+    "analysis_id": "AN-001",
+    "paper_id": "QP-2026-DRAFT-01",
+    "category": "originality",
+    "severity": "high",
+    "rule_id": "R-DUP-CROSS-PAPER",
+    "title": "Question 2(b) is a near duplicate of Mid Term Spring 2024, question 3(a)",
+    "detail": "Similarity 0.94. The same correlated-subquery task appeared two years ago and is likely to be circulating in student question banks.",
+    "evidence_question_ids": [
+      "Q-2026D-2B",
+      "Q-2024M-3A"
+    ],
+    "evidence_topic_ids": [],
+    "suggested_action": "Rewrite with a different aggregate and an added ordering or window requirement."
+  },
+  {
+    "finding_id": "FND-004",
+    "analysis_id": "AN-001",
+    "paper_id": "QP-2026-DRAFT-01",
+    "category": "originality",
+    "severity": "high",
+    "rule_id": "R-DUP-CROSS-PAPER",
+    "title": "Question 4(a) repeats Final Spring 2025, question 1(b)",
+    "detail": "Similarity 0.87, and the source paper is only one year old, which is inside the three-year lookback window.",
+    "evidence_question_ids": [
+      "Q-2026D-4A",
+      "Q-2025F-1B"
+    ],
+    "evidence_topic_ids": [],
+    "suggested_action": "Replace the HAVING threshold task with a multi-table aggregate over a different schema."
+  },
+  {
+    "finding_id": "FND-005",
+    "analysis_id": "AN-001",
+    "paper_id": "QP-2026-DRAFT-01",
+    "category": "redundancy",
+    "severity": "high",
+    "rule_id": "R-DUP-INTRA-PAPER",
+    "title": "Questions 1(a) and 3(a) assess the same concept twice",
+    "detail": "Similarity 0.81 within the same paper. 12 of 58 marks are spent on data independence, while CO6 receives none.",
+    "evidence_question_ids": [
+      "Q-2026D-1A",
+      "Q-2026D-3A"
+    ],
+    "evidence_topic_ids": [
+      "T-02"
+    ],
+    "suggested_action": "Remove 3(a) and reallocate its 6 marks to CO6."
+  },
+  {
+    "finding_id": "FND-006",
+    "analysis_id": "AN-001",
+    "paper_id": "QP-2026-DRAFT-01",
+    "category": "structural",
+    "severity": "medium",
+    "rule_id": "R-MARKS-TOTAL-MISMATCH",
+    "title": "Marks do not add up: header declares 60, questions total 58",
+    "detail": "A shortfall of 2 marks. Either the header is wrong or a question has been dropped during editing.",
+    "evidence_question_ids": [],
+    "evidence_topic_ids": [],
+    "suggested_action": "Reconcile the header total after the CO6 question is added."
+  },
+  {
+    "finding_id": "FND-007",
+    "analysis_id": "AN-001",
+    "paper_id": "QP-2026-DRAFT-01",
+    "category": "tagging",
+    "severity": "medium",
+    "rule_id": "R-UNTAGGED-QUESTION",
+    "title": "Question 5 carries no course-outcome tag",
+    "detail": "5 marks cannot be attributed to any CO, so they will be excluded from the attainment calculation and the OBE report will not reconcile.",
+    "evidence_question_ids": [
+      "Q-2026D-5"
+    ],
+    "evidence_topic_ids": [],
+    "suggested_action": "Tag to CO5 (recovery and logging, week 13) or rewrite to target CO6."
+  },
+  {
+    "finding_id": "FND-008",
+    "analysis_id": "AN-001",
+    "paper_id": "QP-2026-DRAFT-01",
+    "category": "co_coverage",
+    "severity": "high",
+    "rule_id": "R-CO-UNDERWEIGHT",
+    "title": "CO5 is assessed at 8.6% against a course weight of 15%",
+    "detail": "The only CO5 question, 4(b), is a 5-mark recall item at Bloom L2 whereas CO5 targets L5 (Evaluate). The CO is nominally covered but not at the intended cognitive level.",
+    "evidence_question_ids": [
+      "Q-2026D-4B"
+    ],
+    "evidence_topic_ids": [
+      "T-11",
+      "T-12",
+      "T-13"
+    ],
+    "suggested_action": "Raise 4(b) to an evaluation of a concurrency-control scenario and increase it to 8-10 marks."
+  },
+  {
+    "finding_id": "FND-009",
+    "analysis_id": "AN-001",
+    "paper_id": "QP-2026-DRAFT-01",
+    "category": "co_coverage",
+    "severity": "medium",
+    "rule_id": "R-CO-OVERWEIGHT",
+    "title": "CO1 receives 31% of the paper against a course weight of 15%",
+    "detail": "Three questions target CO1, two of which overlap in content.",
+    "evidence_question_ids": [
+      "Q-2026D-1A",
+      "Q-2026D-1B",
+      "Q-2026D-3A"
+    ],
+    "evidence_topic_ids": [],
+    "suggested_action": "Reduce CO1 to roughly 9-12 marks."
+  },
+  {
+    "finding_id": "FND-010",
+    "analysis_id": "AN-001",
+    "paper_id": "QP-2026-DRAFT-01",
+    "category": "structural",
+    "severity": "medium",
+    "rule_id": "R-TIME-FEASIBILITY",
+    "title": "Estimated answering time is 152 minutes against a 180-minute paper",
+    "detail": "Comfortable, but the two SQL questions and the normalisation question together account for 84 minutes, and all three sit in the second half of the paper.",
+    "evidence_question_ids": [
+      "Q-2026D-2B",
+      "Q-2026D-3B",
+      "Q-2026D-4A"
+    ],
+    "evidence_topic_ids": [],
+    "suggested_action": "Redistribute so that the heaviest computation is not concentrated at the end."
+  },
+  {
+    "finding_id": "FND-011",
+    "analysis_id": "AN-001",
+    "paper_id": "QP-2026-DRAFT-01",
+    "category": "coverage",
+    "severity": "low",
+    "rule_id": "R-TOPIC-UNTESTED",
+    "title": "Six taught topics are not assessed",
+    "detail": "Weeks 3, 5, 7, 10, 12 and 14 contribute no marks. Weeks 12 and 14 matter most because they carry CO5 and CO6.",
+    "evidence_question_ids": [],
+    "evidence_topic_ids": [
+      "T-03",
+      "T-05",
+      "T-07",
+      "T-10",
+      "T-12",
+      "T-14"
+    ],
+    "suggested_action": "Cover week 14 through the proposed CO6 question and week 12 through the revised 4(b)."
+  }
+]

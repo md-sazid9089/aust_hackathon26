@@ -1,0 +1,74 @@
+[
+  {
+    "script_id": "ANS-01",
+    "student_id": "S-004",
+    "student_name": "Tasnim Akter",
+    "question_id": "Q-2025F-6",
+    "rubric_id": "RUB-001",
+    "paper_id": "QP-2025-FIN-01",
+    "answer_text": "Update anomaly: if the title of CSE 3103 changes it must be edited in every row for that course. Insertion anomaly: a newly announced course with no enrolled student cannot be stored because student_id is part of the key. Deletion anomaly: removing the last enrolment for a course erases the course title and instructor. FDs: student_id, course_code -> grade; course_code -> course_title; course_code -> instructor. The relation is in 2NF but course_code -> course_title is a transitive dependency on a non-prime attribute, so it violates 3NF. Decomposition: Course(course_code, course_title, instructor) and Enrollment(student_id, course_code, grade) with course_code as a foreign key. The common attribute course_code is a key of Course, therefore the join is lossless, and both FDs are preserved.",
+    "word_count": 119,
+    "is_typed": true,
+    "submitted_at": "2025-06-02T13:40:00+06:00"
+  },
+  {
+    "script_id": "ANS-02",
+    "student_id": "S-011",
+    "student_name": "Zahid Hasan",
+    "question_id": "Q-2025F-6",
+    "rubric_id": "RUB-001",
+    "paper_id": "QP-2025-FIN-01",
+    "answer_text": "There are update and deletion anomalies. If a course title changes we have to update many rows, and deleting a student may delete course information. FDs are course_code -> course_title and course_code -> instructor, and student_id with course_code gives grade. So we break it into two tables, one for courses and one for enrolments. This removes the repetition.",
+    "word_count": 58,
+    "is_typed": true,
+    "submitted_at": "2025-06-02T13:40:00+06:00"
+  },
+  {
+    "script_id": "ANS-03",
+    "student_id": "S-017",
+    "student_name": "Rifat Sarker",
+    "question_id": "Q-2025F-6",
+    "rubric_id": "RUB-001",
+    "paper_id": "QP-2025-FIN-01",
+    "answer_text": "FDs: {student_id, course_code} -> grade; course_code -> course_title, instructor. Candidate key is {student_id, course_code}. Transitive dependency exists, so decompose: R1(course_code, course_title, instructor), R2(student_id, course_code, grade). Both are in 3NF.",
+    "word_count": 29,
+    "is_typed": true,
+    "submitted_at": "2025-06-02T13:40:00+06:00"
+  },
+  {
+    "script_id": "ANS-04",
+    "student_id": "S-023",
+    "student_name": "Adnan Bhuiyan",
+    "question_id": "Q-2025F-6",
+    "rubric_id": "RUB-001",
+    "paper_id": "QP-2025-FIN-01",
+    "answer_text": "The table has redundancy because the course title repeats. Functional dependency means one attribute determines another. Here course_code determines course_title. We should make separate tables for course and student so that data is not repeated. Then it will be normalised.",
+    "word_count": 40,
+    "is_typed": true,
+    "submitted_at": "2025-06-02T13:40:00+06:00"
+  },
+  {
+    "script_id": "ANS-05",
+    "student_id": "S-026",
+    "student_name": "Jarin Nahar",
+    "question_id": "Q-2025F-6",
+    "rubric_id": "RUB-001",
+    "paper_id": "QP-2025-FIN-01",
+    "answer_text": "Anomalies: update (title repeated per row), insertion (cannot record a course before anyone enrols), deletion (last enrolment removal loses the course). FDs: course_code -> course_title; course_code -> instructor; {student_id, course_code} -> grade. Rather than one course table I decompose into three: Course(course_code, course_title), Teaching(course_code, instructor) and Enrollment(student_id, course_code, grade). Every relation is in 3NF, all joins are lossless because course_code is a key in both Course and Teaching, and all dependencies are preserved. Splitting instructor out also allows the schema to be extended to multiple instructors per course later.",
+    "word_count": 89,
+    "is_typed": true,
+    "submitted_at": "2025-06-02T13:40:00+06:00"
+  },
+  {
+    "script_id": "ANS-06",
+    "student_id": "S-029",
+    "student_name": "Sifat Kabir",
+    "question_id": "Q-2025F-6",
+    "rubric_id": "RUB-001",
+    "paper_id": "QP-2025-FIN-01",
+    "answer_text": "Normalisation removes redundancy from a table. 1NF means atomic values, 2NF removes partial dependency and 3NF removes transitive dependency. The given table should be converted to 3NF by making separate tables.",
+    "word_count": 31,
+    "is_typed": true,
+    "submitted_at": "2025-06-02T13:40:00+06:00"
+  }
+]

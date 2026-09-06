@@ -1,0 +1,70 @@
+[
+  {
+    "proposal_id": "PROP-001",
+    "code": "CSE 4109",
+    "title": "Data Engineering and Analytics",
+    "proposed_by": "F-004",
+    "submitted_at": "2026-09-06T09:30:00+06:00",
+    "program_id": "PROG-BSC-CSE",
+    "level": 4,
+    "term": 2,
+    "credit_hours": 3.0,
+    "contact_hours_per_week": 3,
+    "declared_prerequisites": [],
+    "rationale": "Industry demand for graduates who can build and operate analytical data pipelines.",
+    "topic_keywords": [
+      "relational review",
+      "data modelling for analytics",
+      "etl",
+      "data warehousing",
+      "star schema",
+      "olap",
+      "distributed storage",
+      "nosql stores",
+      "batch processing",
+      "spark",
+      "data quality",
+      "dashboards",
+      "stream processing",
+      "feature engineering",
+      "distributed databases",
+      "query optimisation",
+      "sharding"
+    ],
+    "proposed_cos": [
+      {
+        "code": "CO1",
+        "statement": "Explain the architecture of modern analytical data platforms.",
+        "target_bloom_id": "L2",
+        "po_ids": [
+          "PO1"
+        ]
+      },
+      {
+        "code": "CO2",
+        "statement": "Design dimensional models and build ETL pipelines for a given analytical requirement.",
+        "target_bloom_id": "L3",
+        "po_ids": [
+          "PO3"
+        ]
+      },
+      {
+        "code": "CO3",
+        "statement": "Apply batch and stream processing frameworks to transform large datasets.",
+        "target_bloom_id": "L3",
+        "po_ids": [
+          "PO5"
+        ]
+      },
+      {
+        "code": "CO4",
+        "statement": "Describe common data quality issues in analytical pipelines.",
+        "target_bloom_id": "L2",
+        "po_ids": []
+      }
+    ],
+    "assessment_plan_supplied": false,
+    "status": "under_review",
+    "note": "Seed proposal. Standards violations and overlaps are intentional."
+  }
+]

@@ -1,0 +1,209 @@
+[
+  {
+    "rule_id": "R-CO-NOT-ASSESSED",
+    "scope": "paper",
+    "default_severity": "critical",
+    "description": "A course outcome receives zero marks.",
+    "evaluation": "deterministic",
+    "is_enabled": true,
+    "policy_id": "POL-AUST-CSE-01"
+  },
+  {
+    "rule_id": "R-CO-UNDERWEIGHT",
+    "scope": "paper",
+    "default_severity": "high",
+    "description": "A course outcome receives less than 70% of its intended weight.",
+    "evaluation": "deterministic",
+    "is_enabled": true,
+    "policy_id": "POL-AUST-CSE-01"
+  },
+  {
+    "rule_id": "R-CO-OVERWEIGHT",
+    "scope": "paper",
+    "default_severity": "medium",
+    "description": "A course outcome receives more than 150% of its intended weight.",
+    "evaluation": "deterministic",
+    "is_enabled": true,
+    "policy_id": "POL-AUST-CSE-01"
+  },
+  {
+    "rule_id": "R-BLOOM-LOWER-EXCESS",
+    "scope": "paper",
+    "default_severity": "high",
+    "description": "Lower-order marks exceed the departmental cap.",
+    "evaluation": "deterministic",
+    "is_enabled": true,
+    "policy_id": "POL-AUST-CSE-01"
+  },
+  {
+    "rule_id": "R-BLOOM-HIGHER-SHORT",
+    "scope": "paper",
+    "default_severity": "high",
+    "description": "Higher-order marks fall below the departmental floor.",
+    "evaluation": "deterministic",
+    "is_enabled": true,
+    "policy_id": "POL-AUST-CSE-01"
+  },
+  {
+    "rule_id": "R-BLOOM-MISMATCH",
+    "scope": "paper",
+    "default_severity": "medium",
+    "description": "A question sits below the Bloom level its outcome targets.",
+    "evaluation": "hybrid",
+    "is_enabled": true,
+    "policy_id": "POL-AUST-CSE-01"
+  },
+  {
+    "rule_id": "R-DUP-CROSS-PAPER",
+    "scope": "paper",
+    "default_severity": "high",
+    "description": "Similarity to a past paper exceeds the threshold.",
+    "evaluation": "hybrid",
+    "is_enabled": true,
+    "policy_id": "POL-AUST-CSE-01"
+  },
+  {
+    "rule_id": "R-DUP-INTRA-PAPER",
+    "scope": "paper",
+    "default_severity": "high",
+    "description": "Two questions in the same paper assess the same concept.",
+    "evaluation": "hybrid",
+    "is_enabled": true,
+    "policy_id": "POL-AUST-CSE-01"
+  },
+  {
+    "rule_id": "R-MARKS-TOTAL-MISMATCH",
+    "scope": "paper",
+    "default_severity": "medium",
+    "description": "Declared total does not equal the sum of question marks.",
+    "evaluation": "deterministic",
+    "is_enabled": true,
+    "policy_id": "POL-AUST-CSE-01"
+  },
+  {
+    "rule_id": "R-UNTAGGED-QUESTION",
+    "scope": "paper",
+    "default_severity": "medium",
+    "description": "A question carries no outcome tag.",
+    "evaluation": "deterministic",
+    "is_enabled": true,
+    "policy_id": "POL-AUST-CSE-01"
+  },
+  {
+    "rule_id": "R-TIME-FEASIBILITY",
+    "scope": "paper",
+    "default_severity": "medium",
+    "description": "Estimated answering time exceeds the scheduled duration.",
+    "evaluation": "hybrid",
+    "is_enabled": true,
+    "policy_id": "POL-AUST-CSE-01"
+  },
+  {
+    "rule_id": "R-TOPIC-UNTESTED",
+    "scope": "paper",
+    "default_severity": "low",
+    "description": "A taught topic is not assessed anywhere.",
+    "evaluation": "deterministic",
+    "is_enabled": true,
+    "policy_id": "POL-AUST-CSE-01"
+  },
+  {
+    "rule_id": "R-ITEM-POOR-DISCRIMINATION",
+    "scope": "item",
+    "default_severity": "medium",
+    "description": "Discrimination index below 0.20.",
+    "evaluation": "deterministic",
+    "is_enabled": true,
+    "policy_id": "POL-AUST-CSE-01"
+  },
+  {
+    "rule_id": "R-ITEM-TOO-EASY",
+    "scope": "item",
+    "default_severity": "low",
+    "description": "Facility index above 0.85.",
+    "evaluation": "deterministic",
+    "is_enabled": true,
+    "policy_id": "POL-AUST-CSE-01"
+  },
+  {
+    "rule_id": "R-CO-NOT-ATTAINED",
+    "scope": "attainment",
+    "default_severity": "high",
+    "description": "Class attainment below the threshold.",
+    "evaluation": "deterministic",
+    "is_enabled": true,
+    "policy_id": "POL-AUST-CSE-01"
+  },
+  {
+    "rule_id": "R-CO-SYSTEMIC",
+    "scope": "attainment",
+    "default_severity": "critical",
+    "description": "An outcome missed the threshold in consecutive sessions.",
+    "evaluation": "deterministic",
+    "is_enabled": true,
+    "policy_id": "POL-AUST-CSE-01"
+  },
+  {
+    "rule_id": "R-GRADER-DIVERGENCE",
+    "scope": "grading",
+    "default_severity": "high",
+    "description": "Two markers differ beyond the departmental tolerance.",
+    "evaluation": "deterministic",
+    "is_enabled": true,
+    "policy_id": "POL-AUST-CSE-01"
+  },
+  {
+    "rule_id": "R-RUBRIC-AMBIGUITY",
+    "scope": "grading",
+    "default_severity": "high",
+    "description": "Divergences cluster on one criterion, indicating a rubric defect.",
+    "evaluation": "hybrid",
+    "is_enabled": true,
+    "policy_id": "POL-AUST-CSE-01"
+  },
+  {
+    "rule_id": "R-STD-OVERLAP",
+    "scope": "curriculum",
+    "default_severity": "critical",
+    "description": "Topic overlap with an existing course exceeds the permitted limit.",
+    "evaluation": "deterministic",
+    "is_enabled": true,
+    "policy_id": "POL-AUST-CSE-01"
+  },
+  {
+    "rule_id": "R-STD-UNDECLARED-PREREQ",
+    "scope": "curriculum",
+    "default_severity": "high",
+    "description": "Topics assume a course that is not declared as a prerequisite.",
+    "evaluation": "hybrid",
+    "is_enabled": true,
+    "policy_id": "POL-AUST-CSE-01"
+  },
+  {
+    "rule_id": "R-STD-CO-PO-UNMAPPED",
+    "scope": "curriculum",
+    "default_severity": "critical",
+    "description": "An outcome maps to no programme outcome.",
+    "evaluation": "deterministic",
+    "is_enabled": true,
+    "policy_id": "POL-AUST-CSE-01"
+  },
+  {
+    "rule_id": "R-STD-NO-HIGHER-CO",
+    "scope": "curriculum",
+    "default_severity": "high",
+    "description": "A final-year course defines no outcome above Bloom level 4.",
+    "evaluation": "deterministic",
+    "is_enabled": true,
+    "policy_id": "POL-AUST-CSE-01"
+  },
+  {
+    "rule_id": "R-STD-PO-UNCOVERED",
+    "scope": "curriculum",
+    "default_severity": "medium",
+    "description": "A programme outcome is addressed by no course.",
+    "evaluation": "deterministic",
+    "is_enabled": true,
+    "policy_id": "POL-AUST-CSE-01"
+  }
+]

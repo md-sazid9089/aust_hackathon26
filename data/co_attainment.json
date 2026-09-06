@@ -1,0 +1,141 @@
+[
+  {
+    "attainment_id": "ATT-CO1",
+    "course_id": "C-CSE3103",
+    "offering_id": "OFF-2025-SP",
+    "paper_id": "QP-2025-FIN-01",
+    "co_id": "CO1",
+    "question_ids": [
+      "Q-2025F-1A"
+    ],
+    "max_marks": 5,
+    "students_evaluated": 30,
+    "students_attained": 30,
+    "class_attainment_percent": 100.0,
+    "class_average_percent": 85.7,
+    "median_percent": 85.0,
+    "std_dev": 10.5,
+    "threshold_student_percent": 60,
+    "threshold_class_percent": 60,
+    "attainment_level": 3,
+    "status": "attained",
+    "severity": "none",
+    "is_weak": false
+  },
+  {
+    "attainment_id": "ATT-CO2",
+    "course_id": "C-CSE3103",
+    "offering_id": "OFF-2025-SP",
+    "paper_id": "QP-2025-FIN-01",
+    "co_id": "CO2",
+    "question_ids": [
+      "Q-2025F-2"
+    ],
+    "max_marks": 10,
+    "students_evaluated": 30,
+    "students_attained": 21,
+    "class_attainment_percent": 70.0,
+    "class_average_percent": 68.8,
+    "median_percent": 75.0,
+    "std_dev": 20.5,
+    "threshold_student_percent": 60,
+    "threshold_class_percent": 60,
+    "attainment_level": 3,
+    "status": "attained",
+    "severity": "none",
+    "is_weak": false
+  },
+  {
+    "attainment_id": "ATT-CO3",
+    "course_id": "C-CSE3103",
+    "offering_id": "OFF-2025-SP",
+    "paper_id": "QP-2025-FIN-01",
+    "co_id": "CO3",
+    "question_ids": [
+      "Q-2025F-1B"
+    ],
+    "max_marks": 5,
+    "students_evaluated": 30,
+    "students_attained": 24,
+    "class_attainment_percent": 80.0,
+    "class_average_percent": 73.3,
+    "median_percent": 70.0,
+    "std_dev": 18.3,
+    "threshold_student_percent": 60,
+    "threshold_class_percent": 60,
+    "attainment_level": 3,
+    "status": "attained",
+    "severity": "none",
+    "is_weak": false
+  },
+  {
+    "attainment_id": "ATT-CO4",
+    "course_id": "C-CSE3103",
+    "offering_id": "OFF-2025-SP",
+    "paper_id": "QP-2025-FIN-01",
+    "co_id": "CO4",
+    "question_ids": [
+      "Q-2025F-3",
+      "Q-2025F-6"
+    ],
+    "max_marks": 20,
+    "students_evaluated": 30,
+    "students_attained": 12,
+    "class_attainment_percent": 40.0,
+    "class_average_percent": 53.0,
+    "median_percent": 53.8,
+    "std_dev": 14.7,
+    "threshold_student_percent": 60,
+    "threshold_class_percent": 60,
+    "attainment_level": 0,
+    "status": "not_attained",
+    "severity": "critical",
+    "is_weak": true
+  },
+  {
+    "attainment_id": "ATT-CO5",
+    "course_id": "C-CSE3103",
+    "offering_id": "OFF-2025-SP",
+    "paper_id": "QP-2025-FIN-01",
+    "co_id": "CO5",
+    "question_ids": [
+      "Q-2025F-4"
+    ],
+    "max_marks": 10,
+    "students_evaluated": 30,
+    "students_attained": 12,
+    "class_attainment_percent": 40.0,
+    "class_average_percent": 56.0,
+    "median_percent": 55.0,
+    "std_dev": 12.0,
+    "threshold_student_percent": 60,
+    "threshold_class_percent": 60,
+    "attainment_level": 0,
+    "status": "not_attained",
+    "severity": "critical",
+    "is_weak": true
+  },
+  {
+    "attainment_id": "ATT-CO6",
+    "course_id": "C-CSE3103",
+    "offering_id": "OFF-2025-SP",
+    "paper_id": "QP-2025-FIN-01",
+    "co_id": "CO6",
+    "question_ids": [
+      "Q-2025F-5"
+    ],
+    "max_marks": 10,
+    "students_evaluated": 30,
+    "students_attained": 19,
+    "class_attainment_percent": 63.3,
+    "class_average_percent": 68.3,
+    "median_percent": 70.0,
+    "std_dev": 21.5,
+    "threshold_student_percent": 60,
+    "threshold_class_percent": 60,
+    "attainment_level": 2,
+    "status": "attained",
+    "severity": "none",
+    "is_weak": false
+  }
+]

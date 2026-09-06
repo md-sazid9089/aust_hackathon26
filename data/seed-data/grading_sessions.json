@@ -1,0 +1,18 @@
+[
+  {
+    "session_id": "GS-001",
+    "rubric_id": "RUB-001",
+    "grader_id": "F-002",
+    "graded_at": "2025-06-09T10:00:00+06:00",
+    "scripts_graded": 6,
+    "mode": "blind_first_marking"
+  },
+  {
+    "session_id": "GS-002",
+    "rubric_id": "RUB-001",
+    "grader_id": "F-003",
+    "graded_at": "2025-06-09T15:30:00+06:00",
+    "scripts_graded": 6,
+    "mode": "blind_second_marking"
+  }
+]

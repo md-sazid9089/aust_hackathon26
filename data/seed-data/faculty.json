@@ -1,0 +1,57 @@
+[
+  {
+    "faculty_id": "F-001",
+    "full_name": "Dr. Rezwana Karim",
+    "short_name": "RK",
+    "designation": "Professor",
+    "email": "rezwana.cse@aust.edu",
+    "department_id": "DEPT-CSE",
+    "role": "course_coordinator",
+    "is_active": true,
+    "joined_on": "2009-03-01"
+  },
+  {
+    "faculty_id": "F-002",
+    "full_name": "Dr. Nusrat Jahan",
+    "short_name": "NJ",
+    "designation": "Associate Professor",
+    "email": "nusrat.cse@aust.edu",
+    "department_id": "DEPT-CSE",
+    "role": "examiner",
+    "is_active": true,
+    "joined_on": "2013-08-15"
+  },
+  {
+    "faculty_id": "F-003",
+    "full_name": "Md. Tanvir Hasan",
+    "short_name": "TH",
+    "designation": "Assistant Professor",
+    "email": "tanvir.cse@aust.edu",
+    "department_id": "DEPT-CSE",
+    "role": "examiner",
+    "is_active": true,
+    "joined_on": "2017-01-10"
+  },
+  {
+    "faculty_id": "F-004",
+    "full_name": "Sadia Afrin",
+    "short_name": "SA",
+    "designation": "Lecturer",
+    "email": "sadia.cse@aust.edu",
+    "department_id": "DEPT-CSE",
+    "role": "course_teacher",
+    "is_active": true,
+    "joined_on": "2022-09-01"
+  },
+  {
+    "faculty_id": "F-005",
+    "full_name": "Dr. Kamrul Islam",
+    "short_name": "KI",
+    "designation": "Professor",
+    "email": "kamrul.cse@aust.edu",
+    "department_id": "DEPT-CSE",
+    "role": "obe_committee_chair",
+    "is_active": true,
+    "joined_on": "2005-06-20"
+  }
+]

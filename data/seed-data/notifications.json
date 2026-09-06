@@ -1,0 +1,52 @@
+[
+  {
+    "notification_id": "NT-001",
+    "recipient_id": "F-004",
+    "created_at": "2026-09-06T09:17:25+06:00",
+    "type": "analysis_ready",
+    "entity_id": "AN-001",
+    "severity": "high",
+    "message": "Draft final for CSE 3103 has 2 critical findings. CO6 is not assessed.",
+    "is_read": true
+  },
+  {
+    "notification_id": "NT-002",
+    "recipient_id": "F-002",
+    "created_at": "2026-09-06T09:19:45+06:00",
+    "type": "moderation_requested",
+    "entity_id": "QP-2026-DRAFT-01",
+    "severity": "normal",
+    "message": "Revised draft is ready for moderation. Quality score improved from 54 to 82.",
+    "is_read": false
+  },
+  {
+    "notification_id": "NT-003",
+    "recipient_id": "F-005",
+    "created_at": "2026-09-06T09:31:15+06:00",
+    "type": "standards_violation",
+    "entity_id": "PROP-001",
+    "severity": "critical",
+    "message": "Proposal CSE 4109 overlaps CSE 4101 beyond the permitted limit.",
+    "is_read": false
+  },
+  {
+    "notification_id": "NT-004",
+    "recipient_id": "F-001",
+    "created_at": "2026-09-06T09:24:10+06:00",
+    "type": "grading_divergence",
+    "entity_id": "GCR-001",
+    "severity": "high",
+    "message": "2 of 6 double-marked scripts diverge beyond the departmental threshold.",
+    "is_read": false
+  },
+  {
+    "notification_id": "NT-005",
+    "recipient_id": "F-004",
+    "created_at": "2026-09-06T09:21:45+06:00",
+    "type": "attainment_alert",
+    "entity_id": "OFF-2025-SP",
+    "severity": "high",
+    "message": "CO4 has now missed the attainment threshold in two consecutive sessions.",
+    "is_read": false
+  }
+]

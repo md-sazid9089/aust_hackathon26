@@ -1,0 +1,66 @@
+[
+  {
+    "comment_id": "RCM-001",
+    "thread_id": "TH-001",
+    "author_id": "F-002",
+    "posted_at": "2026-09-06T10:02:00+06:00",
+    "body": "Indexing and query optimisation were taught in weeks 13 and 14 but appear nowhere in the paper. Please add a question.",
+    "references_id": null
+  },
+  {
+    "comment_id": "RCM-002",
+    "thread_id": "TH-001",
+    "author_id": "F-004",
+    "posted_at": "2026-09-06T10:14:00+06:00",
+    "body": "Agreed. The tool suggested an index-selection question; I have taken it with the row counts reduced.",
+    "references_id": "REC-001"
+  },
+  {
+    "comment_id": "RCM-003",
+    "thread_id": "TH-001",
+    "author_id": "F-002",
+    "posted_at": "2026-09-06T10:22:00+06:00",
+    "body": "Looks right. Marking as resolved.",
+    "references_id": null
+  },
+  {
+    "comment_id": "RCM-004",
+    "thread_id": "TH-002",
+    "author_id": "F-005",
+    "posted_at": "2026-09-06T10:05:00+06:00",
+    "body": "Question 2(b) is the 2024 midterm question almost word for word. It will be in circulation.",
+    "references_id": null
+  },
+  {
+    "comment_id": "RCM-005",
+    "thread_id": "TH-002",
+    "author_id": "F-004",
+    "posted_at": "2026-09-06T10:18:00+06:00",
+    "body": "I had not checked the older papers. Replaced with the median-salary variant.",
+    "references_id": "REC-002"
+  },
+  {
+    "comment_id": "RCM-006",
+    "thread_id": "TH-002",
+    "author_id": "F-005",
+    "posted_at": "2026-09-06T10:30:00+06:00",
+    "body": "Better. Resolved.",
+    "references_id": null
+  },
+  {
+    "comment_id": "RCM-007",
+    "thread_id": "TH-003",
+    "author_id": "F-005",
+    "posted_at": "2026-09-06T11:10:00+06:00",
+    "body": "Half of this proposal is already in CSE 4101. Either narrow the scope or bring a merger proposal to the committee.",
+    "references_id": "PFND-001"
+  },
+  {
+    "comment_id": "RCM-008",
+    "thread_id": "TH-003",
+    "author_id": "F-004",
+    "posted_at": "2026-09-06T11:35:00+06:00",
+    "body": "I will drop the warehousing block and expand streaming and data quality. Revised version to follow.",
+    "references_id": null
+  }
+]

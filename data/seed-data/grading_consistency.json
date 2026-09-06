@@ -1,0 +1,52 @@
+[
+  {
+    "report_id": "GCR-001",
+    "rubric_id": "RUB-001",
+    "question_id": "Q-2025F-6",
+    "generated_at": "2026-09-06T09:24:05+06:00",
+    "model": "claude-sonnet-4-6",
+    "scripts_double_marked": 6,
+    "mean_absolute_difference": 2.83,
+    "max_difference": 7,
+    "pearson_r": 0.71,
+    "krippendorff_alpha": 0.58,
+    "agreement_band": "moderate",
+    "divergent_script_ids": [
+      "ANS-03",
+      "ANS-05"
+    ],
+    "criterion_level_disagreement": [
+      {
+        "criterion_id": "RC-1",
+        "code": "R1",
+        "mean_abs_diff": 0.67,
+        "risk": "low"
+      },
+      {
+        "criterion_id": "RC-2",
+        "code": "R2",
+        "mean_abs_diff": 0.83,
+        "risk": "low"
+      },
+      {
+        "criterion_id": "RC-3",
+        "code": "R3",
+        "mean_abs_diff": 1.67,
+        "risk": "high",
+        "note": "Largest single source of disagreement. Triggered by answers that reach a correct 3NF result by an unlisted route."
+      },
+      {
+        "criterion_id": "RC-4",
+        "code": "R4",
+        "mean_abs_diff": 0.33,
+        "risk": "low"
+      }
+    ],
+    "summary": "Two of six double-marked scripts diverge beyond the four-mark departmental threshold. Both divergences originate in criterion R3, and in both cases the students reached a defensible 3NF result by a route the rubric does not enumerate.",
+    "rubric_repair_suggestions": [
+      "Add to R3: an alternative decomposition that is lossless, dependency preserving and in 3NF receives full marks.",
+      "Add to R4: a correct final schema with no justification is capped at 1 of 5 rather than 0, so that R3 and R4 are not double-penalised.",
+      "Add a worked exemplar answer at the 6-mark band for R3 to anchor both markers."
+    ]
+  }
+]

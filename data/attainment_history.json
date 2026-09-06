@@ -1,0 +1,140 @@
+[
+  {
+    "history_id": "HIS-CO1",
+    "course_id": "C-CSE3103",
+    "co_id": "CO1",
+    "series": [
+      {
+        "session": "Spring 2024",
+        "offering_id": "OFF-2024-SP",
+        "class_attainment_percent": 93.3,
+        "status": "attained"
+      },
+      {
+        "session": "Spring 2025",
+        "offering_id": "OFF-2025-SP",
+        "class_attainment_percent": 100.0,
+        "status": "attained"
+      }
+    ],
+    "trend": "improving",
+    "delta": 6.7,
+    "consecutive_failures": 0,
+    "is_systemic": false
+  },
+  {
+    "history_id": "HIS-CO2",
+    "course_id": "C-CSE3103",
+    "co_id": "CO2",
+    "series": [
+      {
+        "session": "Spring 2024",
+        "offering_id": "OFF-2024-SP",
+        "class_attainment_percent": 73.3,
+        "status": "attained"
+      },
+      {
+        "session": "Spring 2025",
+        "offering_id": "OFF-2025-SP",
+        "class_attainment_percent": 70.0,
+        "status": "attained"
+      }
+    ],
+    "trend": "declining",
+    "delta": -3.3,
+    "consecutive_failures": 0,
+    "is_systemic": false
+  },
+  {
+    "history_id": "HIS-CO3",
+    "course_id": "C-CSE3103",
+    "co_id": "CO3",
+    "series": [
+      {
+        "session": "Spring 2024",
+        "offering_id": "OFF-2024-SP",
+        "class_attainment_percent": 80.0,
+        "status": "attained"
+      },
+      {
+        "session": "Spring 2025",
+        "offering_id": "OFF-2025-SP",
+        "class_attainment_percent": 80.0,
+        "status": "attained"
+      }
+    ],
+    "trend": "stable",
+    "delta": 0.0,
+    "consecutive_failures": 0,
+    "is_systemic": false
+  },
+  {
+    "history_id": "HIS-CO4",
+    "course_id": "C-CSE3103",
+    "co_id": "CO4",
+    "series": [
+      {
+        "session": "Spring 2024",
+        "offering_id": "OFF-2024-SP",
+        "class_attainment_percent": 44.0,
+        "status": "not_attained"
+      },
+      {
+        "session": "Spring 2025",
+        "offering_id": "OFF-2025-SP",
+        "class_attainment_percent": 40.0,
+        "status": "not_attained"
+      }
+    ],
+    "trend": "declining",
+    "delta": -4.0,
+    "consecutive_failures": 2,
+    "is_systemic": true
+  },
+  {
+    "history_id": "HIS-CO5",
+    "course_id": "C-CSE3103",
+    "co_id": "CO5",
+    "series": [
+      {
+        "session": "Spring 2024",
+        "offering_id": "OFF-2024-SP",
+        "class_attainment_percent": 56.7,
+        "status": "not_attained"
+      },
+      {
+        "session": "Spring 2025",
+        "offering_id": "OFF-2025-SP",
+        "class_attainment_percent": 40.0,
+        "status": "not_attained"
+      }
+    ],
+    "trend": "declining",
+    "delta": -16.7,
+    "consecutive_failures": 2,
+    "is_systemic": true
+  },
+  {
+    "history_id": "HIS-CO6",
+    "course_id": "C-CSE3103",
+    "co_id": "CO6",
+    "series": [
+      {
+        "session": "Spring 2024",
+        "offering_id": "OFF-2024-SP",
+        "class_attainment_percent": 58.0,
+        "status": "not_attained"
+      },
+      {
+        "session": "Spring 2025",
+        "offering_id": "OFF-2025-SP",
+        "class_attainment_percent": 63.3,
+        "status": "attained"
+      }
+    ],
+    "trend": "improving",
+    "delta": 5.3,
+    "consecutive_failures": 0,
+    "is_systemic": false
+  }
+]

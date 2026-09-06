@@ -1,0 +1,141 @@
+[
+  {
+    "po_id": "PO1",
+    "program_id": "PROG-BSC-CSE",
+    "supporting_course_ids": [
+      "CUR-1101",
+      "CUR-2103",
+      "CUR-3103"
+    ],
+    "course_count": 3,
+    "status": "covered",
+    "severity": "none",
+    "note": null
+  },
+  {
+    "po_id": "PO2",
+    "program_id": "PROG-BSC-CSE",
+    "supporting_course_ids": [
+      "CUR-2103",
+      "CUR-3103",
+      "CUR-3101"
+    ],
+    "course_count": 3,
+    "status": "covered",
+    "severity": "none",
+    "note": null
+  },
+  {
+    "po_id": "PO3",
+    "program_id": "PROG-BSC-CSE",
+    "supporting_course_ids": [
+      "CUR-3105",
+      "CUR-3103",
+      "CUR-2101"
+    ],
+    "course_count": 3,
+    "status": "covered",
+    "severity": "none",
+    "note": null
+  },
+  {
+    "po_id": "PO4",
+    "program_id": "PROG-BSC-CSE",
+    "supporting_course_ids": [
+      "CUR-4103",
+      "CUR-3203"
+    ],
+    "course_count": 2,
+    "status": "covered",
+    "severity": "none",
+    "note": null
+  },
+  {
+    "po_id": "PO5",
+    "program_id": "PROG-BSC-CSE",
+    "supporting_course_ids": [
+      "CUR-4203",
+      "CUR-4101"
+    ],
+    "course_count": 2,
+    "status": "covered",
+    "severity": "none",
+    "note": null
+  },
+  {
+    "po_id": "PO6",
+    "program_id": "PROG-BSC-CSE",
+    "supporting_course_ids": [
+      "CUR-4105"
+    ],
+    "course_count": 1,
+    "status": "covered",
+    "severity": "medium",
+    "note": null
+  },
+  {
+    "po_id": "PO7",
+    "program_id": "PROG-BSC-CSE",
+    "supporting_course_ids": [],
+    "course_count": 0,
+    "status": "not_covered",
+    "severity": "critical",
+    "note": "No core course addresses environment and sustainability."
+  },
+  {
+    "po_id": "PO8",
+    "program_id": "PROG-BSC-CSE",
+    "supporting_course_ids": [
+      "CUR-4105"
+    ],
+    "course_count": 1,
+    "status": "covered",
+    "severity": "medium",
+    "note": null
+  },
+  {
+    "po_id": "PO9",
+    "program_id": "PROG-BSC-CSE",
+    "supporting_course_ids": [
+      "CUR-3105"
+    ],
+    "course_count": 1,
+    "status": "covered",
+    "severity": "medium",
+    "note": null
+  },
+  {
+    "po_id": "PO10",
+    "program_id": "PROG-BSC-CSE",
+    "supporting_course_ids": [
+      "CUR-3105"
+    ],
+    "course_count": 1,
+    "status": "covered",
+    "severity": "medium",
+    "note": null
+  },
+  {
+    "po_id": "PO11",
+    "program_id": "PROG-BSC-CSE",
+    "supporting_course_ids": [
+      "CUR-3105"
+    ],
+    "course_count": 1,
+    "status": "covered",
+    "severity": "medium",
+    "note": null
+  },
+  {
+    "po_id": "PO12",
+    "program_id": "PROG-BSC-CSE",
+    "supporting_course_ids": [
+      "CUR-3103",
+      "CUR-4103"
+    ],
+    "course_count": 2,
+    "status": "covered",
+    "severity": "none",
+    "note": null
+  }
+]

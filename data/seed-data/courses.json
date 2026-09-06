@@ -1,0 +1,54 @@
+[
+  {
+    "course_id": "C-CSE3103",
+    "code": "CSE 3103",
+    "title": "Database Management Systems",
+    "credit_hours": 3.0,
+    "contact_hours_per_week": 3,
+    "level": 3,
+    "term": 1,
+    "program_id": "PROG-BSC-CSE",
+    "department_id": "DEPT-CSE",
+    "course_type": "theory",
+    "prerequisite_codes": [
+      "CSE 2103"
+    ],
+    "coordinator_id": "F-001",
+    "is_seed_course": true,
+    "catalog_description": "Database concepts and architecture; ER modelling; relational model and algebra; SQL; functional dependency and normalisation; transaction management, concurrency control and recovery; indexing and query optimisation."
+  },
+  {
+    "course_id": "C-CSE3104",
+    "code": "CSE 3104",
+    "title": "Database Management Systems Lab",
+    "credit_hours": 1.5,
+    "contact_hours_per_week": 3,
+    "level": 3,
+    "term": 1,
+    "program_id": "PROG-BSC-CSE",
+    "department_id": "DEPT-CSE",
+    "course_type": "lab",
+    "prerequisite_codes": [],
+    "coordinator_id": "F-004",
+    "is_seed_course": false,
+    "catalog_description": "Laboratory work based on CSE 3103."
+  },
+  {
+    "course_id": "C-CSE4101",
+    "code": "CSE 4101",
+    "title": "Advanced Database Systems",
+    "credit_hours": 3.0,
+    "contact_hours_per_week": 3,
+    "level": 4,
+    "term": 1,
+    "program_id": "PROG-BSC-CSE",
+    "department_id": "DEPT-CSE",
+    "course_type": "theory",
+    "prerequisite_codes": [
+      "CSE 3103"
+    ],
+    "coordinator_id": "F-005",
+    "is_seed_course": false,
+    "catalog_description": "Distributed databases, NoSQL stores, data warehousing, advanced query optimisation."
+  }
+]

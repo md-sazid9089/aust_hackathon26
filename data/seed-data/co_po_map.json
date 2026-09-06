@@ -1,0 +1,100 @@
+[
+  {
+    "map_id": "MAP-001",
+    "co_id": "CO1",
+    "po_id": "PO1",
+    "strength": 3,
+    "strength_label": "High"
+  },
+  {
+    "map_id": "MAP-002",
+    "co_id": "CO1",
+    "po_id": "PO12",
+    "strength": 1,
+    "strength_label": "Low"
+  },
+  {
+    "map_id": "MAP-003",
+    "co_id": "CO2",
+    "po_id": "PO3",
+    "strength": 3,
+    "strength_label": "High"
+  },
+  {
+    "map_id": "MAP-004",
+    "co_id": "CO2",
+    "po_id": "PO1",
+    "strength": 1,
+    "strength_label": "Low"
+  },
+  {
+    "map_id": "MAP-005",
+    "co_id": "CO3",
+    "po_id": "PO1",
+    "strength": 2,
+    "strength_label": "Medium"
+  },
+  {
+    "map_id": "MAP-006",
+    "co_id": "CO3",
+    "po_id": "PO3",
+    "strength": 2,
+    "strength_label": "Medium"
+  },
+  {
+    "map_id": "MAP-007",
+    "co_id": "CO3",
+    "po_id": "PO5",
+    "strength": 1,
+    "strength_label": "Low"
+  },
+  {
+    "map_id": "MAP-008",
+    "co_id": "CO4",
+    "po_id": "PO2",
+    "strength": 3,
+    "strength_label": "High"
+  },
+  {
+    "map_id": "MAP-009",
+    "co_id": "CO4",
+    "po_id": "PO1",
+    "strength": 1,
+    "strength_label": "Low"
+  },
+  {
+    "map_id": "MAP-010",
+    "co_id": "CO5",
+    "po_id": "PO2",
+    "strength": 2,
+    "strength_label": "Medium"
+  },
+  {
+    "map_id": "MAP-011",
+    "co_id": "CO5",
+    "po_id": "PO1",
+    "strength": 1,
+    "strength_label": "Low"
+  },
+  {
+    "map_id": "MAP-012",
+    "co_id": "CO6",
+    "po_id": "PO4",
+    "strength": 2,
+    "strength_label": "Medium"
+  },
+  {
+    "map_id": "MAP-013",
+    "co_id": "CO6",
+    "po_id": "PO2",
+    "strength": 1,
+    "strength_label": "Low"
+  },
+  {
+    "map_id": "MAP-014",
+    "co_id": "CO6",
+    "po_id": "PO5",
+    "strength": 1,
+    "strength_label": "Low"
+  }
+]

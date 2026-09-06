@@ -1,0 +1,47 @@
+[
+  {
+    "preference_id": "FP-001",
+    "faculty_id": "F-004",
+    "default_course_id": "C-CSE3103",
+    "preferred_bloom_mix": {
+      "lower": 30,
+      "middle": 40,
+      "higher": 30
+    },
+    "duplicate_similarity_threshold": 0.8,
+    "lookback_years": 3,
+    "auto_apply_low_risk_recommendations": false,
+    "tone": "concise",
+    "notify_on": [
+      "critical",
+      "high"
+    ],
+    "language": "en",
+    "hidden_finding_categories": [],
+    "favourite_report": "co_coverage_heatmap"
+  },
+  {
+    "preference_id": "FP-002",
+    "faculty_id": "F-002",
+    "default_course_id": "C-CSE3103",
+    "preferred_bloom_mix": {
+      "lower": 25,
+      "middle": 40,
+      "higher": 35
+    },
+    "duplicate_similarity_threshold": 0.75,
+    "lookback_years": 5,
+    "auto_apply_low_risk_recommendations": false,
+    "tone": "detailed",
+    "notify_on": [
+      "critical",
+      "high",
+      "medium"
+    ],
+    "language": "en",
+    "hidden_finding_categories": [
+      "tagging"
+    ],
+    "favourite_report": "item_analysis"
+  }
+]

@@ -1,0 +1,148 @@
+[
+  {
+    "edge_id": "PRE-001",
+    "from_course_id": "CUR-1101",
+    "from_code": "CSE 1101",
+    "to_course_id": "CUR-1203",
+    "to_code": "CSE 1203",
+    "type": "prerequisite",
+    "is_declared": true
+  },
+  {
+    "edge_id": "PRE-002",
+    "from_course_id": "CUR-1101",
+    "from_code": "CSE 1101",
+    "to_course_id": "CUR-2101",
+    "to_code": "CSE 2101",
+    "type": "prerequisite",
+    "is_declared": true
+  },
+  {
+    "edge_id": "PRE-003",
+    "from_course_id": "CUR-1203",
+    "from_code": "CSE 1203",
+    "to_course_id": "CUR-2103",
+    "to_code": "CSE 2103",
+    "type": "prerequisite",
+    "is_declared": true
+  },
+  {
+    "edge_id": "PRE-004",
+    "from_course_id": "CUR-2201",
+    "from_code": "CSE 2201",
+    "to_course_id": "CUR-2203",
+    "to_code": "CSE 2203",
+    "type": "prerequisite",
+    "is_declared": true
+  },
+  {
+    "edge_id": "PRE-005",
+    "from_course_id": "CUR-2203",
+    "from_code": "CSE 2203",
+    "to_course_id": "CUR-3101",
+    "to_code": "CSE 3101",
+    "type": "prerequisite",
+    "is_declared": true
+  },
+  {
+    "edge_id": "PRE-006",
+    "from_course_id": "CUR-1203",
+    "from_code": "CSE 1203",
+    "to_course_id": "CUR-3103",
+    "to_code": "CSE 3103",
+    "type": "prerequisite",
+    "is_declared": true
+  },
+  {
+    "edge_id": "PRE-007",
+    "from_course_id": "CUR-2101",
+    "from_code": "CSE 2101",
+    "to_course_id": "CUR-3105",
+    "to_code": "CSE 3105",
+    "type": "prerequisite",
+    "is_declared": true
+  },
+  {
+    "edge_id": "PRE-008",
+    "from_course_id": "CUR-3101",
+    "from_code": "CSE 3101",
+    "to_course_id": "CUR-3201",
+    "to_code": "CSE 3201",
+    "type": "prerequisite",
+    "is_declared": true
+  },
+  {
+    "edge_id": "PRE-009",
+    "from_course_id": "CUR-2103",
+    "from_code": "CSE 2103",
+    "to_course_id": "CUR-3203",
+    "to_code": "CSE 3203",
+    "type": "prerequisite",
+    "is_declared": true
+  },
+  {
+    "edge_id": "PRE-010",
+    "from_course_id": "CUR-2103",
+    "from_code": "CSE 2103",
+    "to_course_id": "CUR-3205",
+    "to_code": "CSE 3205",
+    "type": "prerequisite",
+    "is_declared": true
+  },
+  {
+    "edge_id": "PRE-011",
+    "from_course_id": "CUR-3103",
+    "from_code": "CSE 3103",
+    "to_course_id": "CUR-4101",
+    "to_code": "CSE 4101",
+    "type": "prerequisite",
+    "is_declared": true
+  },
+  {
+    "edge_id": "PRE-012",
+    "from_course_id": "CUR-3203",
+    "from_code": "CSE 3203",
+    "to_course_id": "CUR-4103",
+    "to_code": "CSE 4103",
+    "type": "prerequisite",
+    "is_declared": true
+  },
+  {
+    "edge_id": "PRE-013",
+    "from_course_id": "CUR-3201",
+    "from_code": "CSE 3201",
+    "to_course_id": "CUR-4105",
+    "to_code": "CSE 4105",
+    "type": "prerequisite",
+    "is_declared": true
+  },
+  {
+    "edge_id": "PRE-014",
+    "from_course_id": "CUR-3201",
+    "from_code": "CSE 3201",
+    "to_course_id": "CUR-4201",
+    "to_code": "CSE 4201",
+    "type": "prerequisite",
+    "is_declared": true
+  },
+  {
+    "edge_id": "PRE-015",
+    "from_course_id": "CUR-4201",
+    "from_code": "CSE 4201",
+    "to_course_id": "CUR-4203",
+    "to_code": "CSE 4203",
+    "type": "prerequisite",
+    "is_declared": true
+  },
+  {
+    "edge_id": "PRE-INF-001",
+    "from_course_id": "CUR-3103",
+    "from_code": "CSE 3103",
+    "to_course_id": "PROP-001",
+    "to_code": "CSE 4109",
+    "type": "inferred_dependency",
+    "is_declared": false,
+    "evidence": "9 of 14 proposal topics assume relational modelling, SQL and schema design taught in CSE 3103.",
+    "confidence": 0.88
+  }
+]

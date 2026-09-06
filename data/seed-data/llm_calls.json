@@ -1,0 +1,62 @@
+[
+  {
+    "call_id": "LLM-001",
+    "run_id": "EXT-RUN-001",
+    "purpose": "question_structuring",
+    "model": "claude-sonnet-4-6",
+    "input_tokens": 3120,
+    "output_tokens": 1440,
+    "latency_ms": 21980,
+    "cached": false,
+    "status": "success",
+    "cost_usd": 0.0312
+  },
+  {
+    "call_id": "LLM-002",
+    "run_id": "AN-001",
+    "purpose": "co_bloom_tagging",
+    "model": "claude-sonnet-4-6",
+    "input_tokens": 2410,
+    "output_tokens": 980,
+    "latency_ms": 9120,
+    "cached": false,
+    "status": "success",
+    "cost_usd": 0.0208
+  },
+  {
+    "call_id": "LLM-003",
+    "run_id": "AN-001",
+    "purpose": "duplicate_verification",
+    "model": "claude-sonnet-4-6",
+    "input_tokens": 1890,
+    "output_tokens": 760,
+    "latency_ms": 7340,
+    "cached": true,
+    "status": "success_cached",
+    "cost_usd": 0.0
+  },
+  {
+    "call_id": "LLM-004",
+    "run_id": "AN-001",
+    "purpose": "recommendation_drafting",
+    "model": "claude-sonnet-4-6",
+    "input_tokens": 2760,
+    "output_tokens": 1310,
+    "latency_ms": 11450,
+    "cached": false,
+    "status": "success",
+    "cost_usd": 0.0287
+  },
+  {
+    "call_id": "LLM-005",
+    "run_id": "GCR-001",
+    "purpose": "divergence_diagnosis",
+    "model": "claude-sonnet-4-6",
+    "input_tokens": 3980,
+    "output_tokens": 1120,
+    "latency_ms": 12870,
+    "cached": true,
+    "status": "success_cached",
+    "cost_usd": 0.0
+  }
+]

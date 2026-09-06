@@ -1,0 +1,45 @@
+{
+  "policy_id": "POL-AUST-CSE-01",
+  "department_id": "DEPT-CSE",
+  "effective_from": "2024-01-01",
+  "co_attainment": {
+    "student_pass_percent": 60,
+    "class_attainment_percent": 60,
+    "levels": [
+      {
+        "level": 3,
+        "min_percent": 70
+      },
+      {
+        "level": 2,
+        "min_percent": 60
+      },
+      {
+        "level": 1,
+        "min_percent": 50
+      },
+      {
+        "level": 0,
+        "min_percent": 0
+      }
+    ]
+  },
+  "paper_rules": {
+    "max_lower_order_percent": 40,
+    "min_higher_order_percent": 30,
+    "min_marks_per_co_percent": 8,
+    "max_marks_per_co_percent": 30,
+    "require_all_cos_assessed": true,
+    "max_intra_paper_similarity": 0.75,
+    "max_cross_paper_similarity": 0.8,
+    "cross_paper_lookback_years": 3,
+    "allow_untagged_questions": false,
+    "marks_total_tolerance": 0
+  },
+  "grading_rules": {
+    "double_marking_enabled": true,
+    "divergence_flag_percent_of_total": 20,
+    "divergence_flag_absolute_marks": 4,
+    "resolution": "third_examiner"
+  }
+}

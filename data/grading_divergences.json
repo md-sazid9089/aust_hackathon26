@@ -1,0 +1,74 @@
+[
+  {
+    "divergence_id": "DIV-001",
+    "report_id": "GCR-001",
+    "script_id": "ANS-03",
+    "student_id": "S-017",
+    "grader1_total": 13,
+    "grader2_total": 6,
+    "difference": 7,
+    "difference_percent": 35.0,
+    "severity": "critical",
+    "primary_criterion_id": "RC-3",
+    "criterion_gaps": [
+      {
+        "criterion_id": "RC-1",
+        "gap": 1
+      },
+      {
+        "criterion_id": "RC-2",
+        "gap": 2
+      },
+      {
+        "criterion_id": "RC-3",
+        "gap": 4
+      },
+      {
+        "criterion_id": "RC-4",
+        "gap": 0
+      }
+    ],
+    "ai_diagnosis": "The script is terse but technically correct: the candidate key, the transitive dependency and both 3NF relations are all right. Grader 1 awarded full marks under R3 for the correct end state. Grader 2 marked down heavily because the anomalies were never named and no working was shown, effectively penalising the same omission twice, once under R1 and again under R3. The rubric does not say whether R3 rewards the result or the reasoning.",
+    "ai_suggested_total": 11.5,
+    "ai_confidence": 0.74,
+    "rule_at_fault": "RC-3 descriptor is silent on unshown working.",
+    "resolution_status": "pending_third_examiner",
+    "resolved_total": null
+  },
+  {
+    "divergence_id": "DIV-002",
+    "report_id": "GCR-001",
+    "script_id": "ANS-05",
+    "student_id": "S-026",
+    "grader1_total": 17,
+    "grader2_total": 11,
+    "difference": 6,
+    "difference_percent": 30.0,
+    "severity": "high",
+    "primary_criterion_id": "RC-3",
+    "criterion_gaps": [
+      {
+        "criterion_id": "RC-1",
+        "gap": 1
+      },
+      {
+        "criterion_id": "RC-2",
+        "gap": 1
+      },
+      {
+        "criterion_id": "RC-3",
+        "gap": 3
+      },
+      {
+        "criterion_id": "RC-4",
+        "gap": 1
+      }
+    ],
+    "ai_diagnosis": "The student decomposed into three relations rather than the two shown in the model answer. The decomposition is lossless, dependency preserving and in 3NF, so it satisfies the stated requirement. Grader 1 accepted it; grader 2 treated any departure from the model answer as an error. This is a rubric gap rather than a marking error: R3 lists a single expected decomposition and gives no instruction for valid alternatives.",
+    "ai_suggested_total": 16.0,
+    "ai_confidence": 0.81,
+    "rule_at_fault": "RC-3 assumes one canonical decomposition.",
+    "resolution_status": "pending_third_examiner",
+    "resolved_total": null
+  }
+]
