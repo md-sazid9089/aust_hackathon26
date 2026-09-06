@@ -1,0 +1,75 @@
+# ---- secrets & local config ----
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+.claude/settings.local.json
+.mcp.local.json
+
+# ---- python ----
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+venv/
+env/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.coverage
+.coverage.*
+htmlcov/
+*.egg-info/
+build/
+*.egg
+
+# ---- local databases & uploaded files ----
+*.db
+*.db-journal
+*.sqlite
+*.sqlite3
+storage/
+uploads/
+tests/.test_storage*/
+tests/.test-*.db
+
+# ---- node / frontend ----
+node_modules/
+dist/
+dist-ssr/
+coverage/
+*.tsbuildinfo
+.vite/
+.eslintcache
+playwright-report/
+test-results/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# ---- duplicate agent-skill copies (canonical copy lives in .agents/skills) ----
+agent/skills/
+data/skills/
+.claude/skills/
+
+# ---- editors & OS ----
+.vscode/*
+!.vscode/mcp.json
+!.vscode/settings.json
+!.vscode/extensions.json
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# ---- logs & temp ----
+*.log
+logs/
+tmp/
+.tmp/
+*.bak
+*.orig

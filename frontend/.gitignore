@@ -1,3 +1,4 @@
+# mostly covered by root .gitignore; frontend-only extras go here
 node_modules
 dist
 .env.local

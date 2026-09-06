@@ -9,7 +9,7 @@ DO $$
 DECLARE
   u        uuid := '00000000-0000-0000-0000-0000000000c1';
   c1       uuid; c2 uuid;
-  paper25  uuid; marks uuid; draft uuid; p2024 uuid;
+  paper25  uuid; v_marks uuid; draft uuid; p2024 uuid;
   q_draft4 uuid; q_2024_3 uuid; q_other uuid;
   n        int;
   rec      record;
@@ -34,9 +34,9 @@ BEGIN
 
   -- ---------- compute_co_attainment ----------
   SELECT id INTO paper25 FROM artefacts WHERE course_id = c1 AND kind = 'question_paper' AND year = 2025;
-  SELECT id INTO marks   FROM artefacts WHERE course_id = c1 AND kind = 'marks_sheet';
+  SELECT id INTO v_marks FROM artefacts WHERE course_id = c1 AND kind = 'marks_sheet';
 
-  FOR rec IN SELECT * FROM compute_co_attainment(gen_random_uuid(), marks, paper25, 60) LOOP
+  FOR rec IN SELECT * FROM compute_co_attainment(gen_random_uuid(), v_marks, paper25, 60) LOOP
     IF rec.unmatched_numbers <> '{}'::text[] THEN
       RAISE EXCEPTION 'unexpected unmatched numbers: %', rec.unmatched_numbers;
     END IF;
@@ -58,12 +58,12 @@ BEGIN
   END LOOP;
 
   -- unmatched detection: a stray marks row
-  INSERT INTO marks_rows (artefact_id, student_anon_id, question_number, score, max_score) VALUES (marks, 'S001', '9', 1, 5);
-  SELECT unmatched_numbers INTO rec FROM compute_co_attainment(gen_random_uuid(), marks, paper25, 60) LIMIT 1;
+  INSERT INTO marks_rows (artefact_id, student_anon_id, question_number, score, max_score) VALUES (v_marks, 'S001', '9', 1, 5);
+  SELECT unmatched_numbers INTO rec FROM compute_co_attainment(gen_random_uuid(), v_marks, paper25, 60) LIMIT 1;
   IF rec.unmatched_numbers <> ARRAY['9'] THEN
     RAISE EXCEPTION 'expected unmatched {9}, got %', rec.unmatched_numbers;
   END IF;
-  DELETE FROM marks_rows WHERE artefact_id = marks AND question_number = '9';
+  DELETE FROM marks_rows WHERE artefact_id = v_marks AND question_number = '9';
 
   -- ---------- similar_questions with stubbed embeddings ----------
   v_same := (ARRAY[1::real] || array_fill(0::real, ARRAY[1535]))::vector;
