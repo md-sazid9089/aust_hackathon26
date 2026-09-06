@@ -96,6 +96,7 @@ Planned, not yet created (`architecture.md` §9–10): `frontend/`, `backend/`, 
 | D-015 | 2026-09-06 | Embeddings `text-embedding-3-small`, `vector(1536)` fixed; pgvector HNSW cosine                                                                                                              | Verified OpenRouter `/embeddings`; no local model download (ADR-06)                                                 |
 | D-016 | 2026-09-06 | Findings first-class table; module aggregates in `runs.summary` jsonb; numeric results in `attainment_results` / `answer_prescores` tables                                                   | Queryable for views, flexible per module (ADR-07)                                                                   |
 | D-017 | 2026-09-06 | Merge audit vs an external "versioned assessment platform" design: adopted copy-at-write + provenance columns (`runs.context_snapshot`, `runs.model`, `runs.prompt_versions`, `findings.provenance`, `findings.decided_by`, `questions/topics.embedding_model`, `artefacts.declared_total_marks`, finding `marks_total_mismatch`, `409 SCORES_EXCEED_RUBRIC`); rejected paper/CLO versioning tables, persisted similarity-match table, SIS/sections/released results/blind grading | Reproducible, defensible findings at column-level cost; rejected items violate §2 non-goals and would re-introduce the only partition-scale table (ADR-13) |
+| D-018 | 2026-09-06 | Three-lens DB review (security / integrity / pragmatist) → ADR-14: `course_owner()` hides soft-deleted courses; functions SECURITY INVOKER, `seed_demo`/`reset_demo` assert owner-or-admin; explicit `run_events`/`usage_logs` RLS; `run_inputs` → nullable artefact/course + `run_input_role` enum; `attainment_results.target_code` copied; `normalize_qnum()` on both `questions.number` and `marks_rows.question_number` + `marks_question_mismatch` finding; IDENTITY not bigserial; final run stage single tx; RLS lands Phase 1 (app-layer ownership checks mandatory from Phase 0); hosted Supabase only (no local Docker); demo fixtures TXT/CSV-first + second course `CSE 2101`, authored in Phase 0; `0006` P2 tables may slip to Phase 4 | Fixes 3 High security findings (deleted-course leak, demo-fn abuse, cross-owner vector search), the silent marks-join drop, and the two biggest schedule risks (RLS in Phase 0, fixtures in Phase 2) without dropping the DB-as-authz principle |
 
 ## 7. Conventions
 
@@ -118,8 +119,8 @@ Planned, not yet created (`architecture.md` §9–10): `frontend/`, `backend/`, 
 
 - [x] Lock requirements (Prompt 1)
 - [x] Architecture design (Prompt 2) → `architecture.md`
-- [ ] Phase 0 contracts: Supabase project (Auth providers, `artefacts` bucket), `database/migrations/0001–0008`, backend Pydantic schemas + `openapi.json`
-- [ ] Phase 1 foundation: FE scaffold + auth, BE skeleton + `/me` + ORM parity, DB indexes/RLS/functions/views
+- [ ] Phase 0 contracts: hosted Supabase project (Auth providers, `artefacts` bucket), `database/migrations/0001–0005, 0007–0008` (+`0006` if P2 stays in T0), backend Pydantic schemas + `openapi.json`, **demo fixtures authored (TXT/CSV, 2 courses)**
+- [ ] Phase 1 foundation: FE scaffold + auth, BE skeleton + `/me` + ORM parity + service-layer ownership checks, DB indexes/RLS/functions/views + `seed_demo` idempotency test
 - [ ] Phase 2–3 (Tier 0): ingestion/extraction, P1 Exam Auditor, findings + accept/dismiss, demo seed → W1 live
 - [ ] Tier 1: P4, P3, P2, export, question suggestion
 - [ ] Tier 2: SSE progress, Bangla support, system-admin panel (users, runs, LLM usage)
@@ -131,8 +132,9 @@ Planned, not yet created (`architecture.md` §9–10): `frontend/`, `backend/`, 
 - Demo depends on venue network (Supabase + LLM API). Keep the one-click demo seed and partial-result fallback working.
 - Scanned/image PDFs are unsupported — prompt faculty to paste text.
 - Demo data is on the critical path: 1 course, 5–6 COs, 2 past papers, 1 draft paper with deliberate gaps/duplicates, marks CSV with one weak CO, rubric + 6 typed answers × 2 graders (2 divergent). Seed both a faculty and an admin account. Cache last successful analysis JSON for the seed course as offline fallback. Watch LLM quota during the pitch.
-- `grader_scores.score ≤ rubric_criteria.max_score` cannot be a DB CHECK (rubric and answers are separate artefacts) — enforced in backend at calibration run start (`409 SCORES_EXCEED_RUBRIC`).
-- Doc nits still open in `architecture.md`: `compute_co_attainment` signature differs between §11.3 and §21.3 (use §21.3); `backend/alembic/` should be removed from the tree listing; IDs `AI-005/006`, `DATA-002`, `NF-005`, `OPT-*` referenced there are not defined in §12 below.
+- `grader_scores.score ≤ rubric_criteria.max_score` cannot be a DB CHECK (rubric and answers are separate artefacts) — enforced in backend at calibration run start (`409 SCORES_EXCEED_RUBRIC`). Same for `marks_rows.question_number` → `questions.number`: no FK possible; both sides pass through `normalize_qnum()` and unmatched numbers become a `marks_question_mismatch` finding.
+- Doc nits still open in `architecture.md`: IDs `AI-005/006`, `DATA-002`, `NF-005`, `OPT-*` referenced there are not defined in §12 below.
+- Migrations `0001` (role creation) and `0003` (trigger on `auth.users`) need the superuser `SUPABASE_DB_URL`, not `app_backend`.
 - Transaction pooler (6543): use `SET LOCAL` (never `SET`) for RLS vars; asyncpg `statement_cache_size=0`.
 - Supabase JWT may be ES256 (JWKS) or HS256 (legacy secret) — verify in Phase 1.
 - WeasyPrint needs system libs; run backend in Docker or accept md-only export locally.
@@ -169,3 +171,5 @@ Planned, not yet created (`architecture.md` §9–10): `frontend/`, `backend/`, 
 | 2026-09-06 | Copilot | Added `.vscode/mcp.json` (Supabase + Context7 MCP servers, D-010)                                                  |
 | 2026-09-06 | Copilot | Wrote `architecture.md` (React/FastAPI/Supabase/LangGraph/OpenRouter); filled Tech Stack, conventions, D-011–D-016 |
 | 2026-09-06 | Copilot | Merge audit vs external versioned-assessment design: provenance/copy-at-write columns, `marks_total_mismatch`, `SCORES_EXCEED_RUBRIC` (D-017, ADR-13); filled §3 stack table + env names; added `architecture.md` to §4 |
+| 2026-09-06 | Copilot | Multi-agent DB review (security/integrity/pragmatist) → ADR-14 / D-018: RLS hardening, `run_inputs` redesign, `normalize_qnum`, `target_code`, IDENTITY, phase re-sequencing, fixture plan; fixed `compute_co_attainment` signature + removed `alembic/` |
+| 2026-09-06 | Copilot | `edge_cases.md`: added §14 access-pattern queries Q1–Q16 with volume/latency budgets and per-query edge cases |

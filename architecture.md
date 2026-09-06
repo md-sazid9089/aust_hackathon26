@@ -336,7 +336,6 @@ backend/
 ├── pyproject.toml
 ├── Dockerfile
 ├── .env.example
-├── alembic/                            # NOT USED — intentionally absent
 ├── app/
 │   ├── main.py                         # FastAPI app, middleware, routers, lifespan
 │   ├── config.py                       # pydantic-settings
@@ -585,7 +584,7 @@ Format: **File — Owner — Purpose — Contains — Consumes — Exposes — R
 | `0008_attainment_prescores_usage.sql` | Results    | `attainment_results, answer_prescores, usage_logs`                                                                                                                                                                                         | tables    | F-403, F-203, F-033                |
 | `0009_indexes.sql`                    | Perf       | all B-tree + HNSW indexes (§21.4)                                                                                                                                                                                                          | indexes   | NF-003                             |
 | `0010_rls_policies.sql`               | Security   | `ENABLE RLS` + policies per table using `app.user_id`/`app.role`                                                                                                                                                                           | policies  | SEC-005                            |
-| `0011_functions.sql`                  | Logic      | `set_updated_at()`, `current_app_user()`, `similar_questions(q uuid, course uuid, k int, min_sim numeric)`, `similar_topics(...)`, `compute_co_attainment(run uuid, threshold numeric)`, `reset_demo(owner uuid)`, `seed_demo(owner uuid)` | functions | F-105, F-302, F-403, F-034, NF-004 |
+| `0011_functions.sql`                  | Logic      | `set_updated_at()`, `current_app_user()`, `course_owner()`, `similar_questions(p_question uuid, p_course uuid, p_k int, p_min_sim numeric)`, `similar_topics(...)`, `compute_co_attainment(p_run uuid, p_marks_artefact uuid, p_paper_artefact uuid, p_threshold numeric)`, `reset_demo(owner uuid)`, `seed_demo(owner uuid)` | functions | F-105, F-302, F-403, F-034, NF-004 |
 | `0012_views.sql`                      | Reads      | `v_course_run_summary`, `v_admin_department_attainment`, `v_admin_exam_audit_summary`, `v_admin_usage`                                                                                                                                     | views     | F-023, F-033, F-035, F-036         |
 | `seeds/seed_demo.sql`                 | Demo       | course "CSE 2201 Algorithms", 6 COs, 12 POs, CO→PO, topics; artefact rows referencing `seeds/fixtures/*`                                                                                                                                   | data      | NF-004                             |
 | `seeds/seed_admin.sql`                | Admin      | `UPDATE profiles SET role='admin' WHERE email=:email`                                                                                                                                                                                      | —         | F-030                              |
@@ -835,14 +834,15 @@ Validation: per-module required inputs; all artefacts belong to course (syllabus
 
 ## 20. Database Architecture
 
-- **Ownership model:** every domain row descends from `courses.owner_id`. Child tables carry `course_id` (not `owner_id`) and RLS joins through `courses` via a stable SQL function `course_owner(course_id)`; `runs`/`findings` additionally denormalise `owner_id` for admin views and index selectivity.
-- **Session variables:** `app.user_id` (uuid text), `app.role` (`faculty|admin`). Set with `SET LOCAL` per transaction by the backend. Helper: `current_app_user() RETURNS uuid` = `nullif(current_setting('app.user_id', true), '')::uuid`.
-- **RLS pattern:** `FOR SELECT USING (owner_id = current_app_user() OR current_setting('app.role', true) = 'admin')`; `FOR INSERT/UPDATE/DELETE` require ownership only (admin read-only, SEC-009). `profiles`: users see self; admin sees all and may update `is_active/role`.
+- **Ownership model:** every domain row descends from `courses.owner_id`. Child tables carry `course_id` (not `owner_id`) and RLS joins through `courses` via a stable SQL function `course_owner(course_id)` **which returns NULL for soft-deleted courses** (so one function carries the `deleted_at` rule for every child table); `runs`/`findings` additionally denormalise `owner_id` for admin views and index selectivity.
+- **Session variables:** `app.user_id` (uuid text), `app.role` (`faculty|admin`). Set with `SET LOCAL` per transaction by the backend. Helper: `current_app_user() RETURNS uuid` = `nullif(current_setting('app.user_id', true), '')::uuid`; unset → NULL → every owner predicate is false (fail closed). `is_admin()` = `current_setting('app.role', true) = 'admin'`.
+- **RLS pattern:** `FOR SELECT USING (owner_id = current_app_user() OR is_admin())`; `FOR INSERT/UPDATE/DELETE` require ownership only (admin read-only, SEC-009). `profiles`: users see self; admin sees all and may update `is_active/role`. Explicit policies for the two non-obvious tables: `run_events` SELECT via `runs.owner_id` (owner or admin), INSERT owner only; `usage_logs` SELECT owner-or-admin, INSERT any authenticated (backend writes for the current user).
+- **Functions run as SECURITY INVOKER** (RLS still applies inside `similar_questions`, `similar_topics`, `compute_co_attainment`). Only `handle_new_user()` is `SECURITY DEFINER` (`SET search_path = public`). `seed_demo`/`reset_demo` additionally assert `p_owner = current_app_user() OR is_admin()` and raise `42501` otherwise.
 - **Integrity:** FKs with explicit `ON DELETE`; CHECKs on numeric ranges and enum-like text; UNIQUEs for natural keys; `updated_at` triggers.
 - **Vectors:** `vector(1536)`, HNSW `vector_cosine_ops` (`m=16, ef_construction=64`). Similarity = `1 - (a <=> b)`.
-- **Soft delete:** only `courses.deleted_at`; RLS `USING` clauses also require `deleted_at IS NULL` for non-admin.
-- **Naming:** snake_case, singular enums, plural tables, `id uuid PK default gen_random_uuid()`, `created_at timestamptz default now()`, `updated_at` where mutable.
-- **Dev flow:** `supabase start` (local) or linked project → `database/scripts/apply.sh` → `seed_admin.sql` for your email → backend `POST /demo/seed`.
+- **Soft delete:** only `courses.deleted_at`; `course_owner()` returns NULL for deleted courses, so child rows vanish for non-admins without repeating the predicate per policy.
+- **Naming:** snake_case, singular enums, plural tables, `id uuid PK default gen_random_uuid()` (append-only log tables use `bigint GENERATED ALWAYS AS IDENTITY`), `created_at timestamptz default now()`, `updated_at` where mutable.
+- **Dev flow:** **hosted Supabase project shared by the team** (Windows laptops; no local Docker/Supabase) → `database/scripts/apply.sh` with `SUPABASE_DB_URL` (superuser; required for `0001`, `0003`) → `seed_admin.sql` for your email → backend `POST /demo/seed`. `supabase start` is optional for CI only.
 
 ## 21. Database Schema
 
@@ -850,7 +850,7 @@ Audit fields on every table unless noted: `created_at timestamptz NOT NULL DEFAU
 
 ### 21.1 Enums (`0002`)
 
-`app_role('faculty','admin')` · `artefact_kind('syllabus','question_paper','marks_sheet','rubric','answer_set')` · `extraction_status('pending','extracting','done','failed')` · `text_lang('en','bn','mixed','unknown')` · `bloom_level('remember','understand','apply','analyze','evaluate','create')` · `map_source('ai','faculty')` · `run_module('exam_audit','attainment','syllabus_check','calibration')` · `run_status('queued','analyzing','completed','partial','failed')` · `finding_severity('info','low','medium','high')` · `finding_status('open','accepted','dismissed')` · `target_kind('question','course_outcome','program_outcome','topic','answer','criterion','course','none')` · `usage_purpose('extraction','exam_audit','attainment','syllabus_check','calibration','suggestion','embedding')`.
+`app_role('faculty','admin')` · `artefact_kind('syllabus','question_paper','marks_sheet','rubric','answer_set')` · `extraction_status('pending','extracting','done','failed')` · `text_lang('en','bn','mixed','unknown')` · `bloom_level('remember','understand','apply','analyze','evaluate','create')` · `map_source('ai','faculty')` · `run_module('exam_audit','attainment','syllabus_check','calibration')` · `run_status('queued','analyzing','completed','partial','failed')` · `run_input_role('draft','past','marks','paper','syllabus','rubric','answer_set','compare_course')` · `finding_severity('info','low','medium','high')` · `finding_status('open','accepted','dismissed')` · `target_kind('question','course_outcome','program_outcome','topic','answer','criterion','course','none')` · `usage_purpose('extraction','exam_audit','attainment','syllabus_check','calibration','suggestion','embedding')`.
 
 ### 21.2 Tables
 
@@ -934,7 +934,7 @@ FK `course_id → courses CASCADE`; CHECK `size_bytes IS NULL OR size_bytes <= 1
 | embedding | vector(1536) | yes | |
 | embedding_model | text | yes | (model that produced `embedding`; re-embed when ≠ `EMBED_MODEL`) |
 | sort_order | int | no | 0 |
-FK `artefact_id → artefacts CASCADE`; UNIQUE `(artefact_id, number)`; CHECK `marks >= 0`. Reason: unit of analysis for P1/P4 (F-101).
+FK `artefact_id → artefacts CASCADE`; UNIQUE `(artefact_id, number)`; CHECK `marks >= 0`; CHECK `number = normalize_qnum(number)`. Reason: unit of analysis for P1/P4 (F-101). `normalize_qnum(text)` (immutable SQL fn: lowercase, strip whitespace and trailing `.`/`)`) is applied by the backend to both `questions.number` and `marks_rows.question_number` so the run-time join is stable ("3(b)" = "3 (B)").
 
 **question_co_map**
 | question_id uuid FK→questions CASCADE | co_id uuid FK→course_outcomes ON DELETE RESTRICT | confidence numeric(4,3) NULL CHECK (0..1) | source map_source NOT NULL | created_at |
@@ -943,8 +943,8 @@ PK `(question_id, co_id)`. Reason: F-102, F-402. RESTRICT stops CO deletion whil
 **question_topic_map** — same shape with `topic_id FK→topics ON DELETE CASCADE`. PK `(question_id, topic_id)`. Reason: F-103 coverage by topic.
 
 **marks_rows** — one row per (student, question) from a `marks_sheet`.
-| id bigserial PK | artefact_id uuid FK→artefacts CASCADE | student_anon_id text NOT NULL | question_number text NOT NULL | score numeric(6,2) NOT NULL CHECK (score >= 0) | max_score numeric(6,2) NOT NULL CHECK (max_score > 0) |
-UNIQUE `(artefact_id, student_anon_id, question_number)`; CHECK `score <= max_score`. No `updated_at`. Reason: F-401; anonymised (SEC-007/DATA-401). Joined to `questions` by `(paper artefact, number)` at run time.
+| id bigint IDENTITY PK | artefact_id uuid FK→artefacts CASCADE | student_anon_id text NOT NULL | question_number text NOT NULL CHECK (= normalize_qnum(question_number)) | score numeric(6,2) NOT NULL CHECK (score >= 0) | max_score numeric(6,2) NOT NULL CHECK (max_score > 0) |
+UNIQUE `(artefact_id, student_anon_id, question_number)`; CHECK `score <= max_score`. No `updated_at`. Reason: F-401; anonymised (SEC-007/DATA-401). Joined to `questions` by `(paper artefact, number)` at run time; `compute_co_attainment` also returns `unmatched_numbers text[]`, which the attainment graph writes to `runs.summary.unmatched_question_numbers` and, if non-empty, emits as a `high` finding `marks_question_mismatch` (cross-artefact FK is impossible; silent drops are not acceptable).
 
 **rubric_criteria** — from `rubric` artefacts.
 | id uuid PK | artefact_id uuid FK CASCADE | code text NOT NULL | text text NOT NULL | max_score numeric(6,2) NOT NULL CHECK (>0) | levels jsonb NOT NULL DEFAULT '[]' | sort_order int |
@@ -979,11 +979,11 @@ PK `(answer_id, grader_label, criterion_code)`. Reason: F-202 divergence input.
 FK `course_id → courses CASCADE`, `owner_id → profiles CASCADE`; UNIQUE `(owner_id, idempotency_key)` WHERE idempotency_key IS NOT NULL. Reason: DATA-001; `summary` holds module-specific aggregates (§28.6) — kept as jsonb because its shape differs per module and it is never queried by key except via views. `context_snapshot` makes a run's findings reproducible after COs/questions are edited (copy-at-write, ADR-13).
 
 **run_inputs**
-| run_id uuid FK→runs CASCADE | artefact_id uuid FK→artefacts ON DELETE RESTRICT | role text NOT NULL CHECK (role IN ('draft','past','marks','paper','syllabus','rubric','answer_set')) |
-PK `(run_id, artefact_id, role)`. Also `compare_course_id uuid NULL FK→courses` for syllabus_check (nullable, PK unaffected). Reason: provenance; RESTRICT enforces `409 ARTEFACT_IN_USE`.
+| id bigint IDENTITY PK | run_id uuid FK→runs CASCADE | role run_input_role NOT NULL | artefact_id uuid NULL FK→artefacts ON DELETE RESTRICT | course_id uuid NULL FK→courses ON DELETE RESTRICT |
+CHECK `(artefact_id IS NOT NULL) <> (course_id IS NOT NULL)` (exactly one); CHECK `(role = 'compare_course') = (course_id IS NOT NULL)`; UNIQUE `(run_id, role, artefact_id)`, UNIQUE `(run_id, role, course_id)`. Reason: provenance; RESTRICT enforces `409 ARTEFACT_IN_USE` and blocks hard-deleting a course still referenced as a comparison (soft delete is unaffected).
 
 **run_events**
-| id bigserial PK | run_id uuid FK CASCADE | seq int NOT NULL | stage text NOT NULL | message text | pct smallint CHECK 0..100 | at timestamptz DEFAULT now() |
+| id bigint IDENTITY PK | run_id uuid FK CASCADE | seq int NOT NULL | stage text NOT NULL | message text | pct smallint CHECK 0..100 | at timestamptz DEFAULT now() |
 UNIQUE `(run_id, seq)`. No updated_at. Reason: SSE backlog + audit (F-024).
 
 **findings**
@@ -992,7 +992,7 @@ UNIQUE `(run_id, seq)`. No updated_at. Reason: SSE backlog + audit (F-024).
 | id | uuid | no | gen_random_uuid() |
 | run_id | uuid | no | |
 | owner_id | uuid | no | |
-| type | text | no | CHECK IN ('coverage_gap','overweight','bloom_imbalance','duplicate','fairness','marks_total_mismatch','suggestion','co_underperformance','po_underperformance','action','overlap','prerequisite_gap','missing_topic','repositioning','divergence','prescore_note','rubric_clarification') |
+| type | text | no | CHECK IN ('coverage_gap','overweight','bloom_imbalance','duplicate','fairness','marks_total_mismatch','marks_question_mismatch','suggestion','co_underperformance','po_underperformance','action','overlap','prerequisite_gap','missing_topic','repositioning','divergence','prescore_note','rubric_clarification') |
 | severity | finding_severity | no | 'medium' |
 | title | text | no | |
 | rationale | text | no | |
@@ -1008,27 +1008,27 @@ UNIQUE `(run_id, seq)`. No updated_at. Reason: SSE backlog + audit (F-024).
 FK `run_id → runs CASCADE`, `owner_id → profiles CASCADE`, `decided_by → profiles SET NULL`. CHECK `(status = 'open') = (decided_by IS NULL)`. Reason: D-005 first-class findings (F-013, F-022, AI-003); `provenance` lets a challenged finding be traced to model + prompt + input (ADR-13); `decided_by` records the human who accepted/dismissed (REQ-F-004). `target_id` is polymorphic (no FK) — `target_kind` disambiguates; `target_label` preserves meaning after deletes and drives run compare.
 
 **attainment_results**
-| run_id uuid FK CASCADE | target_kind target_kind NOT NULL CHECK IN ('course_outcome','program_outcome') | target_id uuid NOT NULL | attained_pct numeric(5,2) NOT NULL CHECK 0..100 | students int NOT NULL | target_pct numeric(5,2) NOT NULL | met boolean NOT NULL |
-PK `(run_id, target_kind, target_id)`. Reason: F-403, dashboard/department views need queryable numbers (not jsonb).
+| run_id uuid FK CASCADE | target_kind target_kind NOT NULL CHECK IN ('course_outcome','program_outcome') | target_id uuid NOT NULL | target_code text NOT NULL | attained_pct numeric(5,2) NOT NULL CHECK 0..100 | students int NOT NULL | target_pct numeric(5,2) NOT NULL | met boolean NOT NULL |
+PK `(run_id, target_kind, target_id)`. No FK on `target_id` (polymorphic, ADR-09); `target_code` is copied at write time so views (`weakest_co_code`) and exports never need the join and survive CO edits/deletes. Reason: F-403, dashboard/department views need queryable numbers (not jsonb).
 
 **answer_prescores**
 | run_id uuid FK CASCADE | answer_id uuid FK→answers CASCADE | criterion_code text NOT NULL | ai_score numeric(6,2) NOT NULL | rationale text NOT NULL |
 PK `(run_id, answer_id, criterion_code)`. Reason: F-203.
 
 **usage_logs**
-| id bigserial PK | user_id uuid FK→profiles SET NULL | run_id uuid FK→runs SET NULL | purpose usage_purpose NOT NULL | model text NOT NULL | tokens_in int | tokens_out int | cost_usd numeric(10,6) | latency_ms int | status text CHECK IN ('ok','retry','failed') | created_at |
+| id bigint IDENTITY PK | user_id uuid FK→profiles SET NULL | run_id uuid FK→runs SET NULL | purpose usage_purpose NOT NULL | model text NOT NULL | tokens_in int | tokens_out int | cost_usd numeric(10,6) | latency_ms int | status text CHECK IN ('ok','retry','failed') | created_at |
 Reason: F-033 admin usage, AI monitoring.
 
 ### 21.3 Functions & triggers (`0011`)
 
-- `set_updated_at()` trigger on all tables with `updated_at`.
-- `handle_new_user()` — insert into `profiles(id,email,full_name)` from `auth.users` (SECURITY DEFINER, `search_path = public`).
-- `current_app_user() RETURNS uuid STABLE`; `is_admin() RETURNS boolean STABLE`.
-- `course_owner(course_id uuid) RETURNS uuid STABLE` — used in RLS for child tables.
-- `similar_questions(p_question uuid, p_course uuid, p_k int, p_min_sim numeric) RETURNS TABLE(question_id uuid, artefact_id uuid, similarity numeric)` — nearest questions from **other** artefacts of the course using HNSW; excludes null embeddings.
-- `similar_topics(p_topic uuid, p_course_ids uuid[], p_k int, p_min_sim numeric)` — same for topics across comparison courses.
-- `compute_co_attainment(p_run uuid, p_marks_artefact uuid, p_paper_artefact uuid, p_threshold numeric) RETURNS TABLE(co_id uuid, attained_pct numeric, students int)` — SQL: per student, sum scores of questions mapped to the CO ÷ sum max; attained if ≥ threshold%; pct = attained students / students. Backend computes PO from this + `co_po_map`.
-- `reset_demo(p_owner uuid)` — deletes courses `WHERE owner_id=p_owner AND is_demo` (cascades). `seed_demo(p_owner uuid) RETURNS uuid` — inserts demo course/COs/POs/topics/artefact **rows** (files uploaded by backend) and returns course id; idempotent (returns existing).
+- `set_updated_at()` trigger — attached by explicit list to tables that have `updated_at` (never to `run_events`, `marks_rows`, `usage_logs`, `co_po_map`, `grader_scores`, `run_inputs`).
+- `handle_new_user()` — `INSERT … ON CONFLICT (id) DO UPDATE SET email = EXCLUDED.email` into `profiles` from `auth.users` (SECURITY DEFINER, `search_path = public`); never touches `role`/`is_active` on conflict.
+- `current_app_user() RETURNS uuid STABLE`; `is_admin() RETURNS boolean STABLE`; `normalize_qnum(text) RETURNS text IMMUTABLE`.
+- `course_owner(course_id uuid) RETURNS uuid STABLE` — `SELECT owner_id FROM courses WHERE id = $1 AND deleted_at IS NULL`; used in RLS for child tables.
+- `similar_questions(p_question uuid, p_course uuid, p_k int, p_min_sim numeric) RETURNS TABLE(question_id uuid, artefact_id uuid, similarity numeric)` — SECURITY INVOKER; nearest questions from **other** artefacts of the course using HNSW; excludes null embeddings and rows whose `embedding_model` differs from the source question's.
+- `similar_topics(p_topic uuid, p_course_ids uuid[], p_k int, p_min_sim numeric)` — same for topics across comparison courses (RLS limits to courses the caller owns).
+- `compute_co_attainment(p_run uuid, p_marks_artefact uuid, p_paper_artefact uuid, p_threshold numeric) RETURNS TABLE(co_id uuid, co_code text, attained_pct numeric, students int, unmatched_numbers text[])` — SQL: per student, sum scores of questions mapped to the CO ÷ sum max; attained if ≥ threshold%; pct = attained students / students; `unmatched_numbers` lists `marks_rows.question_number` values with no matching `questions.number` (same on every row). Backend computes PO from this + `co_po_map`.
+- `reset_demo(p_owner uuid)` — asserts `p_owner = current_app_user() OR is_admin()`; deletes courses `WHERE owner_id=p_owner AND is_demo` (cascades). `seed_demo(p_owner uuid) RETURNS uuid` — same assertion; inserts demo course/COs/POs/topics/artefact **rows** (files uploaded by backend) and returns course id; idempotent (returns existing).
 
 ### 21.4 Indexes (`0009`)
 
@@ -1042,28 +1042,31 @@ Reason: F-033 admin usage, AI monitoring.
 | `marks_rows(artefact_id, question_number)`                                                                          | attainment join                       |
 | `grader_scores(answer_id)` (PK prefix)                                                                              | divergence                            |
 | `runs(course_id, created_at DESC)`, `runs(owner_id, status)`, `runs(module, status, finished_at DESC)`              | history, admin runs, department views |
-| `run_events(run_id, seq)` (UNIQUE)                                                                                  | SSE backlog                           |
-| `findings(run_id, severity DESC, created_at)`, `findings(owner_id, status)`, `findings(run_id, type, target_label)` | list, dashboard totals, compare       |
-| `attainment_results(target_kind, target_id)`                                                                        | department weakest-CO                 |
-| `usage_logs(user_id, created_at)`, `usage_logs(created_at)`                                                         | admin usage                           |
+| `run_events(run_id, seq)` (UNIQUE)                                                                                  | SSE backlog (`WHERE run_id=? AND seq>?` is a range scan on this index) |
+| `run_inputs(artefact_id)`, `run_inputs(course_id) WHERE course_id IS NOT NULL`                                      | RESTRICT checks, "runs using this artefact/course" |
+| `findings(run_id, severity DESC, created_at)`, `findings(owner_id, status)`, `findings(run_id, type, target_label)` | list, dashboard totals, compare               |
+| `attainment_results(target_kind, target_id)`                                                                        | department weakest-CO                         |
+| `usage_logs(user_id, created_at)`, `usage_logs(created_at)`                                                         | admin usage                                   |
+
+HNSW on tables this small is exact-scan-equivalent; it is created up front only so no migration is needed when real courses accumulate hundreds of questions.
 
 ### 21.5 Views (`0012`)
 
 - `v_course_run_summary(owner_id, course_id, code, title, last_exam_audit_run_id, exam_open_findings, exam_coverage_pct, last_attainment_run_id, cos_met, cos_total)` — lateral latest completed run per module + `summary->>'coverage_pct'` + counts from `attainment_results`.
-- `v_admin_department_attainment(owner_email, course_code, run_id, finished_at, cos_met, cos_total, weakest_co_code, weakest_pct)`.
+- `v_admin_department_attainment(owner_email, course_code, run_id, finished_at, cos_met, cos_total, weakest_co_code, weakest_pct)` — `weakest_*` from `attainment_results` ordered by `attained_pct` using the denormalised `target_code` (no join to `course_outcomes`); NULL when every CO is met.
 - `v_admin_exam_audit_summary(owner_email, course_code, run_id, finished_at, coverage_pct, duplicates, open_findings)`.
 - `v_admin_usage(user_id, email, day, calls, tokens_in, tokens_out, cost_usd, failures)`.
   Views are `security_invoker = true` so RLS still applies (admin role sees all).
 
 ### 21.6 Seed data
 
-`program_outcomes` PO1–PO12 (BAETE-style labels, editable); demo course `CSE 2201 Design & Analysis of Algorithms` with CO1–CO6, CO→PO map, 10 topics; artefacts: syllabus (txt), 2 past papers (pdf, 2024/2025), 1 draft paper (pdf, deliberately: CO5 uncovered, Q4 ≈ 2024 Q3, 40% marks on CO2), marks CSV (40 anonymised students, CO3 weak), rubric (4 criteria) + 6 answers × 2 graders (2 divergent). Fixture files in `database/seeds/fixtures/`; row inserts in `seed_demo()`; file upload + extraction triggered by backend `POST /demo/seed`. After seeding, backend also runs P1 + P4 once and caches results (= completed runs) for offline demo.
+`program_outcomes` PO1–PO12 (BAETE-style labels, editable); demo course `CSE 2201 Design & Analysis of Algorithms` with CO1–CO6, CO→PO map, 10 topics; artefacts: syllabus (txt), 2 past papers (2024/2025), 1 draft paper (deliberately: CO5 uncovered, Q4 ≈ 2024 Q3, 40% marks on CO2, `declared_total_marks` 100 vs question sum 90), marks CSV (40 anonymised students, CO3 weak, one question number deliberately mis-formatted to exercise `normalize_qnum`), rubric (4 criteria) + 6 answers × 2 graders (2 divergent); a **second course** `CSE 2101 Data Structures` with syllabus only (≈70% topic overlap) so P3 has something to compare. **Fixtures are authored as TXT/CSV** (pasted-text path) — PDFs are optional extras and must have a real text layer or `parsers.py` rejects them with `ARTEFACT_NO_TEXT`. Fixture files in `database/seeds/fixtures/`; row inserts in `seed_demo()`; file upload + extraction triggered by backend `POST /demo/seed`. After seeding, backend also runs P1 + P4 once and caches results (= completed runs) for offline demo. Fixture authoring starts in Phase 0 (DB-10a), not Phase 2.
 
 ### 21.7 Transactions & concurrency
 
 - API requests: single transaction (`READ COMMITTED`).
 - Replace-all PUTs: `DELETE … WHERE course_id=… AND id <> ALL(:keep)` + upsert in one tx; RESTRICT FKs raise → mapped to 409.
-- Analysis tasks: commit per stage; findings inserted in one batch tx at the end (no half-written results); `runs.status` updated last.
+- Analysis tasks: commit per stage for progress; **final stage is one transaction**: `INSERT findings` + `INSERT attainment_results/answer_prescores` + `UPDATE runs SET status, summary, finished_at` — never split, so a run can't have findings while still `analyzing`.
 - Embedding writes: `UPDATE questions SET embedding=…, embedding_model=:m WHERE id=… AND (embedding IS NULL OR embedding_model IS DISTINCT FROM :m)` (idempotent; stale vectors from a previous model are re-embedded lazily).
 - Calibration run start: backend validates every `grader_scores.score <= rubric_criteria.max_score` for the selected rubric artefact; violation → `409 SCORES_EXCEED_RUBRIC` (cross-artefact check, not expressible as a DB CHECK).
 - Two concurrent runs on the same course are allowed; they only read shared data and write their own `run_id` rows.
@@ -1337,7 +1340,7 @@ Tasks: BE-01 scaffold (FastAPI, settings, logging, errors, deps, session, health
 
 **Owns:** everything under `database/`. **Schema/migrations/seeds/indexes/constraints/functions/views/RLS/tests:** §20–23.
 
-Tasks: DB-01 `0001–0002` extensions, role, enums → DB-02 `0003` profiles + trigger → DB-03 `0004` courses/outcomes/topics + PO seed → DB-04 `0005–0006` artefacts, questions, maps, marks, rubric, answers, grader_scores → DB-05 `0007–0008` runs, events, findings, attainment_results, prescores, usage_logs → DB-06 `0009` indexes (HNSW) → DB-07 `0010` RLS policies → DB-08 `0011` functions (`similar_questions`, `compute_co_attainment`, `reset_demo`, `seed_demo`) → DB-09 `0012` views → DB-10 seed fixtures (author demo documents + CSV) → DB-11 SQL tests + `scripts/*` → DB-12 CI migration job (with BE) → DB-13 query review of BE repositories (EXPLAIN on hot paths) → DB-14 backup/restore drill on Supabase project.
+Tasks: DB-01 `0001–0002` extensions, role, enums → DB-02 `0003` profiles + trigger → DB-03 `0004` courses/outcomes/topics + PO seed → DB-04 `0005` artefacts, questions, maps (`0006` marks/rubric/answers/grader_scores may land in Phase 4 if P2 is deferred; `marks_rows` must be in Phase 0 for P4) → DB-05 `0007–0008` runs, inputs, events, findings, attainment_results, prescores, usage_logs → **DB-10a fixtures (TXT/CSV, both courses) — start in Phase 0** → DB-06 `0009` indexes (HNSW) → DB-07 `0010` RLS (SELECT policies first, write policies second; every table tested) → DB-08 `0011` functions (`normalize_qnum`, `course_owner`, `similar_questions`, `compute_co_attainment`, `reset_demo`, `seed_demo`) → DB-09 `0012` views → DB-10b `seed_demo()` body + idempotency test (×5) → DB-11 SQL tests + `scripts/*` → DB-12 CI migration job (with BE) → DB-13 query review of BE repositories (EXPLAIN on hot paths) → DB-14 backup/restore drill on Supabase project.
 
 ## 37. Ownership Matrix
 
@@ -1373,9 +1376,10 @@ Tasks: DB-01 `0001–0002` extensions, role, enums → DB-02 `0003` profiles + t
 - **Tables/columns/enums:** §21 verbatim; BE `models.py` mirrors it; `test_orm_schema_parity.py` fails CI on drift.
 - **Session variables:** BE sets `SET LOCAL app.user_id = :uuid; SET LOCAL app.role = :role` at the start of every transaction (including background tasks). DB guarantees RLS uses only these.
 - **Role:** BE connects as `app_backend`; DB grants `SELECT/INSERT/UPDATE/DELETE` on all tables/sequences and `EXECUTE` on functions to it; never `BYPASSRLS`.
-- **Functions BE calls:** `similar_questions`, `similar_topics`, `compute_co_attainment`, `reset_demo`, `seed_demo` — signatures in §21.3; DB may change bodies, not signatures, without notice.
+- **Functions BE calls:** `similar_questions`, `similar_topics`, `compute_co_attainment`, `reset_demo`, `seed_demo`, `normalize_qnum` — signatures in §21.3; DB may change bodies, not signatures, without notice. All are SECURITY INVOKER; BE must have set `app.user_id` before calling.
 - **Views BE reads:** §21.5 column lists are the contract.
-- **Constraint names** (for error mapping): `courses_owner_code_uniq`, `question_co_map_co_fk`, `run_inputs_artefact_fk`, `attainment_results_co_fk` (if added), `profiles_email_key`.
+- **`runs.summary` keys read by views:** `coverage_pct` (exam_audit), `duplicates` (array length). Renaming them is a contract change.
+- **Constraint names** (for error mapping): `courses_owner_code_uniq`, `question_co_map_co_fk`, `run_inputs_artefact_fk`, `run_inputs_course_fk`, `profiles_email_key`.
 - **Migrations:** BE never edits `database/`; schema requests go to DB engineer as an issue with desired columns/indexes; DB adds `NNNN_*.sql`.
 - **Vector dim:** 1536 fixed; changing `EMBED_MODEL` to another dimension requires a DB migration. Changing to another 1536-d model needs no migration: `embedding_model` mismatch triggers lazy re-embedding.
 - **Provenance:** BE writes `runs.model`, `runs.prompt_versions`, `findings.provenance` and `runs.context_snapshot`; DB never derives them.
@@ -1384,8 +1388,8 @@ Tasks: DB-01 `0001–0002` extensions, role, enums → DB-02 `0003` profiles + t
 
 | Phase                                  | FE                                                                     | BE                                                                                     | DB                                                 | Deps    | Deliverable                                         | Integration point                               |
 | -------------------------------------- | ---------------------------------------------------------------------- | -------------------------------------------------------------------------------------- | -------------------------------------------------- | ------- | --------------------------------------------------- | ----------------------------------------------- |
-| **0 Contracts (first 60–90 min)**      | review §19/§21; set up repo, Supabase project (Auth providers, bucket) | write Pydantic schemas for §19 + skeleton routers returning 501; export `openapi.json` | write `0001–0008` DDL; apply to Supabase           | none    | `openapi.json`, applied schema, `.env` filled       | schema/enum names frozen                        |
-| **1 Foundation**                       | FE-01…FE-04                                                            | BE-01…BE-03                                                                            | DB-06…DB-09, DB-11 scripts                         | Phase 0 | login works end-to-end; `/me`; RLS tests pass       | JWT + `/me`; parity test                        |
+| **0 Contracts (first 60–90 min)**      | review §19/§21; set up repo, Supabase project (Auth providers, bucket) | write Pydantic schemas for §19 + skeleton routers returning 501; export `openapi.json` | write `0001–0005, 0007–0008` DDL (`0006` P2 tables may follow in Phase 4); apply to hosted Supabase; start authoring demo fixtures (DB-10a) | none    | `openapi.json`, applied schema, `.env` filled       | schema/enum names frozen                        |
+| **1 Foundation**                       | FE-01…FE-04                                                            | BE-01…BE-03; service-layer ownership checks on every query (mandatory regardless of RLS) | `0009` indexes, `0010` RLS (SELECT policies first, then write policies), `0011` functions, `0012` views, DB-11 scripts | Phase 0 | login works end-to-end; `/me`; RLS tests pass       | JWT + `/me`; parity test                        |
 | **2 Parallel core**                    | FE-05…FE-09 (MSW mocks)                                                | BE-04…BE-09                                                                            | DB-10 fixtures, DB-08 functions final, `seed_demo` | Phase 1 | P1 flow works with mock LLM                         | `POST /demo/seed`, `/runs`, SSE, findings       |
 | **3 Integration (T0 demo checkpoint)** | swap MSW → real API; fix mismatches                                    | BE-10 export, BE-11 demo seed + warm runs; real LLM                                    | DB-13 EXPLAIN review, HNSW check                   | Phase 2 | **W1 passes live**                                  | full stack                                      |
 | **4 Tier 1 modules**                   | FE-10…FE-13                                                            | BE-12…BE-15                                                                            | function/view tweaks by request                    | Phase 3 | P4, P3, P2, export, suggestions                     | `/runs` per module, `/attainment`, `/prescores` |
@@ -1543,6 +1547,7 @@ Detailed task items (Task ID · Engineer · File · Purpose · Depends · Input/
 | ADR-11 | Role stored in `profiles`, not JWT claims                                                                                         | Supabase custom claims                                     | single source, no auth-hook setup time                            |
 | ADR-12 | Deferred: Sentry, CRLF/.gitattributes, PITR                                                                                       | —                                                          | unjustified for the day                                           |
 | ADR-13 | Copy-at-write + provenance: `runs.context_snapshot`, `runs.model/prompt_versions`, `findings.provenance`, `findings.decided_by`, `*.embedding_model`, `artefacts.declared_total_marks` | full paper/CLO versioning tables; persisted `question_similarity_match` table | Merge audit 2026-09-06: gives reproducibility and audit trail of the versioned design at column-level cost; rejected versioning tables and persisted similarity rows as out of scope (§12 non-goals) and the only growth/partitioning risk |
+| ADR-14 | Multi-reviewer DB audit fixes: `course_owner()` hides soft-deleted courses; all functions SECURITY INVOKER with owner assertion in `seed_demo`/`reset_demo`; explicit `run_events`/`usage_logs` policies; `run_inputs` redesigned (nullable artefact/course + enum role); `attainment_results.target_code`; `normalize_qnum` + `marks_question_mismatch` finding; IDENTITY columns; final-stage single tx; RLS moved to Phase 1 with app-layer ownership checks mandatory; hosted Supabase only; fixtures TXT-first + second course, authored in Phase 0 | drop RLS for T0 (service-role); FK `marks_rows→questions`; split `attainment_results` per kind | Keeps DB as the authz layer (D-004) while de-risking Phase 0; cross-artefact FK impossible so surface mismatches loudly; polymorphic + copied code is cheaper than two tables |
 
 ## 43. Architecture Validation
 
@@ -1574,7 +1579,9 @@ Revision made during validation: `attainment_results` and `answer_prescores` pro
 | Supabase JWT algorithm mismatch (HS256 vs ES256 project) | 401s                                                           | `SUPABASE_JWT_SECRET` fallback; verify in Phase 1                                       |
 | Transaction pooler + `SET LOCAL`                         | if `SET` used instead of `SET LOCAL`, leaks across connections | enforced in `get_db`; test asserts `current_setting` resets                             |
 | WeasyPrint system deps on Windows dev machines           | PDF export fails locally                                       | Docker backend image includes deps; md fallback                                         |
-| Demo data authoring time                                 | modules have nothing convincing to show                        | DB-10 starts in Phase 2; deliberately planted defects listed §21.6                      |
+| Demo data authoring time                                 | modules have nothing convincing to show                        | DB-10a starts in Phase 0 (TXT/CSV fixtures); deliberately planted defects listed §21.6           |
+| `seed_demo` not idempotent / fixture upload half-fails   | "Load demo" leaves orphans; demo cannot restart                | pure-SQL seed with `ON CONFLICT`; run `SELECT seed_demo(:o)` twice in `test_functions.sql`; backend upload skips existing storage paths |
+| Marks CSV question numbers don't match extracted paper   | attainment silently drops marks                                | `normalize_qnum` on both sides; `unmatched_numbers` surfaced as `marks_question_mismatch` finding |
 | Bangla PDF text extraction (font encoding)               | garbage text                                                   | `lang` detection + `ARTEFACT_NO_TEXT` path; paste-text fallback                         |
 
 ## 45. Final Architecture Verdict
