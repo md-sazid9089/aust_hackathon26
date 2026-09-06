@@ -5,7 +5,18 @@ from typing import Annotated
 
 from fastapi import APIRouter, Body, Depends, File, Form, Query, Response, UploadFile, status
 
-from app.artefacts.schemas import ArtefactOut, ArtefactTextOut, QuestionCoMapIn, QuestionIn, QuestionOut
+from app.artefacts.schemas import (
+    AnswerIn,
+    AnswerOut,
+    ArtefactOut,
+    ArtefactTextOut,
+    MarksSheetOut,
+    QuestionCoMapIn,
+    QuestionIn,
+    QuestionOut,
+    RubricCriterionIn,
+    RubricCriterionOut,
+)
 from app.artefacts.service import ArtefactService
 from app.db.enums import ArtefactKind, ExtractionStatus, Permission
 from app.deps import DbDep, UserDep, require_permission, uploads_rate_limit
@@ -21,9 +32,9 @@ WRITE = [Depends(require_permission(Permission.artefacts_write))]
     status_code=status.HTTP_202_ACCEPTED,
     summary="Upload or paste an artefact",
     description=(
-        "Multipart form. Provide exactly one of `file` (pdf/docx/txt/md, ≤ MAX_UPLOAD_MB) or `text`. "
+        "Multipart form. Provide exactly one of `file` (pdf/docx/txt/md; csv/xlsx for marks sheets; ≤ MAX_UPLOAD_MB) or `text`. "
         "File type is verified by magic bytes. Extraction runs in the background; poll the artefact "
-        "until `status` is `done` or `failed`. Supported kinds in this build: `question_paper`, `syllabus`."
+        "until `status` is `done` or `failed`. Kinds: `question_paper`, `syllabus`, `marks_sheet`, `rubric`, `answer_set`."
     ),
     responses={**ERROR_RESPONSES, 413: {"description": "FILE_TOO_LARGE"}, 415: {"description": "UNSUPPORTED_FILE_TYPE"}},
     dependencies=[Depends(require_permission(Permission.artefacts_write)), Depends(uploads_rate_limit)],
@@ -123,3 +134,44 @@ async def set_co_map(
     artefact_id: uuid.UUID, db: DbDep, user: UserDep, items: list[QuestionCoMapIn] = Body(max_length=200)
 ) -> list[QuestionOut]:
     return await ArtefactService(db, user).set_co_map(artefact_id, items)
+
+
+@router.get("/artefacts/{artefact_id}/marks", response_model=MarksSheetOut, summary="Parsed marks sheet (anonymised students)", responses=ERROR_RESPONSES)
+async def marks(artefact_id: uuid.UUID, db: DbDep, user: UserDep) -> MarksSheetOut:
+    return await ArtefactService(db, user).marks(artefact_id)
+
+
+@router.get("/artefacts/{artefact_id}/rubric", response_model=list[RubricCriterionOut], summary="Extracted rubric criteria", responses=ERROR_RESPONSES)
+async def rubric(artefact_id: uuid.UUID, db: DbDep, user: UserDep) -> list[RubricCriterionOut]:
+    return await ArtefactService(db, user).rubric(artefact_id)
+
+
+@router.put(
+    "/artefacts/{artefact_id}/rubric",
+    response_model=list[RubricCriterionOut],
+    summary="Confirm/edit rubric criteria (replace-all)",
+    responses=ERROR_RESPONSES,
+    dependencies=WRITE,
+)
+async def replace_rubric(
+    artefact_id: uuid.UUID, db: DbDep, user: UserDep, items: list[RubricCriterionIn] = Body(max_length=40)
+) -> list[RubricCriterionOut]:
+    return await ArtefactService(db, user).replace_rubric(artefact_id, items)
+
+
+@router.get("/artefacts/{artefact_id}/answers", response_model=list[AnswerOut], summary="Extracted answers with grader scores", responses=ERROR_RESPONSES)
+async def answers(artefact_id: uuid.UUID, db: DbDep, user: UserDep) -> list[AnswerOut]:
+    return await ArtefactService(db, user).answers(artefact_id)
+
+
+@router.put(
+    "/artefacts/{artefact_id}/answers",
+    response_model=list[AnswerOut],
+    summary="Confirm/edit answers and grader scores (replace-all)",
+    responses=ERROR_RESPONSES,
+    dependencies=WRITE,
+)
+async def replace_answers(
+    artefact_id: uuid.UUID, db: DbDep, user: UserDep, items: list[AnswerIn] = Body(max_length=200)
+) -> list[AnswerOut]:
+    return await ArtefactService(db, user).replace_answers(artefact_id, items)

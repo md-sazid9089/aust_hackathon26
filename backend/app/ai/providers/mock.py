@@ -183,3 +183,142 @@ class MockProvider(AIProvider):
                 }
             )
         return {"items": out}
+
+    # --- assistant planner (keyword intents; offline stand-in for the LLM agent) ---
+    def _h_assistant_plan(self, ctx: dict[str, Any]) -> dict[str, Any]:
+        from app.ai.providers.mock_assistant import plan
+
+        return plan(ctx)
+
+    # --- Tier-1 extraction handlers --------------------------------------------
+    def _h_extract_rubric(self, ctx: dict[str, Any]) -> dict[str, Any]:
+        from app.artefacts.parsers import split_rubric_heuristic
+
+        return {"criteria": split_rubric_heuristic(ctx.get("text", "")), "notes": "heuristic split (mock provider)"}
+
+    def _h_extract_answers(self, ctx: dict[str, Any]) -> dict[str, Any]:
+        from app.artefacts.parsers import split_answers_heuristic
+
+        items = split_answers_heuristic(ctx.get("text", ""))
+        for a in items:
+            a["question_ref"] = a.get("question_ref") or ""
+        return {"answers": items, "notes": "heuristic split (mock provider)"}
+
+    # --- Tier-1 module handlers ---------------------------------------------------
+    def _h_explain_attainment(self, ctx: dict[str, Any]) -> dict[str, Any]:
+        items = []
+        for co in ctx.get("cos", []):
+            if co.get("met"):
+                continue
+            weak = ", ".join(f"Q{q}" for q in co.get("weak_questions", [])[:3]) or "the mapped questions"
+            items.append(
+                {
+                    "co_code": co["code"],
+                    "explanation": (
+                        f"{co['attained_pct']:.0f}% of students reached the threshold on {co['code']} against a target of "
+                        f"{co['target_pct']:.0f}%. Scores were lowest on {weak}, which carry most of this outcome's marks."
+                    ),
+                    "actions": [
+                        f"Add a formative exercise on '{co['text'][:60]}' before the next assessment.",
+                        f"Review {weak} for wording or difficulty that exceeds the intended Bloom level.",
+                        "Re-teach the concept with a worked example and re-assess with a short quiz.",
+                    ],
+                }
+            )
+        return {"items": items}
+
+    def _h_relate_topics(self, ctx: dict[str, Any]) -> dict[str, Any]:
+        this_num = _course_number(ctx.get("course_code", ""))
+        items = []
+        for p in ctx.get("pairs", []):
+            sim = float(p.get("similarity", 0))
+            ov = _overlap(p["topic_a"], p["topic_b"])
+            other_num = _course_number(p.get("course_code", ""))
+            if sim >= 0.7 or ov >= 0.5:
+                rel, why = "overlap", f"Both topics share core vocabulary (overlap {max(sim, ov):.2f})."
+            elif other_num and this_num and other_num < this_num and (sim >= 0.45 or ov >= 0.3):
+                rel, why = "prerequisite", f"'{p['topic_b']}' in the earlier course {p['course_code']} introduces what '{p['topic_a']}' builds on."
+            else:
+                rel, why = "distinct", "Related vocabulary but different learning focus."
+            items.append(
+                {
+                    "topic_a": p["topic_a"], "topic_b": p["topic_b"], "course_code": p["course_code"], "relation": rel, "rationale": why,
+                    "suggestion": (
+                        f"Reference {p['course_code']} coverage and shift depth toward application rather than re-teaching." if rel == "overlap"
+                        else (f"State {p['course_code']} as a prerequisite or add a short recap." if rel == "prerequisite" else "")
+                    ),
+                }
+            )
+        return {"items": items}
+
+    def _h_explain_divergence(self, ctx: dict[str, Any]) -> dict[str, Any]:
+        items = []
+        for it in ctx.get("items", []):
+            scores = it.get("scores", {})
+            hi = max(scores, key=scores.get) if scores else "?"
+            lo = min(scores, key=scores.get) if scores else "?"
+            items.append(
+                {
+                    "answer_id": it["answer_id"], "criterion_code": it["criterion_code"],
+                    "explanation": (
+                        f"Grader {hi} awarded {scores.get(hi, 0):g} while grader {lo} awarded {scores.get(lo, 0):g} on {it['criterion_code']} "
+                        f"(max {it.get('max_score', 0):g}). The descriptor '{it.get('criterion_text', '')[:70]}' leaves room to reward the end result "
+                        "versus the justification shown; agree which evidence counts before re-marking."
+                    ),
+                }
+            )
+        return {"items": items}
+
+    def _h_prescore_answers(self, ctx: dict[str, Any]) -> dict[str, Any]:
+        criteria = ctx.get("criteria", [])
+        items = []
+        for a in ctx.get("answers", []):
+            scores = []
+            for c in criteria:
+                ref = c["text"] + " " + " ".join(lv.get("descriptor", "") for lv in c.get("levels", []))
+                ov = _overlap(a["text"], ref)
+                raw = min(1.0, ov * 2.5) * float(c["max_score"])
+                levels = sorted({float(lv["score"]) for lv in c.get("levels", [])} | {0.0, float(c["max_score"])})
+                score = min(levels, key=lambda s: abs(s - raw))
+                scores.append({"criterion_code": c["code"], "score": score, "rationale": f"Lexical overlap {ov:.2f} with the criterion descriptors; nearest band {score:g}/{float(c['max_score']):g}."})
+            items.append({"answer_id": a["answer_id"], "scores": scores})
+        return {"items": items}
+
+    def _h_propose_rubric_v2(self, ctx: dict[str, Any]) -> dict[str, Any]:
+        items = []
+        for c in ctx.get("criteria", []):
+            mx = float(c["max_score"])
+            items.append(
+                {
+                    "criterion_code": c["code"],
+                    "proposed_text": f"{c['text']} — award marks only for evidence shown in the script (state what counts as evidence).",
+                    "proposed_levels": [
+                        {"label": f"{mx:g}", "score": mx, "descriptor": "Complete and explicitly justified."},
+                        {"label": f"{mx / 2:g}", "score": round(mx / 2, 1), "descriptor": "Partially correct or correct result without justification."},
+                        {"label": "0", "score": 0.0, "descriptor": "Missing or incorrect."},
+                    ],
+                    "rationale": f"Graders diverged by {float(c.get('mean_divergence', 0)):.1f} marks on average; the bands above make the evidence requirement explicit.",
+                }
+            )
+        return {"items": items}
+
+    def _h_suggest_questions(self, ctx: dict[str, Any]) -> dict[str, Any]:
+        items = []
+        stems = {"remember": "Define", "understand": "Explain", "apply": "Apply", "analyze": "Analyse", "evaluate": "Evaluate", "create": "Design"}
+        for co in ctx.get("cos", []):
+            level = co.get("bloom_level") or "apply"
+            items.append(
+                {
+                    "co_code": co["code"],
+                    "question": f"{stems.get(level, 'Explain')} — with reference to a concrete scenario — {co['text'][0].lower() + co['text'][1:].rstrip('.')}.",
+                    "marks": 10,
+                    "bloom_level": level,
+                    "rationale": f"Targets {co['code']} directly at its intended Bloom level '{level}'; no current question assesses it.",
+                }
+            )
+        return {"items": items}
+
+
+def _course_number(code: str) -> int:
+    m = re.search(r"(\d{3,4})", code or "")
+    return int(m.group(1)) if m else 0

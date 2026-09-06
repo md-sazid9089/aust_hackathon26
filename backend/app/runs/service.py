@@ -3,9 +3,11 @@ from __future__ import annotations
 import uuid
 
 from pydantic import ValidationError
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.artefacts.repository import ArtefactRepo
+from app.courses.repository import CourseRepo
 from app.courses.service import get_owned_course
 from app.db.enums import (
     IMPLEMENTED_MODULES,
@@ -23,11 +25,17 @@ from app.errors import ApiError, Conflict, Forbidden, NotFound
 from app.logging import get_logger
 from app.outcomes.repository import OutcomeRepo
 from app.runs.export import render_markdown
-from app.runs.orchestrator import orchestrator
+from app.runs.orchestrator import PIPELINES, orchestrator
 from app.runs.repository import RunRepo
 from app.runs.schemas import ExamAuditInputs, ExamAuditParams, FindingOut, RunCreate, RunOut
 
 log = get_logger(__name__)
+
+
+def _json(obj):  # noqa: ANN001
+    import json
+
+    return json.loads(json.dumps(obj, default=str))
 
 
 class RunService:
@@ -40,6 +48,9 @@ class RunService:
         run = await self.repo.get(run_id)
         if run is None or (run.owner_id != self.user.id and self.user.role != AppRole.admin):
             raise NotFound("RUN_NOT_FOUND", "Run not found")
+        course = await CourseRepo(self.db).get(run.course_id)
+        if course is None:  # soft-deleted course hides its runs
+            raise NotFound("RUN_NOT_FOUND", "Run not found")
         return run
 
     async def create(self, course_id: uuid.UUID, data: RunCreate, idempotency_key: str | None) -> RunOut:
@@ -47,10 +58,13 @@ class RunService:
         if idempotency_key:
             existing = await self.repo.by_idempotency(self.user.id, idempotency_key)
             if existing is not None:
+                same = existing.course_id == course.id and existing.module == data.module and existing.inputs == _json(data.inputs)
+                if not same:
+                    raise Conflict("IDEMPOTENCY_KEY_REUSED", "Idempotency-Key was already used with a different request")
                 return RunOut.model_validate(existing)
-        if data.module not in IMPLEMENTED_MODULES:
+        if data.module not in PIPELINES:
             raise ApiError("MODULE_NOT_IMPLEMENTED", 422, f"Module '{data.module.value}' is not available in this build",
-                           {"available": sorted(m.value for m in IMPLEMENTED_MODULES)})
+                           {"available": sorted(m.value for m in PIPELINES)})
         try:
             inputs = ExamAuditInputs.model_validate(data.inputs)
             params = ExamAuditParams.model_validate(data.params)
@@ -77,7 +91,16 @@ class RunService:
         await self.db.flush()
         self.db.add_all(RunInput(run_id=run.id, artefact_id=aid, role=role) for aid, role in roles)
         self.db.add(RunEvent(run_id=run.id, seq=0, stage="queued", message="Run queued", pct=0))
-        await self.db.commit()  # background task needs to see the row
+        try:
+            await self.db.commit()  # background task needs to see the row
+        except IntegrityError:
+            # Concurrent request with the same Idempotency-Key won the race: return its run.
+            await self.db.rollback()
+            if idempotency_key:
+                existing = await self.repo.by_idempotency(self.user.id, idempotency_key)
+                if existing is not None:
+                    return RunOut.model_validate(existing)
+            raise
         orchestrator.enqueue(run.id, self.user.id, course.id, run.module, run.params)
         log.info("run.created", run_id=str(run.id), module=run.module.value)
         return RunOut.model_validate(run)

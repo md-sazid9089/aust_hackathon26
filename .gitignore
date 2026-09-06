@@ -32,6 +32,8 @@ build/
 storage/
 uploads/
 tests/.test_storage*/
+**/tests/.test_storage*/
+**/tests/.test.db*
 tests/.test-*.db
 
 # ---- node / frontend ----

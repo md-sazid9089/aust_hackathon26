@@ -254,6 +254,70 @@ class Question(Base, TimestampMixin):
     topic_links: Mapped[list[QuestionTopicMap]] = relationship(cascade="all, delete-orphan")
 
 
+class MarksColumn(Base):
+    """One assessed item (question column) of a marks sheet; `co_code` is the header hint, if any."""
+
+    __tablename__ = "marks_columns"
+    __table_args__ = (
+        UniqueConstraint("artefact_id", "number", name="uq_marks_columns_artefact_number"),
+        CheckConstraint("max_marks >= 0", name="ck_marks_columns_max"),
+    )
+
+    id: Mapped[uuid.UUID] = mapped_column(Uuid, primary_key=True, default=new_uuid)
+    artefact_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("artefacts.id", ondelete="CASCADE"), nullable=False)
+    number: Mapped[str] = mapped_column(Text, nullable=False)
+    max_marks: Mapped[float] = mapped_column(Marks, nullable=False)
+    co_code: Mapped[str | None] = mapped_column(Text)
+    sort_order: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
+
+
+class MarksRow(Base):
+    """One student's scores keyed by column `number` (SEC-007: anonymised id only, no names)."""
+
+    __tablename__ = "marks_rows"
+    __table_args__ = (
+        UniqueConstraint("artefact_id", "student_anon_id", name="uq_marks_rows_artefact_student"),
+        Index("ix_marks_rows_artefact", "artefact_id"),
+    )
+
+    id: Mapped[uuid.UUID] = mapped_column(Uuid, primary_key=True, default=new_uuid)
+    artefact_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("artefacts.id", ondelete="CASCADE"), nullable=False)
+    student_anon_id: Mapped[str] = mapped_column(Text, nullable=False)
+    scores: Mapped[dict[str, Any]] = mapped_column(JsonCol, default=dict, nullable=False)
+    sort_order: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
+
+
+class RubricCriterion(Base, TimestampMixin):
+    __tablename__ = "rubric_criteria"
+    __table_args__ = (
+        UniqueConstraint("artefact_id", "code", name="uq_rubric_criteria_artefact_code"),
+        CheckConstraint("max_score > 0", name="ck_rubric_criteria_max"),
+    )
+
+    id: Mapped[uuid.UUID] = mapped_column(Uuid, primary_key=True, default=new_uuid)
+    artefact_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("artefacts.id", ondelete="CASCADE"), nullable=False)
+    code: Mapped[str] = mapped_column(Text, nullable=False)
+    text: Mapped[str] = mapped_column(Text, nullable=False)
+    max_score: Mapped[float] = mapped_column(Marks, nullable=False)
+    levels: Mapped[list[Any]] = mapped_column(JsonCol, default=list, nullable=False)  # [{label, score, descriptor}]
+    sort_order: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
+
+
+class Answer(Base, TimestampMixin):
+    """A typed student answer plus each grader's per-criterion scores (`[{grader_label, criterion_code, score}]`)."""
+
+    __tablename__ = "answers"
+    __table_args__ = (Index("ix_answers_artefact_order", "artefact_id", "sort_order"),)
+
+    id: Mapped[uuid.UUID] = mapped_column(Uuid, primary_key=True, default=new_uuid)
+    artefact_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("artefacts.id", ondelete="CASCADE"), nullable=False)
+    student_anon_id: Mapped[str] = mapped_column(Text, nullable=False)
+    question_ref: Mapped[str | None] = mapped_column(Text)
+    text: Mapped[str] = mapped_column(Text, nullable=False)
+    grader_scores: Mapped[list[Any]] = mapped_column(JsonCol, default=list, nullable=False)
+    sort_order: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
+
+
 class QuestionCoMap(Base):
     __tablename__ = "question_co_map"
     __table_args__ = (

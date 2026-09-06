@@ -68,7 +68,9 @@ export function LoginPage() {
                 ? 'Demo mode — choose a role to explore with seeded data.'
                 : authMode === 'dev'
                   ? 'Local development — the backend runs with a fixed faculty account.'
-                  : 'Use your university account.'}
+                  : authMode === 'local'
+                    ? 'Sign in with your seeded account (e.g. teacher@aust.edu / admin@aust.edu).'
+                    : 'Use your university account.'}
             </CardDescription>
           </CardHeader>
           <CardContent className="flex flex-col gap-4">

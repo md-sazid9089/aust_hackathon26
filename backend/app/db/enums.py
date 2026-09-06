@@ -80,8 +80,19 @@ class ArtefactKind(StrEnum):
     answer_set = "answer_set"
 
 
-# Kinds whose extraction pipeline exists in this build (Tier 0).
-SUPPORTED_ARTEFACT_KINDS = {ArtefactKind.syllabus, ArtefactKind.question_paper}
+# Kinds whose extraction pipeline exists in this build.
+SUPPORTED_ARTEFACT_KINDS = set(ArtefactKind)
+
+# Which artefact kind each run-input role must reference.
+ROLE_KINDS: dict[str, ArtefactKind] = {
+    "draft": ArtefactKind.question_paper,
+    "past": ArtefactKind.question_paper,
+    "paper": ArtefactKind.question_paper,
+    "marks": ArtefactKind.marks_sheet,
+    "syllabus": ArtefactKind.syllabus,
+    "rubric": ArtefactKind.rubric,
+    "answer_set": ArtefactKind.answer_set,
+}
 
 
 class ExtractionStatus(StrEnum):
@@ -124,7 +135,7 @@ class RunModule(StrEnum):
     calibration = "calibration"
 
 
-IMPLEMENTED_MODULES = {RunModule.exam_audit}
+IMPLEMENTED_MODULES = set(RunModule)
 
 
 class RunStatus(StrEnum):
@@ -194,3 +205,4 @@ class UsagePurpose(StrEnum):
     calibration = "calibration"
     suggestion = "suggestion"
     embedding = "embedding"
+    assistant = "assistant"

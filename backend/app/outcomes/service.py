@@ -25,6 +25,13 @@ def _check_unique_codes(items: list, what: str) -> None:
         raise ApiError("VALIDATION_ERROR", 422, f"Duplicate {what} codes", {"codes": dupes})
 
 
+async def _park_codes(db: AsyncSession, rows: list) -> None:
+    """Temporarily rename kept rows so codes can be swapped without tripping the UNIQUE(course_id, code)."""
+    for row in rows:
+        row.code = f"\x00{row.id}"
+    await db.flush()
+
+
 class OutcomeService:
     def __init__(self, db: AsyncSession, user: Profile) -> None:
         self.db = db
@@ -56,6 +63,7 @@ class OutcomeService:
                 {"ids": [str(i) for i in in_use], "codes": [existing[i].code for i in in_use]},
             )
         await self.repo.delete_cos(to_delete)
+        await _park_codes(self.db, [existing[i.id] for i in items if i.id])
         for order, item in enumerate(items):
             if item.id:
                 row = existing[item.id]
@@ -105,6 +113,7 @@ class OutcomeService:
         if unknown:
             raise ApiError("VALIDATION_ERROR", 422, "Unknown topic ids", {"ids": [str(u) for u in unknown]})
         await self.repo.delete_topics([tid for tid in existing if tid not in keep])
+        await _park_codes(self.db, [existing[i.id] for i in items if i.id])
         for order, item in enumerate(items):
             if item.id:
                 row = existing[item.id]

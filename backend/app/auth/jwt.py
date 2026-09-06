@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import uuid
+from datetime import UTC, datetime
 from functools import lru_cache
 from typing import Any
 
@@ -9,6 +11,44 @@ from jwt import PyJWKClient
 from app.errors import Unauthenticated
 
 ASYMMETRIC_ALGS = ("ES256", "RS256")
+LOCAL_ISSUER = "faculty-copilot"
+LOCAL_AUDIENCE = "faculty-copilot"
+LOCAL_ISS, LOCAL_AUD = LOCAL_ISSUER, LOCAL_AUDIENCE
+
+
+def issue_local_jwt(
+    *, user_id: uuid.UUID, email: str, role: str, secret: str, ttl_s: int
+) -> tuple[str, int]:
+    """Sign an HS256 token for AUTH_MODE=local. Returns (token, expires_at epoch seconds)."""
+    now = int(datetime.now(UTC).timestamp())
+    exp = now + ttl_s
+    claims = {
+        "sub": str(user_id),
+        "email": email,
+        "role": role,
+        "iss": LOCAL_ISSUER,
+        "aud": LOCAL_AUDIENCE,
+        "iat": now,
+        "exp": exp,
+    }
+    return jwt.encode(claims, secret, algorithm="HS256"), exp
+
+
+def verify_local_jwt(token: str, *, secret: str) -> dict[str, Any]:
+    """Verify a token issued by `issue_local_jwt` and return its claims."""
+    try:
+        return jwt.decode(
+            token,
+            secret,
+            algorithms=["HS256"],
+            audience=LOCAL_AUDIENCE,
+            issuer=LOCAL_ISSUER,
+            options={"require": ["sub", "exp", "iat"]},
+        )
+    except jwt.ExpiredSignatureError as exc:
+        raise Unauthenticated("Token expired") from exc
+    except jwt.InvalidTokenError as exc:
+        raise Unauthenticated("Invalid token") from exc
 
 
 @lru_cache

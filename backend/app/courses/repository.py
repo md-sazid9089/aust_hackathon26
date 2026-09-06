@@ -20,8 +20,9 @@ class CourseRepo:
     ) -> tuple[list[Course], int]:
         stmt = self._active(owner_id)
         if q:
-            pattern = f"%{q.strip()}%"
-            stmt = stmt.where(or_(Course.code.ilike(pattern), Course.title.ilike(pattern)))
+            escaped = q.strip().replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")
+            pattern = f"%{escaped}%"
+            stmt = stmt.where(or_(Course.code.ilike(pattern, escape="\\"), Course.title.ilike(pattern, escape="\\")))
         total = (await self.db.execute(select(func.count()).select_from(stmt.subquery()))).scalar_one()
         order = Course.created_at.desc() if sort_desc else Course.created_at.asc()
         rows = (await self.db.execute(stmt.order_by(order).offset(offset).limit(limit))).scalars().all()

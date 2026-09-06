@@ -32,7 +32,12 @@ class CourseUpdate(ApiModel):
     @field_validator("code")
     @classmethod
     def _normalise_code(cls, v: str | None) -> str | None:
-        return " ".join(v.strip().upper().split()) if v else v
+        if v is None:
+            return v
+        v = " ".join(v.strip().upper().split())
+        if len(v) < 2:
+            raise ValueError("code too short")
+        return v
 
 
 class CourseCounts(ApiModel):

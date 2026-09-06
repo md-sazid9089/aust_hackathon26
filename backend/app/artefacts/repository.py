@@ -7,7 +7,19 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from app.db.enums import ArtefactKind, ExtractionStatus, RunStatus
-from app.db.models import Artefact, Question, QuestionCoMap, QuestionTopicMap, Run, RunInput, Topic
+from app.db.models import (
+    Answer,
+    Artefact,
+    MarksColumn,
+    MarksRow,
+    Question,
+    QuestionCoMap,
+    QuestionTopicMap,
+    RubricCriterion,
+    Run,
+    RunInput,
+    Topic,
+)
 
 
 class ArtefactRepo:
@@ -29,9 +41,32 @@ class ArtefactRepo:
         return list((await self.db.execute(stmt)).scalars().all())
 
     async def counts(self, artefact_id: uuid.UUID) -> dict[str, int]:
-        q = (await self.db.execute(select(func.count()).where(Question.artefact_id == artefact_id))).scalar_one()
-        t = (await self.db.execute(select(func.count()).where(Topic.source_artefact_id == artefact_id))).scalar_one()
-        return {"questions": q, "topics": t}
+        async def n(stmt) -> int:  # noqa: ANN001
+            return (await self.db.execute(select(func.count()).select_from(stmt.subquery()))).scalar_one()
+
+        return {
+            "questions": await n(select(Question.id).where(Question.artefact_id == artefact_id)),
+            "topics": await n(select(Topic.id).where(Topic.source_artefact_id == artefact_id)),
+            "students": await n(select(MarksRow.id).where(MarksRow.artefact_id == artefact_id)),
+            "criteria": await n(select(RubricCriterion.id).where(RubricCriterion.artefact_id == artefact_id)),
+            "answers": await n(select(Answer.id).where(Answer.artefact_id == artefact_id)),
+        }
+
+    async def marks_columns(self, artefact_id: uuid.UUID) -> list[MarksColumn]:
+        stmt = select(MarksColumn).where(MarksColumn.artefact_id == artefact_id).order_by(MarksColumn.sort_order)
+        return list((await self.db.execute(stmt)).scalars().all())
+
+    async def marks_rows(self, artefact_id: uuid.UUID) -> list[MarksRow]:
+        stmt = select(MarksRow).where(MarksRow.artefact_id == artefact_id).order_by(MarksRow.sort_order)
+        return list((await self.db.execute(stmt)).scalars().all())
+
+    async def rubric(self, artefact_id: uuid.UUID) -> list[RubricCriterion]:
+        stmt = select(RubricCriterion).where(RubricCriterion.artefact_id == artefact_id).order_by(RubricCriterion.sort_order)
+        return list((await self.db.execute(stmt)).scalars().all())
+
+    async def answers(self, artefact_id: uuid.UUID) -> list[Answer]:
+        stmt = select(Answer).where(Answer.artefact_id == artefact_id).order_by(Answer.sort_order)
+        return list((await self.db.execute(stmt)).scalars().all())
 
     async def questions(self, artefact_id: uuid.UUID) -> list[Question]:
         stmt = (
@@ -68,6 +103,8 @@ class ArtefactRepo:
     async def clear_children(self, artefact: Artefact) -> None:
         ids = [q.id for q in await self.questions(artefact.id)]
         await self.delete_questions(ids)
+        for model in (MarksColumn, MarksRow, RubricCriterion, Answer):
+            await self.db.execute(delete(model).where(model.artefact_id == artefact.id))
         if artefact.kind == ArtefactKind.syllabus:
             topic_ids = list(
                 (await self.db.execute(select(Topic.id).where(Topic.source_artefact_id == artefact.id))).scalars()

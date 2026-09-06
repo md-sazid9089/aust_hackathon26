@@ -12,6 +12,9 @@ from app.schemas import ApiModel
 class ArtefactCounts(ApiModel):
     questions: int = 0
     topics: int = 0
+    students: int = 0
+    criteria: int = 0
+    answers: int = 0
 
 
 class ArtefactOut(ApiModel):
@@ -37,6 +40,72 @@ class ArtefactTextOut(ApiModel):
     extracted_text: str | None
 
 
+# --- marks sheet -----------------------------------------------------------
+class MarksQuestionOut(ApiModel):
+    number: str
+    max: float
+    co_code: str | None = None
+
+
+class MarksRowOut(ApiModel):
+    student_anon_id: str
+    scores: dict[str, float]
+
+
+class MarksSheetOut(ApiModel):
+    students: int
+    questions: list[MarksQuestionOut]
+    rows: list[MarksRowOut]
+
+
+# --- rubric ----------------------------------------------------------------
+class RubricLevel(ApiModel):
+    label: str = Field(min_length=1, max_length=40)
+    score: float = Field(ge=0, le=1000)
+    descriptor: str = Field(max_length=2000)
+
+
+class RubricCriterionIn(ApiModel):
+    id: uuid.UUID | None = None
+    code: str = Field(min_length=1, max_length=20)
+    text: str = Field(min_length=1, max_length=1000)
+    max_score: float = Field(gt=0, le=1000)
+    levels: list[RubricLevel] = Field(default_factory=list, max_length=12)
+
+    @field_validator("code")
+    @classmethod
+    def _norm(cls, v: str) -> str:
+        return "".join(v.upper().split())
+
+
+class RubricCriterionOut(RubricCriterionIn):
+    id: uuid.UUID  # type: ignore[assignment]
+
+
+# --- answer set --------------------------------------------------------------
+class GraderScore(ApiModel):
+    grader_label: str = Field(min_length=1, max_length=40)
+    criterion_code: str = Field(min_length=1, max_length=20)
+    score: float = Field(ge=0, le=1000)
+
+    @field_validator("criterion_code")
+    @classmethod
+    def _norm(cls, v: str) -> str:
+        return "".join(v.upper().split())
+
+
+class AnswerIn(ApiModel):
+    id: uuid.UUID | None = None
+    student_anon_id: str = Field(min_length=1, max_length=40)
+    question_ref: str | None = Field(None, max_length=20)
+    text: str = Field(min_length=1, max_length=20_000)
+    grader_scores: list[GraderScore] = Field(default_factory=list, max_length=200)
+
+
+class AnswerOut(AnswerIn):
+    id: uuid.UUID  # type: ignore[assignment]
+
+
 class QuestionIn(ApiModel):
     id: uuid.UUID | None = None
     number: str = Field(min_length=1, max_length=20, examples=["3(b)"])
@@ -46,7 +115,10 @@ class QuestionIn(ApiModel):
     @field_validator("number")
     @classmethod
     def _norm(cls, v: str) -> str:
-        return "".join(v.split())
+        v = "".join(v.split())
+        if not v:
+            raise ValueError("number must not be blank")
+        return v
 
 
 class QuestionOut(ApiModel):

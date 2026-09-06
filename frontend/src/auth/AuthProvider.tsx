@@ -8,9 +8,12 @@ import { getSupabase } from '@/lib/supabase';
 import type { Profile } from '@/lib/types/api';
 
 const MOCK_USER_KEY = 'fc-mock-user';
+const LOCAL_TOKEN_KEY = 'fc-local-token';
 const BASE_URL = (import.meta.env.VITE_API_BASE_URL as string | undefined) ?? '/api/v1';
-/** `dev` pairs with backend `AUTH_MODE=dev` (no token, fixed faculty user). Never set in production. */
-export const AUTH_MODE: 'dev' | 'supabase' = (import.meta.env.VITE_AUTH_MODE as string) === 'dev' ? 'dev' : 'supabase';
+/** Pairs with backend `AUTH_MODE`: `dev` = no token, fixed faculty user (never in prod); `local` = email+password → HS256 JWT from `/auth/login`; `supabase` = Supabase Auth session. */
+export type AuthMode = 'dev' | 'local' | 'supabase';
+const rawAuthMode = import.meta.env.VITE_AUTH_MODE as string | undefined;
+export const AUTH_MODE: AuthMode = rawAuthMode === 'dev' || rawAuthMode === 'local' ? rawAuthMode : 'supabase';
 
 export const DEMO_USERS = [
   { id: ids.faculty, label: 'Faculty', hint: 'Dr. Farhana Rahman · owns CSE 2201 & CSE 2101' },
@@ -21,7 +24,7 @@ interface AuthState {
   status: 'loading' | 'anonymous' | 'authenticated';
   profile: Profile | null;
   mode: 'mock' | 'live';
-  authMode: 'dev' | 'supabase';
+  authMode: AuthMode;
   lastError: string | null;
   signInMock: (userId: string) => void;
   signInDev: () => Promise<void>;
@@ -44,10 +47,57 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [lastError, setLastError] = useState<string | null>(null);
 
   const clear = useCallback(() => {
+    sessionStorage.removeItem(LOCAL_TOKEN_KEY);
     setApi(null);
     setProfile(null);
     setStatus('anonymous');
   }, []);
+
+  /* ---- local mode (backend AUTH_MODE=local, HS256 JWT from /auth/login) ---- */
+  const bootLocal = useCallback(
+    async (token: string) => {
+      sessionStorage.setItem(LOCAL_TOKEN_KEY, token);
+      const http = new HttpApi(BASE_URL, async () => sessionStorage.getItem(LOCAL_TOKEN_KEY), clear);
+      try {
+        const p = await http.me();
+        setApi(http);
+        setProfile(p);
+        setStatus('authenticated');
+      } catch (e) {
+        setLastError(e instanceof Error ? e.message : 'Backend unreachable');
+        clear();
+      }
+    },
+    [clear],
+  );
+
+  const signInLocal = useCallback(
+    async (email: string, password: string): Promise<string | null> => {
+      setLastError(null);
+      let res: Response;
+      try {
+        res = await fetch(`${BASE_URL}/auth/login`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, password }),
+        });
+      } catch {
+        return 'Backend unreachable';
+      }
+      if (!res.ok) {
+        try {
+          const body = (await res.json()) as { error?: { message?: string } };
+          return body.error?.message ?? res.statusText;
+        } catch {
+          return res.statusText || 'Sign-in failed';
+        }
+      }
+      const { access_token } = (await res.json()) as { access_token: string };
+      await bootLocal(access_token);
+      return null;
+    },
+    [bootLocal],
+  );
 
   /* ---- dev mode (backend AUTH_MODE=dev, no token) ---- */
   const signInDev = useCallback(async () => {
@@ -110,6 +160,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       void signInDev();
       return;
     }
+    if (AUTH_MODE === 'local') {
+      const saved = sessionStorage.getItem(LOCAL_TOKEN_KEY);
+      if (saved) void bootLocal(saved);
+      else setStatus('anonymous');
+      return;
+    }
     const sb = getSupabase();
     if (!sb) {
       setStatus('anonymous');
@@ -121,18 +177,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (event === 'SIGNED_IN') void bootLive(session);
     });
     return () => sub.subscription.unsubscribe();
-  }, [bootLive, clear, signInMock, signInDev]);
+  }, [bootLive, bootLocal, clear, signInMock, signInDev]);
 
-  const signInWithPassword = useCallback(async (email: string, password: string) => {
-    const sb = getSupabase();
-    if (!sb) return 'Supabase is not configured (VITE_SUPABASE_URL / VITE_SUPABASE_ANON_KEY).';
-    const { error } = await sb.auth.signInWithPassword({ email, password });
-    return error ? error.message : null;
-  }, []);
+  const signInWithPassword = useCallback(
+    async (email: string, password: string) => {
+      if (AUTH_MODE === 'local') return signInLocal(email, password);
+      const sb = getSupabase();
+      if (!sb) return 'Supabase is not configured (VITE_SUPABASE_URL / VITE_SUPABASE_ANON_KEY).';
+      const { error } = await sb.auth.signInWithPassword({ email, password });
+      return error ? error.message : null;
+    },
+    [signInLocal],
+  );
 
   const signOut = useCallback(async () => {
     sessionStorage.removeItem(MOCK_USER_KEY);
-    const sb = API_MODE === 'live' ? getSupabase() : null;
+    const sb = API_MODE === 'live' && AUTH_MODE === 'supabase' ? getSupabase() : null;
     if (sb) await sb.auth.signOut();
     clear();
   }, [clear]);

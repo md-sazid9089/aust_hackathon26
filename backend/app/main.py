@@ -8,6 +8,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.ai.client import get_provider
 from app.artefacts.router import router as artefacts_router
+from app.assistant.router import router as assistant_router
 from app.auth.router import router as auth_router
 from app.auth.service import ensure_seed_users, sync_role_permissions
 from app.config import get_settings
@@ -94,6 +95,7 @@ def create_app() -> FastAPI:
     api.include_router(artefacts_router)
     api.include_router(runs_router)
     api.include_router(demo_router)
+    api.include_router(assistant_router)
     app.include_router(api)
     return app
 

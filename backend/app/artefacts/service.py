@@ -7,12 +7,25 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.artefacts import parsers
 from app.artefacts.repository import ArtefactRepo
-from app.artefacts.schemas import ArtefactCounts, ArtefactOut, QuestionCoMapIn, QuestionIn, QuestionOut
+from app.artefacts.schemas import (
+    AnswerIn,
+    AnswerOut,
+    ArtefactCounts,
+    ArtefactOut,
+    MarksQuestionOut,
+    MarksRowOut,
+    MarksSheetOut,
+    QuestionCoMapIn,
+    QuestionIn,
+    QuestionOut,
+    RubricCriterionIn,
+    RubricCriterionOut,
+)
 from app.artefacts.storage import get_storage, object_path
 from app.config import get_settings
 from app.courses.service import get_owned_course
 from app.db.enums import SUPPORTED_ARTEFACT_KINDS, ArtefactKind, ExtractionStatus, MapSource
-from app.db.models import Artefact, Profile, Question, QuestionCoMap
+from app.db.models import Answer, Artefact, Profile, Question, QuestionCoMap, RubricCriterion
 from app.errors import ApiError, Conflict, NotFound
 from app.extraction.service import schedule_extraction
 from app.logging import get_logger
@@ -195,3 +208,80 @@ class ArtefactService:
         await self.repo.replace_co_map([i.question_id for i in items], rows)
         await self.db.flush()
         return await self.questions(artefact_id)
+
+    # --- marks sheet ----------------------------------------------------------
+    async def marks(self, artefact_id: uuid.UUID) -> MarksSheetOut:
+        artefact = await self._owned_kind(artefact_id, ArtefactKind.marks_sheet)
+        cols = await self.repo.marks_columns(artefact.id)
+        rows = await self.repo.marks_rows(artefact.id)
+        return MarksSheetOut(
+            students=len(rows),
+            questions=[MarksQuestionOut(number=c.number, max=c.max_marks, co_code=c.co_code) for c in cols],
+            rows=[MarksRowOut(student_anon_id=r.student_anon_id, scores={k: float(v) for k, v in r.scores.items()}) for r in rows],
+        )
+
+    # --- rubric -----------------------------------------------------------------
+    async def rubric(self, artefact_id: uuid.UUID) -> list[RubricCriterionOut]:
+        artefact = await self._owned_kind(artefact_id, ArtefactKind.rubric)
+        return [RubricCriterionOut.model_validate(c) for c in await self.repo.rubric(artefact.id)]
+
+    async def replace_rubric(self, artefact_id: uuid.UUID, items: list[RubricCriterionIn]) -> list[RubricCriterionOut]:
+        artefact = await self._owned_kind(artefact_id, ArtefactKind.rubric, for_write=True)
+        codes = [i.code for i in items]
+        if len(set(codes)) != len(codes):
+            raise ApiError("VALIDATION_ERROR", 422, "Duplicate criterion codes")
+        existing = {c.id: c for c in await self.repo.rubric(artefact.id)}
+        keep = {i.id for i in items if i.id}
+        if keep - set(existing):
+            raise ApiError("VALIDATION_ERROR", 422, "Unknown criterion ids")
+        for cid, row in existing.items():
+            if cid not in keep:
+                await self.db.delete(row)
+        for order, item in enumerate(items):
+            levels = [lv.model_dump() for lv in item.levels]
+            if item.id:
+                row = existing[item.id]
+                row.code, row.text, row.max_score, row.levels, row.sort_order = item.code, item.text, item.max_score, levels, order
+            else:
+                self.db.add(RubricCriterion(artefact_id=artefact.id, code=item.code, text=item.text, max_score=item.max_score, levels=levels, sort_order=order))
+        if artefact.status == ExtractionStatus.failed and items:
+            artefact.status, artefact.error = ExtractionStatus.done, None
+        await self.db.flush()
+        return await self.rubric(artefact_id)
+
+    # --- answer set ---------------------------------------------------------------
+    async def answers(self, artefact_id: uuid.UUID) -> list[AnswerOut]:
+        artefact = await self._owned_kind(artefact_id, ArtefactKind.answer_set)
+        return [AnswerOut.model_validate(a) for a in await self.repo.answers(artefact.id)]
+
+    async def replace_answers(self, artefact_id: uuid.UUID, items: list[AnswerIn]) -> list[AnswerOut]:
+        artefact = await self._owned_kind(artefact_id, ArtefactKind.answer_set, for_write=True)
+        existing = {a.id: a for a in await self.repo.answers(artefact.id)}
+        keep = {i.id for i in items if i.id}
+        if keep - set(existing):
+            raise ApiError("VALIDATION_ERROR", 422, "Unknown answer ids")
+        for aid, row in existing.items():
+            if aid not in keep:
+                await self.db.delete(row)
+        for order, item in enumerate(items):
+            scores = [g.model_dump() for g in item.grader_scores]
+            if item.id:
+                row = existing[item.id]
+                row.student_anon_id, row.question_ref, row.text, row.grader_scores, row.sort_order = (
+                    item.student_anon_id, item.question_ref, item.text, scores, order,
+                )
+            else:
+                self.db.add(Answer(artefact_id=artefact.id, student_anon_id=item.student_anon_id, question_ref=item.question_ref,
+                                   text=item.text, grader_scores=scores, sort_order=order))
+        if artefact.status == ExtractionStatus.failed and items:
+            artefact.status, artefact.error = ExtractionStatus.done, None
+        await self.db.flush()
+        return await self.answers(artefact_id)
+
+    async def _owned_kind(self, artefact_id: uuid.UUID, kind: ArtefactKind, *, for_write: bool = False) -> Artefact:
+        artefact = await self._owned(artefact_id)
+        if artefact.kind != kind:
+            raise ApiError("VALIDATION_ERROR", 422, f"Artefact is a {artefact.kind.value}, not a {kind.value}")
+        if for_write and artefact.status == ExtractionStatus.extracting:
+            raise Conflict("ARTEFACT_NOT_READY", "Extraction in progress")
+        return artefact
