@@ -1,0 +1,21 @@
+# python
+__pycache__/
+*.py[cod]
+.venv/
+.pytest_cache/
+.ruff_cache/
+*.egg-info/
+
+# secrets & local state
+.env
+.env.*
+!.env.example
+dev.db
+*.db
+*.db-journal
+storage/
+ag_scratch.db
+
+# node
+node_modules/
+dist/
