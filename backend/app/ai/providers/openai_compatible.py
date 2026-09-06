@@ -165,6 +165,61 @@ class OpenAICompatibleProvider(AIProvider):
         usage = data.get("usage") or {}
         return EmbedResult(vectors=vectors, model=data.get("model") or self.embed_model, tokens_in=usage.get("prompt_tokens"))
 
+    async def chat_vision(
+        self,
+        *,
+        purpose: str,
+        system: str,
+        user_prompt: str,
+        images: list[tuple[bytes, str]],
+        model: str | None = None,
+        temperature: float = 0.0,
+        timeout_s: float = 60.0,
+    ) -> ChatResult:
+        import base64
+
+        model_id = model or self.model
+        content_parts: list[dict[str, Any]] = [{"type": "text", "text": user_prompt}]
+        for img_bytes, mime in images:
+            b64 = base64.b64encode(img_bytes).decode("utf-8")
+            content_parts.append({
+                "type": "image_url",
+                "image_url": {"url": f"data:{mime};base64,{b64}"},
+            })
+
+        messages = [
+            {"role": "system", "content": system},
+            {"role": "user", "content": content_parts},
+        ]
+        body: dict[str, Any] = {"model": model_id, "messages": messages, "temperature": temperature}
+        if self.is_openrouter:
+            body["provider"] = {"require_parameters": True, "data_collection": "deny"}
+
+        data = await self._post(f"{self.base_url}/chat/completions", body, timeout_s)
+        try:
+            choice = data["choices"][0]
+            message = choice["message"]
+            content = message.get("content")
+            if isinstance(content, list):
+                content = "".join(p.get("text", "") for p in content if isinstance(p, dict))
+        except (KeyError, IndexError, TypeError, AttributeError) as exc:
+            raise ProviderError("Malformed vision completion response", retryable=True, kind="malformed") from exc
+
+        finish_reason = choice.get("finish_reason")
+        if message.get("refusal"):
+            raise ProviderError("Model refused the vision request", retryable=False, kind="refusal")
+        if finish_reason == "content_filter":
+            raise ProviderError("Output blocked by content filter", retryable=False, kind="refusal")
+        usage = data.get("usage") or {}
+        return ChatResult(
+            content=content or "",
+            model=data.get("model") or body["model"],
+            tokens_in=usage.get("prompt_tokens"),
+            tokens_out=usage.get("completion_tokens"),
+            finish_reason=finish_reason,
+            raw={"finish_reason": finish_reason},
+        )
+
     async def health(self) -> bool:
         try:
             r = await self._client.get(f"{self.base_url}/models", timeout=5.0)

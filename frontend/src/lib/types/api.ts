@@ -60,6 +60,7 @@ export interface Profile {
   full_name: string | null;
   role: AppRole;
   is_active: boolean;
+  must_change_password?: boolean;
   created_at: ISODate;
 }
 
@@ -383,6 +384,23 @@ export interface DashboardOut {
 export interface AdminUser extends Profile {
   courses: number;
   runs: number;
+}
+export interface AdminUserCreate {
+  email: string;
+  password: string;
+  full_name?: string;
+  role?: AppRole;
+  must_change_password?: boolean;
+}
+export interface AdminUserPatch {
+  is_active?: boolean;
+  role?: AppRole;
+  password?: string;
+  must_change_password?: boolean;
+}
+export interface ChangePasswordInput {
+  current_password: string;
+  new_password: string;
 }
 export interface AdminRun extends Run {
   owner_email: string;

@@ -9,9 +9,11 @@ import uuid
 from datetime import UTC, date, datetime, timedelta
 from typing import Annotated, Literal
 
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, Query, status
+from pydantic import Field
 from sqlalchemy import delete, func, select
 
+from app.auth.passwords import hash_password
 from app.db.enums import AppRole, FindingStatus, FindingType, Permission, RunModule, RunStatus
 from app.db.models import Course, Finding, Profile, Run, UsageLog
 from app.demo.service import seed_demo
@@ -31,9 +33,19 @@ class AdminUserOut(ProfileOut):
     runs: int = 0
 
 
+class AdminUserCreate(ApiModel):
+    email: str = Field(min_length=3, max_length=254, pattern=r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
+    password: str = Field(min_length=8, max_length=256)
+    full_name: str | None = Field(default=None, max_length=256)
+    role: AppRole = AppRole.faculty
+    must_change_password: bool = True
+
+
 class AdminUserPatch(ApiModel):
     is_active: bool | None = None
     role: AppRole | None = None
+    password: str | None = Field(default=None, min_length=8, max_length=256)
+    must_change_password: bool | None = None
 
 
 class AdminRunOut(RunOut):
@@ -85,12 +97,50 @@ def _profile_out(p: Profile) -> dict:
 async def list_users(db: DbDep, page: Annotated[int, Query(ge=1)] = 1, page_size: Annotated[int, Query(ge=1, le=100)] = 25) -> Page[AdminUserOut]:
     total = (await db.execute(select(func.count()).select_from(Profile))).scalar_one()
     rows = list((await db.execute(select(Profile).order_by(Profile.created_at).offset((page - 1) * page_size).limit(page_size))).scalars())
-    items = []
-    for p in rows:
-        courses = (await db.execute(select(func.count()).where(Course.owner_id == p.id, Course.deleted_at.is_(None)))).scalar_one()
-        runs = (await db.execute(select(func.count()).where(Run.owner_id == p.id))).scalar_one()
-        items.append(AdminUserOut(**_profile_out(p), courses=courses, runs=runs))
+    ids = [p.id for p in rows]
+    course_counts: dict = {}
+    run_counts: dict = {}
+    if ids:
+        course_counts = dict((await db.execute(
+            select(Course.owner_id, func.count()).where(Course.owner_id.in_(ids), Course.deleted_at.is_(None)).group_by(Course.owner_id)
+        )).all())
+        run_counts = dict((await db.execute(
+            select(Run.owner_id, func.count()).where(Run.owner_id.in_(ids)).group_by(Run.owner_id)
+        )).all())
+    items = [
+        AdminUserOut(**_profile_out(p), courses=course_counts.get(p.id, 0), runs=run_counts.get(p.id, 0))
+        for p in rows
+    ]
     return Page(items=items, page=page, page_size=page_size, total=total)
+
+
+@router.post("/users", response_model=AdminUserOut, status_code=status.HTTP_201_CREATED, summary="Add user with email and password (F-031)", responses=ERROR_RESPONSES,
+             dependencies=[Depends(require_permission(Permission.admin_users))])
+async def create_user(data: AdminUserCreate, db: DbDep) -> AdminUserOut:
+    email = data.email.strip().lower()
+    existing = (await db.execute(select(Profile).where(Profile.email == email))).scalar_one_or_none()
+    if existing is not None:
+        raise ApiError("EMAIL_EXISTS", 409, f"A user with email '{email}' already exists")
+
+    p = Profile(
+        id=uuid.uuid4(),
+        email=email,
+        full_name=data.full_name.strip() if data.full_name else None,
+        role=data.role,
+        is_active=True,
+        password_hash=hash_password(data.password),
+        must_change_password=data.must_change_password,
+    )
+    db.add(p)
+    await db.flush()
+    log.info(
+        "admin.user_created",
+        user_id=str(p.id),
+        email=p.email,
+        role=p.role.value,
+        must_change_password=p.must_change_password,
+    )
+    return AdminUserOut(**_profile_out(p), courses=0, runs=0)
 
 
 @router.patch("/users/{user_id}", response_model=AdminUserOut, summary="Enable/disable a user or change role (F-031)", responses=ERROR_RESPONSES,
@@ -105,6 +155,10 @@ async def patch_user(user_id: uuid.UUID, data: AdminUserPatch, db: DbDep, admin:
         p.is_active = data.is_active
     if data.role is not None:
         p.role = data.role
+    if data.password is not None:
+        p.password_hash = hash_password(data.password)
+    if data.must_change_password is not None:
+        p.must_change_password = data.must_change_password
     await db.flush()
     log.info("admin.user_patched", user_id=str(p.id), is_active=p.is_active, role=p.role.value)
     courses = (await db.execute(select(func.count()).where(Course.owner_id == p.id, Course.deleted_at.is_(None)))).scalar_one()
@@ -197,14 +251,27 @@ async def dept_exam_audits(db: DbDep) -> list[DeptAuditRow]:
                              .where(Run.module == RunModule.exam_audit, Run.status.in_(FINISHED), Course.deleted_at.is_(None))
                              .order_by(Run.finished_at.desc()))).all()
     seen: set[uuid.UUID] = set()
-    out = []
+    latest: list[tuple] = []
     for run, code, email in rows:
         if run.course_id in seen:
             continue
         seen.add(run.course_id)
+        latest.append((run, code, email))
+
+    run_ids = [run.id for run, _, _ in latest]
+    open_by_run: dict[uuid.UUID, int] = {}
+    dups_by_run: dict[uuid.UUID, int] = {}
+    if run_ids:
+        open_by_run = dict((await db.execute(
+            select(Finding.run_id, func.count()).where(Finding.run_id.in_(run_ids), Finding.status == FindingStatus.open).group_by(Finding.run_id)
+        )).all())
+        dups_by_run = dict((await db.execute(
+            select(Finding.run_id, func.count()).where(Finding.run_id.in_(run_ids), Finding.type == FindingType.duplicate).group_by(Finding.run_id)
+        )).all())
+
+    out = []
+    for run, code, email in latest:
         s = run.summary or {}
-        open_n = (await db.execute(select(func.count()).where(Finding.run_id == run.id, Finding.status == FindingStatus.open))).scalar_one()
-        dups = (await db.execute(select(func.count()).where(Finding.run_id == run.id, Finding.type == FindingType.duplicate))).scalar_one()
         out.append(DeptAuditRow(owner_email=email, course_code=code, run_id=run.id, finished_at=run.finished_at,
-                                coverage_pct=float(s.get("coverage_pct", 0)), duplicates=dups, open_findings=open_n))
+                                coverage_pct=float(s.get("coverage_pct", 0)), duplicates=dups_by_run.get(run.id, 0), open_findings=open_by_run.get(run.id, 0)))
     return out

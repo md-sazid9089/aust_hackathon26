@@ -33,9 +33,9 @@ class CourseService:
             self.user.id, q=q, offset=(page - 1) * page_size, limit=page_size, sort_desc=desc
         )
         out: list[CourseOut] = []
-        for c in rows:
+        for c, counts in rows:
             o = CourseOut.model_validate(c)
-            o.counts = CourseCounts(**await self.repo.counts(c.id))
+            o.counts = CourseCounts(**counts)
             out.append(o)
         return out, total
 

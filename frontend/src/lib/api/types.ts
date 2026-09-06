@@ -10,6 +10,7 @@ export interface RunEventHandlers {
 export interface Api {
   // auth
   me(): Promise<T.Profile>;
+  changePassword(body: T.ChangePasswordInput): Promise<void>;
 
   // courses
   listCourses(q?: string): Promise<T.Page<T.Course>>;
@@ -62,7 +63,8 @@ export interface Api {
 
   // admin
   adminUsers(page?: number): Promise<T.Page<T.AdminUser>>;
-  adminPatchUser(id: string, body: { is_active?: boolean; role?: T.AppRole }): Promise<T.AdminUser>;
+  adminCreateUser(body: T.AdminUserCreate): Promise<T.AdminUser>;
+  adminPatchUser(id: string, body: T.AdminUserPatch): Promise<T.AdminUser>;
   adminRuns(params: { page?: number; module?: T.RunModule; status?: T.RunStatus }): Promise<T.Page<T.AdminRun>>;
   adminUsage(params: { from?: string; to?: string; group?: 'user' | 'day' }): Promise<T.UsageRow[]>;
   adminDemoReset(): Promise<{ course_id: string }>;

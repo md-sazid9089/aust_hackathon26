@@ -20,6 +20,7 @@ interface AuthState {
   signInDev: () => Promise<void>;
   signInWithPassword: (email: string, password: string) => Promise<string | null>;
   signOut: () => Promise<void>;
+  refreshProfile: () => Promise<Profile | null>;
 }
 
 const AuthCtx = createContext<AuthState | null>(null);
@@ -109,7 +110,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setStatus('authenticated');
     } catch (e) {
       setLastError(e instanceof Error ? e.message : 'Backend unreachable');
-      clear();
+      setApi(null);
+      setProfile(null);
+      setStatus('anonymous');
     }
   }, [clear]);
 
@@ -130,7 +133,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setStatus('authenticated');
       } catch (e) {
         setLastError(e instanceof Error ? e.message : 'Backend unreachable');
-        clear();
+        // Keep the Supabase session unless the backend actually rejected it.
+        if (e instanceof ApiError && (e.status === 401 || e.status === 403)) return void sb.auth.signOut().then(clear);
+        setApi(null);
+        setProfile(null);
+        setStatus('anonymous');
       }
     },
     [clear],
@@ -177,9 +184,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     clear();
   }, [clear]);
 
+  const refreshProfile = useCallback(async () => {
+    if (!api) return null;
+    try {
+      const p = await api.me();
+      setProfile(p);
+      return p;
+    } catch {
+      return null;
+    }
+  }, [api]);
+
   const value = useMemo<AuthState>(
-    () => ({ status, profile, authMode: AUTH_MODE, lastError, signInDev, signInWithPassword, signOut }),
-    [status, profile, lastError, signInDev, signInWithPassword, signOut],
+    () => ({ status, profile, authMode: AUTH_MODE, lastError, signInDev, signInWithPassword, signOut, refreshProfile }),
+    [status, profile, lastError, signInDev, signInWithPassword, signOut, refreshProfile],
   );
 
   return (

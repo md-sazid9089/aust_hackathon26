@@ -16,6 +16,9 @@ ALLOWED: dict[str, tuple[str, ...]] = {
     "md": ("text/markdown", "text/plain", "application/octet-stream"),
     "csv": ("text/csv", "text/plain", "application/octet-stream"),
     "xlsx": ("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "application/octet-stream"),
+    "png": ("image/png", "application/octet-stream"),
+    "jpg": ("image/jpeg", "image/jpg", "application/octet-stream"),
+    "jpeg": ("image/jpeg", "image/jpg", "application/octet-stream"),
 }
 
 CANONICAL_MIME = {
@@ -25,9 +28,13 @@ CANONICAL_MIME = {
     "md": "text/markdown",
     "csv": "text/csv",
     "xlsx": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    "png": "image/png",
+    "jpg": "image/jpeg",
+    "jpeg": "image/jpeg",
 }
 
 TABULAR_EXTS = {"csv", "xlsx"}
+IMAGE_EXTS = {"png", "jpg", "jpeg"}
 
 
 class UnsupportedFile(Exception):
@@ -43,6 +50,10 @@ def sniff_extension(filename: str, head: bytes) -> str:
     ext = (filename.rsplit(".", 1)[-1].lower() if "." in filename else "")
     if head.startswith(b"%PDF-"):
         return "pdf"
+    if head.startswith(b"\x89PNG\r\n\x1a\n"):
+        return "png"
+    if head.startswith(b"\xff\xd8\xff"):
+        return "jpg" if ext != "jpeg" else "jpeg"
     if head.startswith(b"PK\x03\x04") and ext == "docx":
         return "docx"
     if head.startswith(b"PK\x03\x04") and ext == "xlsx":
@@ -59,6 +70,8 @@ MAX_PDF_PAGES = 200
 
 
 def extract_text(ext: str, data: bytes) -> str:
+    if ext in IMAGE_EXTS:
+        return ""
     if ext == "pdf":
         text = _pdf_text(data)
     elif ext == "docx":
@@ -71,6 +84,28 @@ def extract_text(ext: str, data: bytes) -> str:
     if len(text) < 20:
         raise NoTextExtracted("No extractable text (scanned/image document?)")
     return text
+
+
+async def extract_text_async(ext: str, data: bytes) -> str:
+    """Extract text from documents, automatically running OCR for scanned PDFs or images."""
+    if ext in IMAGE_EXTS:
+        from app.artefacts.ocr import perform_ocr
+
+        ocr_text = await perform_ocr(ext, data)
+        if len(ocr_text) < 20:
+            raise NoTextExtracted("No extractable text found in image")
+        return ocr_text
+
+    try:
+        return extract_text(ext, data)
+    except (NoTextExtracted, UnsupportedFile):
+        if ext == "pdf":
+            from app.artefacts.ocr import perform_ocr
+
+            ocr_text = await perform_ocr(ext, data)
+            if len(ocr_text) >= 20:
+                return ocr_text
+        raise
 
 
 def _xlsx_csv(data: bytes) -> str:

@@ -91,8 +91,9 @@ class ArtefactService:
                 raise ApiError("VALIDATION_ERROR", 422, "Empty file")
             try:
                 ext = parsers.sniff_extension(file.filename, data[:1024])
+                timeout = 45.0 if ext in parsers.IMAGE_EXTS else PARSE_TIMEOUT_S
                 extracted = await asyncio.wait_for(
-                    asyncio.to_thread(parsers.extract_text, ext, data), timeout=PARSE_TIMEOUT_S
+                    parsers.extract_text_async(ext, data), timeout=timeout
                 )
             except TimeoutError as exc:
                 raise ApiError("UNSUPPORTED_FILE_TYPE", 415, "Document took too long to parse") from exc
@@ -125,7 +126,12 @@ class ArtefactService:
 
     async def list(self, course_id: uuid.UUID, *, kind: ArtefactKind | None, status: ExtractionStatus | None) -> list[ArtefactOut]:
         await get_owned_course(self.db, course_id, self.user)
-        return [await self._out(a) for a in await self.repo.list(course_id, kind=kind, status=status)]
+        out: list[ArtefactOut] = []
+        for a, counts in await self.repo.list(course_id, kind=kind, status=status):
+            o = ArtefactOut.model_validate(a)
+            o.counts = ArtefactCounts(**counts)
+            out.append(o)
+        return out
 
     async def get(self, artefact_id: uuid.UUID) -> ArtefactOut:
         return await self._out(await self._owned(artefact_id))

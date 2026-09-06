@@ -19,7 +19,7 @@ interface Turn extends ChatMessage {
 }
 
 const SUGGESTIONS = ['What can you do?', 'List my courses', 'Seed the demo course', 'Show findings of the latest run'];
-const ACCEPT = '.pdf,.docx,.txt,.md';
+const ACCEPT = '.pdf,.docx,.txt,.md,.png,.jpg,.jpeg';
 
 export function AssistantWidget() {
   const api = useApi();

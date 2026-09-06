@@ -328,6 +328,37 @@ class MockProvider(AIProvider):
             )
         return {"items": items}
 
+    async def chat_vision(
+        self,
+        *,
+        purpose: str,
+        system: str,
+        user_prompt: str,
+        images: list[tuple[bytes, str]],
+        model: str | None = None,
+        temperature: float = 0.0,
+        timeout_s: float = 60.0,
+    ) -> ChatResult:
+        if not images:
+            return ChatResult(content="", model="mock")
+        q = self._queued.get(purpose)
+        if q:
+            item = q.popleft()
+            if isinstance(item, Exception):
+                raise item
+            if isinstance(item, str):
+                return ChatResult(content=item, model="mock")
+        ocr_text = (
+            "Ahsanullah University of Science and Technology\n"
+            "Department of Computer Science and Engineering\n"
+            "Course: CSE 3101 - Database Systems\n\n"
+            "1. (a) Define DBMS and state three advantages over traditional file processing. [5]\n"
+            "1. (b) Explain the difference between schema and instance with an example. [5]\n"
+            "2. (a) What is 3NF? How does it differ from BCNF? [6]\n"
+            "2. (b) Given relation R(A, B, C, D) with F = {A -> B, BC -> D}, find the candidate keys. [4]\n"
+        )
+        return ChatResult(content=ocr_text, model="mock")
+
 
 def _course_number(code: str) -> int:
     m = re.search(r"(\d{3,4})", code or "")

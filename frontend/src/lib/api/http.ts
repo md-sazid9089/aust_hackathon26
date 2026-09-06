@@ -52,6 +52,9 @@ export class HttpApi implements Api {
   me() {
     return this.request<T.Profile>('/me');
   }
+  changePassword(body: T.ChangePasswordInput) {
+    return this.request<void>('/auth/change-password', { method: 'POST', body: this.json(body) });
+  }
 
   listCourses(q?: string) {
     return this.request<T.Page<T.Course>>('/courses', { query: { q, page_size: 100 } });
@@ -209,7 +212,10 @@ export class HttpApi implements Api {
   adminUsers(page = 1) {
     return this.request<T.Page<T.AdminUser>>('/admin/users', { query: { page, page_size: 25 } });
   }
-  adminPatchUser(id: string, body: { is_active?: boolean; role?: T.AppRole }) {
+  adminCreateUser(body: T.AdminUserCreate) {
+    return this.request<T.AdminUser>('/admin/users', { method: 'POST', body: this.json(body) });
+  }
+  adminPatchUser(id: string, body: T.AdminUserPatch) {
     return this.request<T.AdminUser>(`/admin/users/${id}`, { method: 'PATCH', body: this.json(body) });
   }
   adminRuns(params: { page?: number; module?: T.RunModule; status?: T.RunStatus }) {

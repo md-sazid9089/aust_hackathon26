@@ -208,12 +208,26 @@ export const useAdminUsers = (page = 1) => {
   const api = useApi();
   return useQuery({ queryKey: qk.admin('users', page), queryFn: () => api.adminUsers(page) });
 };
+export const useAdminCreateUser = () => {
+  const api = useApi();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (body: T.AdminUserCreate) => api.adminCreateUser(body),
+    onSuccess: () => qc.invalidateQueries({ queryKey: qk.admin('users') }),
+  });
+};
 export const useAdminPatchUser = () => {
   const api = useApi();
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: ({ id, body }: { id: string; body: { is_active?: boolean; role?: T.AppRole } }) => api.adminPatchUser(id, body),
+    mutationFn: ({ id, body }: { id: string; body: T.AdminUserPatch }) => api.adminPatchUser(id, body),
     onSuccess: () => qc.invalidateQueries({ queryKey: qk.admin('users') }),
+  });
+};
+export const useChangePassword = () => {
+  const api = useApi();
+  return useMutation({
+    mutationFn: (body: T.ChangePasswordInput) => api.changePassword(body),
   });
 };
 export const useAdminRuns = (params: { page?: number; module?: T.RunModule; status?: T.RunStatus }) => {

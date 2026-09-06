@@ -97,6 +97,20 @@ class AIProvider(ABC):
     @abstractmethod
     async def embed(self, texts: list[str], *, timeout_s: float = 60.0) -> EmbedResult: ...
 
+    async def chat_vision(
+        self,
+        *,
+        purpose: str,
+        system: str,
+        user_prompt: str,
+        images: list[tuple[bytes, str]],
+        model: str | None = None,
+        temperature: float = 0.0,
+        timeout_s: float = 60.0,
+    ) -> ChatResult:
+        """Process multimodal vision input for OCR and document image transcription."""
+        raise NotImplementedError("Vision is not supported by this provider")
+
     async def health(self) -> bool:
         return True
 

@@ -160,3 +160,91 @@ async def test_faculty_full_journey_with_jwt(local):
     # restore for other tests
     async with session_scope() as db:
         await ensure_seed_users(db, get_settings())
+
+
+async def test_admin_create_user_and_first_login_password_change(local):
+    """Admin provisions teacher credentials -> teacher signs in with must_change_password=True -> changes password -> must_change_password=False."""
+    fac, _ = await login(local, FACULTY)
+    admin, _ = await login(local, ADMIN)
+
+    new_teacher_email = "new.teacher@aust.edu"
+    temp_password = "TempPassword#123"
+
+    # Faculty cannot create users
+    r = await local.post(
+        "/admin/users",
+        json={"email": new_teacher_email, "password": temp_password, "full_name": "New Teacher", "role": "faculty"},
+        headers=fac,
+    )
+    assert r.status_code == 403
+
+    # Admin creates teacher
+    r = await local.post(
+        "/admin/users",
+        json={
+            "email": new_teacher_email,
+            "password": temp_password,
+            "full_name": "New Teacher",
+            "role": "faculty",
+            "must_change_password": True,
+        },
+        headers=admin,
+    )
+    assert r.status_code == 201, r.text
+    created = r.json()
+    assert created["email"] == new_teacher_email
+    assert created["full_name"] == "New Teacher"
+    assert created["role"] == "faculty"
+    assert created["must_change_password"] is True
+
+    # Duplicate email rejected
+    r = await local.post(
+        "/admin/users",
+        json={"email": new_teacher_email, "password": "AnotherPassword#456"},
+        headers=admin,
+    )
+    assert r.status_code == 409
+    assert r.json()["error"]["code"] == "EMAIL_EXISTS"
+
+    # Teacher logs in with temporary password
+    teacher_hdr, teacher_login = await login(local, (new_teacher_email, temp_password))
+    assert teacher_login["user"]["must_change_password"] is True
+
+    me = (await local.get("/me", headers=teacher_hdr)).json()
+    assert me["must_change_password"] is True
+
+    # Cannot set the exact same password
+    r = await local.post(
+        "/auth/change-password",
+        json={"current_password": temp_password, "new_password": temp_password},
+        headers=teacher_hdr,
+    )
+    assert r.status_code == 422
+
+    # Cannot set with wrong current password
+    r = await local.post(
+        "/auth/change-password",
+        json={"current_password": "WrongPassword#999", "new_password": "PermanentPass#2026"},
+        headers=teacher_hdr,
+    )
+    assert r.status_code == 401
+
+    # Successfully changes password
+    new_permanent_pw = "PermanentPass#2026"
+    r = await local.post(
+        "/auth/change-password",
+        json={"current_password": temp_password, "new_password": new_permanent_pw},
+        headers=teacher_hdr,
+    )
+    assert r.status_code == 204
+
+    # must_change_password is now False
+    me_after = (await local.get("/me", headers=teacher_hdr)).json()
+    assert me_after["must_change_password"] is False
+
+    # Old password no longer works
+    assert (await local.post("/auth/login", json={"email": new_teacher_email, "password": temp_password})).status_code == 401
+
+    # New password works
+    _, re_login = await login(local, (new_teacher_email, new_permanent_pw))
+    assert re_login["user"]["must_change_password"] is False

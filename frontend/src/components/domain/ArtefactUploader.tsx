@@ -13,10 +13,10 @@ import { KIND_LABEL, cn, relTime } from '@/lib/format';
 import { ExtractionConfirm } from './ExtractionConfirm';
 
 const ACCEPT: Record<ArtefactKind, string> = {
-  syllabus: '.pdf,.docx,.txt',
-  question_paper: '.pdf,.docx,.txt',
+  syllabus: '.pdf,.docx,.txt,.png,.jpg,.jpeg',
+  question_paper: '.pdf,.docx,.txt,.png,.jpg,.jpeg',
   marks_sheet: '.csv,.xlsx',
-  rubric: '.pdf,.docx,.csv,.txt',
+  rubric: '.pdf,.docx,.csv,.txt,.png,.jpg,.jpeg',
   answer_set: '.csv,.xlsx,.txt',
 };
 
@@ -104,7 +104,8 @@ function UploadDialog({ courseId, kind, open, onOpenChange }: { courseId: string
                 className={cn('flex cursor-pointer flex-col items-center justify-center gap-2 rounded-lg border-2 border-dashed p-6 text-center transition-colors duration-fast hover:border-primary hover:bg-primary/5', file && 'border-primary')}
               >
                 <Upload className="h-6 w-6 text-muted-foreground" aria-hidden />
-                <span className="text-sm">{file ? file.name : `Choose a file (${ACCEPT[kind]})`}</span>
+                <span className="text-sm font-medium">{file ? file.name : `Choose a file (${ACCEPT[kind]})`}</span>
+                <span className="text-xs text-muted-foreground">Scanned PDFs and exam images supported via AI OCR</span>
                 <input id="up-file" type="file" accept={ACCEPT[kind]} className="sr-only" onChange={(e) => setFile(e.target.files?.[0] ?? null)} />
               </label>
             </TabsContent>
@@ -192,7 +193,7 @@ export function ArtefactUploader({
                   )}
                   <FileText className="h-5 w-5 shrink-0 text-muted-foreground" aria-hidden />
                   <div className="min-w-0 flex-1">
-                    <p className="truncate font-medium">{a.label}</p>
+                    <p className="truncate font-medium" title={a.label}>{a.label}</p>
                     <p className="text-xs text-muted-foreground">
                       {a.year ?? ''} {a.lang !== 'unknown' ? `· ${a.lang.toUpperCase()}` : ''} · {relTime(a.created_at)}
                       {a.counts && Object.entries(a.counts).filter(([, v]) => v > 0).map(([k, v]) => ` · ${v} ${k}`)}

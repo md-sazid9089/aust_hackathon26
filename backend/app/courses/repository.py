@@ -17,7 +17,7 @@ class CourseRepo:
 
     async def list(
         self, owner_id: uuid.UUID, *, q: str | None, offset: int, limit: int, sort_desc: bool
-    ) -> tuple[list[Course], int]:
+    ) -> tuple[list[tuple[Course, dict[str, int]]], int]:
         stmt = self._active(owner_id)
         if q:
             escaped = q.strip().replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")
@@ -25,8 +25,13 @@ class CourseRepo:
             stmt = stmt.where(or_(Course.code.ilike(pattern, escape="\\"), Course.title.ilike(pattern, escape="\\")))
         total = (await self.db.execute(select(func.count()).select_from(stmt.subquery()))).scalar_one()
         order = Course.created_at.desc() if sort_desc else Course.created_at.asc()
-        rows = (await self.db.execute(stmt.order_by(order).offset(offset).limit(limit))).scalars().all()
-        return list(rows), total
+        # Counts as correlated subqueries so the whole page loads in a single round-trip (no per-course N+1).
+        art_c = select(func.count()).where(Artefact.course_id == Course.id).correlate(Course).scalar_subquery()
+        run_c = select(func.count()).where(Run.course_id == Course.id).correlate(Course).scalar_subquery()
+        out_c = select(func.count()).where(CourseOutcome.course_id == Course.id).correlate(Course).scalar_subquery()
+        page = stmt.add_columns(art_c, run_c, out_c).order_by(order).offset(offset).limit(limit)
+        rows = (await self.db.execute(page)).all()
+        return [(r[0], {"artefacts": r[1], "runs": r[2], "outcomes": r[3]}) for r in rows], total
 
     async def get(self, course_id: uuid.UUID) -> Course | None:
         stmt = select(Course).where(Course.id == course_id, Course.deleted_at.is_(None))
@@ -37,14 +42,12 @@ class CourseRepo:
         return (await self.db.execute(stmt)).scalar_one_or_none()
 
     async def counts(self, course_id: uuid.UUID) -> dict[str, int]:
-        async def _count(model, col):  # noqa: ANN001
-            return (await self.db.execute(select(func.count()).where(col == course_id))).scalar_one()
-
-        return {
-            "artefacts": await _count(Artefact, Artefact.course_id),
-            "runs": await _count(Run, Run.course_id),
-            "outcomes": await _count(CourseOutcome, CourseOutcome.course_id),
-        }
+        # Single round-trip: three scalar subqueries in one SELECT.
+        art_c = select(func.count()).where(Artefact.course_id == course_id).scalar_subquery()
+        run_c = select(func.count()).where(Run.course_id == course_id).scalar_subquery()
+        out_c = select(func.count()).where(CourseOutcome.course_id == course_id).scalar_subquery()
+        a, r, o = (await self.db.execute(select(art_c, run_c, out_c))).one()
+        return {"artefacts": a, "runs": r, "outcomes": o}
 
     def add(self, course: Course) -> None:
         self.db.add(course)

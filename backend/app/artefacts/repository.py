@@ -31,26 +31,37 @@ class ArtefactRepo:
 
     async def list(
         self, course_id: uuid.UUID, *, kind: ArtefactKind | None, status: ExtractionStatus | None
-    ) -> list[Artefact]:
+    ) -> list[tuple[Artefact, dict[str, int]]]:
         stmt = select(Artefact).where(Artefact.course_id == course_id)
         if kind:
             stmt = stmt.where(Artefact.kind == kind)
         if status:
             stmt = stmt.where(Artefact.status == status)
-        stmt = stmt.order_by(Artefact.created_at.desc())
-        return list((await self.db.execute(stmt)).scalars().all())
+        # Counts as correlated subqueries so the whole list loads in a single round-trip (no per-artefact N+1).
+        cols = [
+            select(func.count()).where(Question.artefact_id == Artefact.id).correlate(Artefact).scalar_subquery(),
+            select(func.count()).where(Topic.source_artefact_id == Artefact.id).correlate(Artefact).scalar_subquery(),
+            select(func.count()).where(MarksRow.artefact_id == Artefact.id).correlate(Artefact).scalar_subquery(),
+            select(func.count()).where(RubricCriterion.artefact_id == Artefact.id).correlate(Artefact).scalar_subquery(),
+            select(func.count()).where(Answer.artefact_id == Artefact.id).correlate(Artefact).scalar_subquery(),
+        ]
+        stmt = stmt.add_columns(*cols).order_by(Artefact.created_at.desc())
+        rows = (await self.db.execute(stmt)).all()
+        keys = ("questions", "topics", "students", "criteria", "answers")
+        return [(r[0], dict(zip(keys, r[1:], strict=True))) for r in rows]
 
     async def counts(self, artefact_id: uuid.UUID) -> dict[str, int]:
-        async def n(stmt) -> int:  # noqa: ANN001
-            return (await self.db.execute(select(func.count()).select_from(stmt.subquery()))).scalar_one()
-
-        return {
-            "questions": await n(select(Question.id).where(Question.artefact_id == artefact_id)),
-            "topics": await n(select(Topic.id).where(Topic.source_artefact_id == artefact_id)),
-            "students": await n(select(MarksRow.id).where(MarksRow.artefact_id == artefact_id)),
-            "criteria": await n(select(RubricCriterion.id).where(RubricCriterion.artefact_id == artefact_id)),
-            "answers": await n(select(Answer.id).where(Answer.artefact_id == artefact_id)),
-        }
+        # Single round-trip: five scalar subqueries in one SELECT.
+        cols = [
+            select(func.count()).where(Question.artefact_id == artefact_id).scalar_subquery(),
+            select(func.count()).where(Topic.source_artefact_id == artefact_id).scalar_subquery(),
+            select(func.count()).where(MarksRow.artefact_id == artefact_id).scalar_subquery(),
+            select(func.count()).where(RubricCriterion.artefact_id == artefact_id).scalar_subquery(),
+            select(func.count()).where(Answer.artefact_id == artefact_id).scalar_subquery(),
+        ]
+        vals = (await self.db.execute(select(*cols))).one()
+        keys = ("questions", "topics", "students", "criteria", "answers")
+        return dict(zip(keys, vals, strict=True))
 
     async def marks_columns(self, artefact_id: uuid.UUID) -> list[MarksColumn]:
         stmt = select(MarksColumn).where(MarksColumn.artefact_id == artefact_id).order_by(MarksColumn.sort_order)

@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/primitives';
 import { AssistantWidget } from '@/components/assistant/AssistantWidget';
+import { ForceChangePasswordModal } from '@/components/auth/ForceChangePasswordModal';
 import { cn } from '@/lib/format';
 import { preloadAdmin, preloadCourse, preloadCourses, preloadDashboard, preloadNewRun } from '@/router';
 
@@ -166,11 +167,13 @@ export function AppShell() {
             </>
           )}
         </nav>
-        <main id="main" tabIndex={-1} className="mx-auto w-full max-w-[1400px] flex-1 px-4 py-6 md:px-8 md:py-8 focus:outline-none animate-fade-in">
+        {/* pb-24 keeps the last row of content clear of the fixed Assistant launcher */}
+        <main id="main" tabIndex={-1} className="mx-auto w-full max-w-[1400px] flex-1 px-4 py-6 pb-24 md:px-8 md:py-8 md:pb-24 focus:outline-none animate-fade-in">
           <Outlet />
         </main>
       </div>
       <AssistantWidget />
+      <ForceChangePasswordModal />
     </div>
   );
 }

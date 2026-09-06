@@ -377,3 +377,30 @@ def _strictify(schema: dict[str, Any]) -> None:
             for s in sub:
                 if isinstance(s, dict):
                     _strictify(s)
+
+
+async def vision_ocr_call(
+    images: list[tuple[bytes, str]],
+    *,
+    user_prompt: str = "Extract all text, questions, numbers, tables, and marks verbatim from this document. Do not summarize or omit anything.",
+    user_id: uuid.UUID | None = None,
+    run_id: uuid.UUID | None = None,
+    timeout_s: float = 60.0,
+) -> str:
+    """Run multimodal vision extraction across document images."""
+    provider = get_provider()
+    system = (
+        "You are an expert OCR transcription assistant for academic documents. "
+        "Extract all text, question numbers, sub-parts, tables, and marks allocations verbatim. "
+        "Preserve original line breaks, formatting, and mathematical notations. "
+        "Do not invent, hallucinate, or add conversational commentary."
+    )
+    result = await provider.chat_vision(
+        purpose="extraction",
+        system=system,
+        user_prompt=user_prompt,
+        images=images,
+        timeout_s=timeout_s,
+    )
+    return result.content
+

@@ -16,16 +16,18 @@ const contentCls =
 
 const DialogContent = React.forwardRef<
   React.ElementRef<typeof DialogPrimitive.Content>,
-  React.ComponentPropsWithoutRef<typeof DialogPrimitive.Content> & { size?: 'md' | 'lg' | 'xl' }
->(({ className, children, size = 'md', ...props }, ref) => (
+  React.ComponentPropsWithoutRef<typeof DialogPrimitive.Content> & { size?: 'md' | 'lg' | 'xl'; hideClose?: boolean }
+>(({ className, children, size = 'md', hideClose = false, ...props }, ref) => (
   <DialogPrimitive.Portal>
     <DialogPrimitive.Overlay className={overlayCls} />
     <DialogPrimitive.Content ref={ref} className={cn(contentCls, size === 'lg' && 'max-w-3xl', size === 'xl' && 'max-w-5xl', className)} {...props}>
       {children}
-      <DialogPrimitive.Close className="absolute right-4 top-4 rounded-sm p-1 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground cursor-pointer">
-        <X className="h-5 w-5" aria-hidden />
-        <span className="sr-only">Close</span>
-      </DialogPrimitive.Close>
+      {!hideClose && (
+        <DialogPrimitive.Close className="absolute right-4 top-4 rounded-sm p-1 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground cursor-pointer">
+          <X className="h-5 w-5" aria-hidden />
+          <span className="sr-only">Close</span>
+        </DialogPrimitive.Close>
+      )}
     </DialogPrimitive.Content>
   </DialogPrimitive.Portal>
 ));
