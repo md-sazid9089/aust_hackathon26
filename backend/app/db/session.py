@@ -19,6 +19,8 @@ def _build_engine(url: str) -> AsyncEngine:
     else:
         # Supabase transaction pooler (6543) needs no prepared-statement cache.
         kwargs["connect_args"] = {"statement_cache_size": 0}
+        # Remote DB: keep warm connections so concurrent page loads don't pay a TLS handshake each.
+        kwargs.update(pool_size=10, max_overflow=10, pool_recycle=300, pool_timeout=10)
     engine = create_async_engine(url, **kwargs)
     if url.startswith("sqlite"):
 

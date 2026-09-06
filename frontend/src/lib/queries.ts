@@ -1,4 +1,5 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useCallback } from 'react';
 import { useApi } from '@/lib/api';
 import type * as T from '@/lib/types/api';
 
@@ -23,11 +24,24 @@ export const qk = {
 /* ---------- courses ---------- */
 export const useCourses = (q?: string) => {
   const api = useApi();
-  return useQuery({ queryKey: [...qk.courses, q ?? ''], queryFn: () => api.listCourses(q) });
+  return useQuery({ queryKey: [...qk.courses, q ?? ''], queryFn: () => api.listCourses(q), placeholderData: keepPreviousData });
 };
 export const useCourse = (id: string) => {
   const api = useApi();
   return useQuery({ queryKey: qk.course(id), queryFn: () => api.getCourse(id) });
+};
+/** Warm the course page's queries on hover/focus so navigation paints with data already in cache. */
+export const usePrefetchCourse = () => {
+  const api = useApi();
+  const qc = useQueryClient();
+  return useCallback(
+    (id: string) => {
+      void qc.prefetchQuery({ queryKey: qk.course(id), queryFn: () => api.getCourse(id) });
+      void qc.prefetchQuery({ queryKey: qk.artefacts(id), queryFn: () => api.listArtefacts(id) });
+      void qc.prefetchQuery({ queryKey: [...qk.runs(id), 'all', 'all'], queryFn: () => api.listRuns(id) });
+    },
+    [api, qc],
+  );
 };
 export const useCreateCourse = () => {
   const api = useApi();
@@ -41,7 +55,7 @@ export const useSeedDemo = () => {
 };
 export const useRuns = (courseId: string, filter?: { module?: T.RunModule; status?: T.RunStatus }) => {
   const api = useApi();
-  return useQuery({ queryKey: [...qk.runs(courseId), filter?.module ?? 'all', filter?.status ?? 'all'], queryFn: () => api.listRuns(courseId, filter) });
+  return useQuery({ queryKey: [...qk.runs(courseId), filter?.module ?? 'all', filter?.status ?? 'all'], queryFn: () => api.listRuns(courseId, filter), placeholderData: keepPreviousData });
 };
 
 /* ---------- outcomes ---------- */

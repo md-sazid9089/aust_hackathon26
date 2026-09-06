@@ -89,7 +89,21 @@ export function EditableTable<R extends Record<string, unknown>>({
                 if (c.type === 'textarea')
                   return (
                     <TableCell key={c.key}>
-                      <Textarea id={id} aria-label={label} lang={c.lang?.(row)} value={String(v ?? '')} onChange={(e) => update(i, c.key, e.target.value)} className="min-h-[60px] text-sm" rows={2} />
+                      <Textarea
+                        id={id}
+                        aria-label={label}
+                        lang={c.lang?.(row)}
+                        value={String(v ?? '')}
+                        onChange={(e) => update(i, c.key, e.target.value)}
+                        className="min-h-[60px] resize-none overflow-hidden text-sm leading-relaxed field-sizing-content"
+                        rows={2}
+                        ref={(el) => {
+                          // Fallback auto-grow for browsers without CSS field-sizing.
+                          if (!el) return;
+                          el.style.height = 'auto';
+                          el.style.height = `${el.scrollHeight}px`;
+                        }}
+                      />
                     </TableCell>
                   );
                 if (c.type === 'number')

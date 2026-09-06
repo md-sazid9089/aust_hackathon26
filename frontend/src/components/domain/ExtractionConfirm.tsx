@@ -24,7 +24,7 @@ function QuestionsEditor({ courseId, artefactId, onClose }: { courseId: string; 
 
   const total = useMemo(() => rows.reduce((s, r) => s + (Number(r.marks) || 0), 0), [rows]);
   const cols: Column<QRow>[] = [
-    { key: 'number', label: 'No.', width: '72px' },
+    { key: 'number', label: 'No.', width: '96px' },
     { key: 'text', label: 'Question text', type: 'textarea', lang: (r) => bn(r.text) },
     { key: 'marks', label: 'Marks', type: 'number', width: '110px' },
     {

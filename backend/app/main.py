@@ -5,6 +5,7 @@ from contextlib import asynccontextmanager
 
 from fastapi import APIRouter, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.middleware.gzip import GZipMiddleware
 
 from app.admin.router import router as admin_router
 from app.ai.client import get_provider
@@ -86,6 +87,8 @@ def create_app() -> FastAPI:
         allow_headers=["*"],
         expose_headers=["X-Request-Id", "Content-Disposition"],
     )
+    # Findings/questions payloads are large JSON; gzip cuts transfer ~5-10x. SSE responses are streamed and skipped.
+    app.add_middleware(GZipMiddleware, minimum_size=1024)
     app.middleware("http")(request_id_middleware)
     register_error_handlers(app)
 

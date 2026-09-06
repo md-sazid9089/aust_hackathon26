@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { BookOpen, Plus, Search, Sparkles, ArrowRight } from 'lucide-react';
 import { toast } from 'sonner';
-import { useCourses, useCreateCourse, useSeedDemo } from '@/lib/queries';
+import { useCourses, useCreateCourse, usePrefetchCourse, useSeedDemo } from '@/lib/queries';
 import { useAuth } from '@/auth/AuthProvider';
 import { PageHeader, QueryBoundary, EmptyState } from '@/components/feedback/states';
 import { Button } from '@/components/ui/button';
@@ -59,6 +59,7 @@ export function CoursesPage() {
   const { profile } = useAuth();
   const [q, setQ] = useState('');
   const courses = useCourses(q || undefined);
+  const prefetch = usePrefetchCourse();
   const seed = useSeedDemo();
   const nav = useNavigate();
   const [open, setOpen] = useState(false);
@@ -117,7 +118,7 @@ export function CoursesPage() {
             {d.items.map((c) => (
               <li key={c.id}>
                 <Card className="group h-full transition-[border-color,box-shadow] duration-fast hover:border-primary/60 hover:shadow-md">
-                  <Link to={`/courses/${c.id}`} className="flex h-full flex-col p-5 focus-visible:outline-none">
+                  <Link to={`/courses/${c.id}`} onMouseEnter={() => prefetch(c.id)} onFocus={() => prefetch(c.id)} className="flex h-full flex-col p-5 focus-visible:outline-none">
                     <div className="flex items-start justify-between gap-2">
                       <p className="font-mono text-sm font-semibold text-primary">{c.code}</p>
                       {c.is_demo && <Badge variant="secondary">Demo</Badge>}
