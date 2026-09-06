@@ -89,6 +89,9 @@ uvicorn app.main:app --reload                            # http://localhost:8000
 pytest                                                   # 47 tests
 # demo: POST /api/v1/demo/seed → POST /api/v1/courses/{id}/runs {module: exam_audit, inputs:{draft_artefact_id, past_artefact_ids}} → GET /runs/{id}/findings
 # frontend: cd frontend && npm i && npm run dev           (port 5173; VITE_API_BASE_URL=http://localhost:8000/api/v1)
+# frontend on Vercel: import repo, Root Directory = frontend (vercel.json there: SPA rewrite, asset caching, security headers);
+#   env vars: VITE_API_MODE=live, VITE_API_BASE_URL=https://<backend-host>/api/v1, VITE_SUPABASE_URL, VITE_SUPABASE_ANON_KEY;
+#   backend CORS_ORIGINS must include the Vercel origin(s). Build = `npm ci` + `npm run build` (tsc -b && vite build), Node >= 20.19.
 ```
 
 **MCP server setup (once per machine):**
@@ -128,6 +131,7 @@ pytest                                                   # 47 tests
 | D-023 | 2026-09-06 | `MockProvider` = deterministic lexical heuristics (stemmed token overlap, verb→Bloom table, hashed BoW embeddings) selected only by `LLM_PROVIDER=mock`; tests can queue raw/invalid responses. Demo seed leaves the draft paper un-mapped so the AI stage is real; past papers carry archived CO tags as faculty ground truth | Offline demo fallback without fabricated output; failure-path tests need injectable responses |
 | D-024 | 2026-09-06 | Supabase MCP switched from local `npx @supabase/mcp-server-supabase` + PAT to the hosted HTTP endpoint `mcp.supabase.com` with OAuth; same config in `.vscode/mcp.json` and `.mcp.json` (Claude Code) | No token to manage, works across editors; project ref is not a secret |
 | D-025 | 2026-09-06 | Landing page at `/` (`frontend/src/features/landing/`) uses a dedicated light-blue `--brand` token (light `201 90% 40%`, dark `199 89% 66%`) for CTAs/highlights instead of navy `--primary` or amber `--accent`; shadcn-style `Button`/`Card`/`Badge` primitives added under `components/ui`. Supabase auth test page (`App.tsx`) removed; CTA targets `/dashboard` (wildcard redirects home until that route exists) | User request: no navy/orange on the marketing surface; `--accent` stays reserved for in-app decisions per MASTER.md |
+| D-026 | 2026-09-06 | Frontend deploys to Vercel as a static SPA (`frontend/vercel.json`: SPA rewrite, immutable asset cache, security headers, Root Directory = `frontend`). API reached cross-origin via absolute `VITE_API_BASE_URL` + backend `CORS_ORIGINS`, not a Vercel `/api` rewrite. `lib/supabase.ts` falls back to placeholder creds instead of throwing when env is unset | Rewrites can't read env vars, so a proxy would hard-code the backend host; placeholder avoids a blank page on a misconfigured deploy |
 
 ## 7. Conventions
 
@@ -155,6 +159,7 @@ pytest                                                   # 47 tests
 
 - [x] Lock requirements (Prompt 1)
 - [x] Architecture design (Prompt 2) → `architecture.md`
+- [ ] **Resolve schema ownership** (see §10 first bullet): either port `database/` RLS/pgvector/P2–P4 tables into Alembic revisions and retire the SQL files as runtime source, or make the backend set `SET LOCAL app.user_id/app.role` per transaction and align constraint names/deferred-FK handling with `database/migrations`. Add the ORM↔DDL parity test promised in D-013. Port `normalize_qnum()` to Python before P4.
 - [ ] Phase 0 contracts: Supabase project (Auth providers, `artefacts` bucket); export `backend/openapi.json` for FE type generation (`GET /api/v1/openapi.json`)
 - [x] Phase 1 foundation: BE skeleton + `/me` (done); FE scaffold + auth (in progress, FE owner)
 - [ ] FE: add `/login` + `/dashboard` routes (AuthProvider, RequireAuth) so the landing CTA (`APP_ENTRY_PATH` in `features/landing/content.ts`) lands on a real page; reuse `components/ui/*` and the `--brand` token
@@ -164,9 +169,12 @@ pytest                                                   # 47 tests
 - [ ] Tier 1: P4 attainment (marks CSV/XLSX parser + `compute_co_attainment`), P3, P2, question suggestion, PDF export
 - [ ] Tier 2: Bangla prompts verified with real model, admin panel (users, runs, `usage_logs` view), run compare
 - [ ] Tier 3: dashboard, department-admin views; pgvector + RLS when moving fully to Supabase; CI workflow; docker-compose
+- [x] FE Vercel-ready: `vercel.json`, `npm ci` installs cleanly (plugin-react ^5.2), build + tests green (D-026)
+- [ ] Deploy backend to a public host, add the Vercel origin to `CORS_ORIGINS`, then set Vercel env vars (`VITE_API_MODE=live`, `VITE_API_BASE_URL`, `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`) and add the Vercel URL to Supabase Auth redirect URLs
 
 ## 10. Known Issues & Gotchas
 
+- **Two schema sources have diverged (DB deep study 2026-09-06).** `database/migrations/*.sql` (21 tables, PG enums, pgvector, RLS, fns, views) is *not* what runs; production (`render.yaml` → `alembic upgrade head`) creates the ORM schema from `backend/app/db/models.py` (15 tables, varchar enums, JSON embeddings, no RLS). Gaps: ORM lacks `marks_rows`, `rubric_criteria`, `answers`, `grader_scores`, `attainment_results`, `answer_prescores`, `artefacts.grader_labels`, `run_inputs.course_id`/`compare_course`; SQL lacks `run_events.level`; constraint names differ (`uq_/ck_/fk_` vs `*_key/_check/_fk`) so `errors._CONSTRAINT_CODES` only matches the ORM names; ORM in-use FKs are `RESTRICT` (flush) vs SQL `DEFERRABLE` (commit); backend never runs `SET LOCAL app.user_id/app.role`, so applying `0010_rls_policies.sql` to the backend's DB would blank every query; no `normalize_qnum` port exists in Python; `similar_questions` (pgvector) unused — duplicate search is in-process. Decide one owner (see Next Steps).
 - Demo depends on venue network (Supabase + LLM API). Keep the one-click demo seed and partial-result fallback working.
 - Scanned/image PDFs are unsupported — prompt faculty to paste text.
 - Demo data is on the critical path: 1 course, 5–6 COs, 2 past papers, 1 draft paper with deliberate gaps/duplicates, marks CSV with one weak CO, rubric + 6 typed answers × 2 graders (2 divergent). Seed both a faculty and an admin account. Cache last successful analysis JSON for the seed course as offline fallback. Watch LLM quota during the pitch.
@@ -184,6 +192,7 @@ pytest                                                   # 47 tests
 - Do not mutate ORM objects after `db.commit()` inside a request when a background task owns the row — the request's final commit overwrote the task's status (fixed in `ArtefactService`).
 - `MockProvider` heuristics are lexical; with `LLM_PROVIDER=mock` the demo still reproduces CO6-uncovered / marks mismatch / duplicates, but CO mapping quality is only indicative. Use a real key for judging.
 - Python 3.14 venv: `ensurepip` may be missing → `python3 -m venv --without-pip .venv && pip3 --python .venv/bin/python install pip`.
+- Frontend uses Vite 8 → `@vitejs/plugin-react` must be `^5.2.0` (v4 peer range excluded Vite 8 and made `npm ci` fail with ERESOLVE, which breaks Vercel installs). Vite env vars are baked in at build time — redeploy after changing them.
 - Vite dev server: after adding Tailwind colours in `tailwind.config.ts` or new deps, restart `npm run dev` — otherwise new utility classes don't render and lazy imports 504 with "Outdated Optimize Dep". Run npm from `frontend/` (or `npm --prefix frontend …`).
 
 ## 12. Locked Product Scope (Prompt 1 output, 2026-09-06)
@@ -228,3 +237,5 @@ pytest                                                   # 47 tests
 | 2026-09-06 | Copilot | Consolidated root `.gitignore` (secrets, python/node caches, local DBs/uploads, editor/OS, logs, duplicate skill copies in `agent/`, `data/skills/`, `.claude/skills/`); `frontend/.gitignore` reduced to a stub |
 | 2026-09-06 | Copilot | Frontend landing page at `/` (light-blue `--brand` token, shadcn-style ui primitives, theme toggle, router); removed Supabase auth test page `App.tsx` (D-025) |
 | 2026-09-06 | Copilot | Fixed Context7 MCP E404 (`@context7/mcp-server` not on npm) by switching to hosted HTTP `mcp.context7.com/mcp` |
+| 2026-09-06 | Copilot | Frontend Vercel-ready: `frontend/vercel.json`, `@vitejs/plugin-react` 4→^5.2 (fixes `npm ci` ERESOLVE with Vite 8), `engines.node >=20.19`, `supabase.ts` placeholder fallback, `.env.example` deploy notes (D-026) |
+| 2026-09-06 | Copilot | Deep study of database layer: documented SQL-vs-ORM schema drift, RLS bypass, missing tables and constraint-name mismatches in §10 + §9 (no code changes) |
