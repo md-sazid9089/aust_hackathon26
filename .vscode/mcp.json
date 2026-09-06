@@ -5,8 +5,8 @@
       "url": "https://mcp.supabase.com/mcp?project_ref=etzxqeilgohiavdeybbw&features=docs%2Caccount%2Cdatabase%2Cdebugging%2Cdevelopment%2Cfunctions%2Cbranching"
     },
     "context7": {
-      "command": "npx",
-      "args": ["-y", "@context7/mcp-server"]
+      "type": "http",
+      "url": "https://mcp.context7.com/mcp"
     }
   }
 }

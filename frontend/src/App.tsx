@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import type { Session } from '@supabase/supabase-js';
+import { Link } from 'react-router-dom';
 import { supabase } from './lib/supabase';
-import { ShieldCheck, Database, Key, CheckCircle2, AlertCircle, LogIn, LogOut, Loader2, Sparkles } from 'lucide-react';
+import { ShieldCheck, Database, Key, CheckCircle2, AlertCircle, LogIn, LogOut, Loader2, Sparkles, ArrowLeft } from 'lucide-react';
 
 export default function App() {
   const [session, setSession] = useState<Session | null>(null);
@@ -88,8 +89,17 @@ export default function App() {
   );
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 flex flex-col items-center justify-center p-6 font-sans">
-      <div className="w-full max-w-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-lg overflow-hidden">
+    <div className="min-h-screen bg-background text-foreground flex flex-col items-center justify-center p-6 font-sans">
+      <div className="w-full max-w-2xl mb-4">
+        <Link
+          to="/"
+          className="inline-flex items-center gap-1.5 rounded-md text-sm text-muted-foreground transition-colors hover:text-foreground"
+        >
+          <ArrowLeft className="w-4 h-4" aria-hidden />
+          Back to overview
+        </Link>
+      </div>
+      <div className="w-full max-w-2xl bg-card border border-border rounded-xl shadow-lg overflow-hidden">
         {/* Header */}
         <div className="bg-[#1E3A5F] text-white px-8 py-6 flex items-center justify-between border-b border-slate-700">
           <div>
