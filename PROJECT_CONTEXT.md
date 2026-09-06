@@ -96,6 +96,13 @@ uvicorn app.main:app --reload                            # http://localhost:8000
 pytest                                                   # 47 tests
 # demo: POST /api/v1/demo/seed → POST /api/v1/courses/{id}/runs {module: exam_audit, inputs:{draft_artefact_id, past_artefact_ids}} → GET /runs/{id}/findings
 # frontend: cd frontend && npm i && npm run dev           (port 5173; VITE_API_BASE_URL=http://localhost:8000/api/v1)
+# frontend on Vercel: import repo, Root Directory = frontend (vercel.json there: SPA rewrite, asset caching, security headers);
+#   env vars: VITE_API_MODE=live, VITE_API_BASE_URL=https://<backend-host>/api/v1, VITE_SUPABASE_URL, VITE_SUPABASE_ANON_KEY;
+#   backend CORS_ORIGINS must include the Vercel origin(s). Build = `npm ci` + `npm run build` (tsc -b && vite build), Node >= 20.19.
+# backend on Render: Dashboard → New → Blueprint → this repo (root `render.yaml`: rootDir backend, Python 3.12, free tier,
+#   start = `alembic upgrade head && uvicorn … --workers 1`, health /api/v1/health). Fill sync:false secrets in the UI:
+#   DATABASE_URL (pooler 6543, asyncpg), CORS_ORIGINS, SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, SUPABASE_SECRET_KEY, LLM_API_KEY.
+#   Frontend prod origin: https://aust-hackathon26.vercel.app  → CORS_ORIGINS=https://aust-hackathon26.vercel.app,http://localhost:5173
 ```
 
 **MCP server setup (once per machine):**
@@ -135,6 +142,8 @@ pytest                                                   # 47 tests
 | D-023 | 2026-09-06 | `MockProvider` = deterministic lexical heuristics (stemmed token overlap, verb→Bloom table, hashed BoW embeddings) selected only by `LLM_PROVIDER=mock`; tests can queue raw/invalid responses. Demo seed leaves the draft paper un-mapped so the AI stage is real; past papers carry archived CO tags as faculty ground truth | Offline demo fallback without fabricated output; failure-path tests need injectable responses |
 | D-024 | 2026-09-06 | Supabase MCP switched from local `npx @supabase/mcp-server-supabase` + PAT to the hosted HTTP endpoint `mcp.supabase.com` with OAuth; same config in `.vscode/mcp.json` and `.mcp.json` (Claude Code) | No token to manage, works across editors; project ref is not a secret |
 | D-025 | 2026-09-06 | Landing page at `/` (`frontend/src/features/landing/`) uses a dedicated light-blue `--brand` token (light `201 90% 40%`, dark `199 89% 66%`) for CTAs/highlights instead of navy `--primary` or amber `--accent`; shadcn-style `Button`/`Card`/`Badge` primitives added under `components/ui`. Supabase auth test page (`App.tsx`) removed; CTA targets `/dashboard` (wildcard redirects home until that route exists) | User request: no navy/orange on the marketing surface; `--accent` stays reserved for in-app decisions per MASTER.md |
+| D-026 | 2026-09-06 | Frontend deploys to Vercel as a static SPA (`frontend/vercel.json`: SPA rewrite, immutable asset cache, security headers, Root Directory = `frontend`). API reached cross-origin via absolute `VITE_API_BASE_URL` + backend `CORS_ORIGINS`, not a Vercel `/api` rewrite. `lib/supabase.ts` falls back to placeholder creds instead of throwing when env is unset | Rewrites can't read env vars, so a proxy would hard-code the backend host; placeholder avoids a blank page on a misconfigured deploy |
+| D-027 | 2026-09-06 | Backend hosted on Render free tier via root `render.yaml` Blueprint (Python 3.12 pinned, `rootDir: backend`, migrations chained into `startCommand`, `--workers 1`, health `/api/v1/health`); DB stays on Supabase; uploads on ephemeral local disk | Zero-cost git-push deploy; `preDeployCommand` is paid-only so `alembic upgrade head` runs before uvicorn; one worker required by in-process runs + rate limiter |
 
 ## 7. Conventions
 
@@ -175,6 +184,10 @@ pytest                                                   # 47 tests
 - [ ] Tier 1: P4 attainment (marks CSV/XLSX parser + `compute_co_attainment`), P3, P2, question suggestion, PDF export
 - [ ] Tier 2: Bangla prompts verified with real model, admin panel (users, runs, `usage_logs` view), run compare
 - [ ] Tier 3: dashboard, department-admin views; pgvector + RLS when moving fully to Supabase; CI workflow; docker-compose
+- [x] FE Vercel-ready: `vercel.json`, `npm ci` installs cleanly (plugin-react ^5.2), build + tests green (D-026)
+- [ ] Deploy backend to a public host, add the Vercel origin (`https://aust-hackathon26.vercel.app`) to `CORS_ORIGINS`, then set Vercel env vars (`VITE_API_MODE=live`, `VITE_API_BASE_URL`, `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`) and add the Vercel URL to Supabase Auth redirect URLs
+- [x] Render Blueprint (`render.yaml`, `backend/.python-version`, README deploy section) — D-027; actual Render service creation + secrets still manual
+- [ ] Unblock Supabase DB: pooler connections hang (project likely paused) — restore in dashboard, then `alembic upgrade head`
 
 ## 10. Known Issues & Gotchas
 
@@ -196,6 +209,11 @@ pytest                                                   # 47 tests
 - Do not mutate ORM objects after `db.commit()` inside a request when a background task owns the row — the request's final commit overwrote the task's status (fixed in `ArtefactService`).
 - `MockProvider` heuristics are lexical; with `LLM_PROVIDER=mock` the demo still reproduces CO6-uncovered / marks mismatch / duplicates, but CO mapping quality is only indicative. Use a real key for judging.
 - Python 3.14 venv: `ensurepip` may be missing → `python3 -m venv --without-pip .venv && pip3 --python .venv/bin/python install pip`.
+- **Run uvicorn from `backend/`** (or pass `--app-dir backend --env-file backend/.env`). `DATABASE_URL`, `STORAGE_DIR`, `SEED_DATA_DIR` in `.env` are resolved against the process cwd — launching from the repo root created a second empty `dev.db` (`no such table: runs`) and `SEED_DATA_MISSING`. Local `backend/.env` now uses absolute paths. Use `backend/.venv` (created 2026-09-06); a stray `.venv` at the repo root has uvicorn but not the app.
+- `alembic` on PowerShell exits 1 even on success (stderr INFO lines are treated as errors) — check `alembic current` for `(head)`.
+- `backend/.env` (gitignored) holds the Supabase pooler URL commented out; asyncpg to `aws-0`/`aws-1-ap-south-1.pooler.supabase.com` (6543 and 5432) **hangs on the SSL handshake until timeout** — symptom of a **paused Supabase project** (free tier pauses after inactivity) or venue network. Startup logs `startup.db_init_failed` but `/health` still answers; `/readyz` hangs. Alembic `07517be42f00` did reach Supabase during one window. Local fallback (current): `DATABASE_URL=sqlite+aiosqlite:///D:/aust_hackathon26/backend/dev.db` + `alembic upgrade head`; restore the project in the dashboard before switching back.
+- Render free tier: instance sleeps after 15 min idle (cold start 30–60 s — warm it before the pitch); disk is ephemeral so files under `STORAGE_DIR` vanish on redeploy while DB rows persist. Attach a Render Disk + set `STORAGE_DIR` to its mount if needed. Render pins Python 3.12; local dev is 3.14.
+- Frontend uses Vite 8 → `@vitejs/plugin-react` must be `^5.2.0` (v4 peer range excluded Vite 8 and made `npm ci` fail with ERESOLVE, which breaks Vercel installs). Vite env vars are baked in at build time — redeploy after changing them.
 - Vite dev server: after adding Tailwind colours in `tailwind.config.ts` or new deps, restart `npm run dev` — otherwise new utility classes don't render and lazy imports 504 with "Outdated Optimize Dep". Run npm from `frontend/` (or `npm --prefix frontend …`).
 
 ## 12. Locked Product Scope (Prompt 1 output, 2026-09-06)
@@ -241,3 +259,7 @@ pytest                                                   # 47 tests
 | 2026-09-06 | Copilot | Frontend built end-to-end (D-025): Vite/React/TS app, `Api` seam with `HttpApi`/`MockApi`, all §12 pages and states, finding workflow, SSE progress, exports, admin panel; typecheck/tests/build green; smoke-tested in browser |
 | 2026-09-06 | Copilot | Merged `origin/main` (backend Tier 0 + DB review): resolved doc conflicts — decisions renumbered (DB review → D-024, ADR-19), D-026 records backend deviations, `edge_cases.md` §17 access-pattern queries, architecture §21/§36/§42/§44 unioned; removed prototype `App.tsx`/`api-client.ts`/`utils/supabase.ts` superseded by the full frontend |
 | 2026-09-06 | Copilot | Fixed Context7 MCP E404 (`@context7/mcp-server` not on npm) by switching to hosted HTTP `mcp.context7.com/mcp` |
+| 2026-09-06 | Copilot | Frontend Vercel-ready: `frontend/vercel.json`, `@vitejs/plugin-react` 4→^5.2 (fixes `npm ci` ERESOLVE with Vite 8), `engines.node >=20.19`, `supabase.ts` placeholder fallback, `.env.example` deploy notes (D-026) |
+| 2026-09-06 | Copilot | Deep study of database layer: documented SQL-vs-ORM schema drift, RLS bypass, missing tables and constraint-name mismatches in §10 + §9 (no code changes) |
+| 2026-09-06 | Copilot | Render deploy: root `render.yaml` Blueprint + `backend/.python-version` + README deploy section (D-027); created local `backend/.env` with Supabase pooler URL, installed backend deps into system Python 3.14; Supabase pooler connections hang (project likely paused) — logged in §10 |
+| 2026-09-06 | Copilot | Ran full stack locally: `backend/.venv` created, `.env` switched to absolute SQLite/storage/seed paths, backend :8000 (mock LLM) + frontend :5173 up, `/readyz` ok, demo seeded; §10 notes consolidated |
