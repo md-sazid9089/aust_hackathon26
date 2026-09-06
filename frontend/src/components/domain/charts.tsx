@@ -38,7 +38,7 @@ export function BarWithTable({
   const [view, setView] = useState<'chart' | 'table'>('chart');
   const fmt = (n: number) => `${Number.isInteger(n) ? n : n.toFixed(1)}${unit}`;
   return (
-    <section aria-labelledby={`chart-${title}`} className="rounded-lg border bg-card p-4">
+    <section aria-labelledby={`chart-${title}`} className="min-w-0 overflow-hidden rounded-lg border bg-card p-4">
       <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
         <h3 id={`chart-${title}`} className="font-semibold">{title}</h3>
         <div className="flex items-center gap-2">
