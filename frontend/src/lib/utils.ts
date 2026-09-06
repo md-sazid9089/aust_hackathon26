@@ -1,6 +1,2 @@
-import { clsx, type ClassValue } from 'clsx';
-import { twMerge } from 'tailwind-merge';
-
-export function cn(...inputs: ClassValue[]) {
-  return twMerge(clsx(inputs));
-}
+// Shim for shadcn-style imports; canonical `cn` lives in `@/lib/format`.
+export { cn } from '@/lib/format';

@@ -9,6 +9,8 @@ const badgeVariants = cva('inline-flex items-center gap-1 rounded-sm border px-2
       secondary: 'border-transparent bg-muted text-foreground',
       outline: 'text-foreground',
       accent: 'border-transparent bg-accent text-accent-foreground',
+      brand: 'border-brand/30 bg-brand/10 text-brand',
+      ai: 'border-ai-border/40 bg-ai text-ai-foreground',
       success: 'border-transparent bg-success/15 text-success',
       destructive: 'border-transparent bg-destructive/15 text-destructive',
       info: 'border-transparent bg-sev-info text-sev-info-fg',

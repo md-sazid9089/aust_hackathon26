@@ -11,6 +11,7 @@ import { NewRunPage } from '@/features/runs/NewRunPage';
 import { RunPage } from '@/features/runs/RunPage';
 import { ComparePage } from '@/features/runs/ComparePage';
 import { DashboardPage } from '@/features/dashboard/DashboardPage';
+import LandingPage from '@/features/landing/LandingPage';
 import { AdminDepartmentPage, AdminRunsPage, AdminSeedPage, AdminUsagePage, AdminUsersPage } from '@/features/admin/AdminPages';
 import { MODULE_PATH } from '@/lib/format';
 import type { RunModule } from '@/lib/types/api';
@@ -19,7 +20,7 @@ const MODULES = Object.keys(MODULE_PATH) as RunModule[];
 
 function NotFound() {
   return (
-    <EmptyState icon={FileQuestion} title="Page not found" description="The link may be outdated." action={<Button asChild><Link to="/">Back to start</Link></Button>} />
+    <EmptyState icon={FileQuestion} title="Page not found" description="The link may be outdated." action={<Button asChild><Link to="/courses">Back to start</Link></Button>} />
   );
 }
 
@@ -33,6 +34,7 @@ function RouteError() {
 }
 
 export const router = createBrowserRouter([
+  { path: '/', element: <LandingPage />, errorElement: <RouteError /> },
   { path: '/login', element: <LoginPage />, errorElement: <RouteError /> },
   {
     element: <RequireAuth />,
@@ -46,7 +48,7 @@ export const router = createBrowserRouter([
           {
             element: <RequireRole role="faculty" />,
             children: [
-              { path: '/', element: <CoursesPage /> },
+              { path: '/courses', element: <CoursesPage /> },
               { path: '/dashboard', element: <DashboardPage /> },
               { path: '/courses/:id', element: <CoursePage /> },
               { path: '/courses/:id/exam-audit/compare', element: <ComparePage /> },

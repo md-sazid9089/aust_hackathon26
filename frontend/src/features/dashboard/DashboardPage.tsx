@@ -15,7 +15,7 @@ export function DashboardPage() {
       <QueryBoundary
         query={q}
         isEmpty={(d) => d.courses.length === 0}
-        empty={<EmptyState icon={LayoutDashboard} title="Nothing to show yet" description="Run an exam audit or attainment analysis and the results will appear here." action={<Button asChild><Link to="/">Go to courses</Link></Button>} />}
+        empty={<EmptyState icon={LayoutDashboard} title="Nothing to show yet" description="Run an exam audit or attainment analysis and the results will appear here." action={<Button asChild><Link to="/courses">Go to courses</Link></Button>} />}
       >
         {(d) => (
           <div className="flex flex-col gap-6">

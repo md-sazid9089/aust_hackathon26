@@ -15,7 +15,7 @@ export function LoginPage() {
   const [busy, setBusy] = useState(false);
 
   if (status === 'authenticated' && profile) {
-    const dest = loc.state?.from && loc.state.from !== '/login' ? loc.state.from : profile.role === 'admin' ? '/admin' : '/';
+    const dest = loc.state?.from && loc.state.from !== '/login' ? loc.state.from : profile.role === 'admin' ? '/admin' : '/courses';
     return <Navigate to={dest} replace />;
   }
 

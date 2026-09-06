@@ -66,7 +66,7 @@ export function AppShell() {
           <nav aria-label="Main" className="flex flex-col gap-0.5">
             {!isAdmin && (
               <>
-                <NavLink to="/" end className={linkCls}>
+                <NavLink to="/courses" end className={linkCls}>
                   <BookOpen aria-hidden /> My courses
                 </NavLink>
                 <NavLink to="/dashboard" className={linkCls}>
@@ -151,7 +151,7 @@ export function AppShell() {
             </>
           ) : (
             <>
-              <NavLink to="/" end className={linkCls}>Courses</NavLink>
+              <NavLink to="/courses" end className={linkCls}>Courses</NavLink>
               <NavLink to="/dashboard" className={linkCls}>Dashboard</NavLink>
               {inCourse && (
                 <>

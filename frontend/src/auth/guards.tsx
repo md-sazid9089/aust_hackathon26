@@ -19,6 +19,6 @@ export function RequireAuth() {
 export function RequireRole({ role }: { role: AppRole }) {
   const { profile } = useAuth();
   if (!profile) return null;
-  if (profile.role !== role) return <Navigate to={profile.role === 'admin' ? '/admin' : '/'} replace />;
+  if (profile.role !== role) return <Navigate to={profile.role === 'admin' ? '/admin' : '/courses'} replace />;
   return <Outlet />;
 }
