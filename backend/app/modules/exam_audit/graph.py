@@ -177,6 +177,7 @@ async def _map_and_bloom(ctx: RunContext, state: State) -> None:
     outcomes_txt = "\n".join(f"- {c.code}: {c.text}" for c in state.cos)
     topics_txt = "\n".join(f"- {t.code}: {t.title}" for t in state.topics) or "- (none provided)"
     failed_batches = 0
+    deferred_warnings: list[str] = []
     for i in range(0, len(state.draft), BATCH):
         batch = state.draft[i : i + BATCH]
         questions_txt = "\n".join(f"{q.number} :: {wrap_untrusted(q.text, f'q{q.number}', 2000)}" for q in batch)
@@ -205,7 +206,7 @@ async def _map_and_bloom(ctx: RunContext, state: State) -> None:
                 valid_cos = [c for c in dict.fromkeys(item.co_codes) if c in co_by_code]
                 valid_topics = [t for t in dict.fromkeys(item.topic_codes) if t in topic_by_code]
                 if len(valid_cos) != len(set(item.co_codes)) or len(valid_topics) != len(set(item.topic_codes)):
-                    await ctx.warn("map_and_bloom", f"Dropped unknown CO/topic codes suggested for question {q.number}")
+                    deferred_warnings.append(f"Dropped unknown CO/topic codes suggested for question {q.number}")
                 row = await db.get(Question, q.id, options=[selectinload(Question.co_links), selectinload(Question.topic_links)])
                 if row is None:
                     continue
@@ -226,6 +227,8 @@ async def _map_and_bloom(ctx: RunContext, state: State) -> None:
                 q.map_rationale = item.rationale
                 q.map_confidence = item.confidence
                 q.prov = prov
+    for w in deferred_warnings:  # emitted after the write session closed (SQLite single-writer)
+        await ctx.warn("map_and_bloom", w)
     if failed_batches:
         await ctx.warn("map_and_bloom", f"AI mapping unavailable for {failed_batches} batch(es); using faculty mappings only")
 

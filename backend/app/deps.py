@@ -70,9 +70,11 @@ async def get_current_user(
         token = _bearer(request, access_token)
         if not token:
             raise Unauthenticated()
-        if not settings.supabase_jwt_secret:
+        if not (settings.jwks_url or settings.supabase_jwt_secret):
             raise ApiError("AUTH_MISCONFIGURED", 503, "Authentication is not configured")
-        claims = verify_supabase_jwt(token, settings.supabase_jwt_secret)
+        claims = verify_supabase_jwt(
+            token, jwks_url=settings.jwks_url, secret=settings.supabase_jwt_secret
+        )
         try:
             user_id = uuid.UUID(str(claims["sub"]))
         except ValueError as exc:

@@ -29,6 +29,10 @@ class Settings(BaseSettings):
     # auth
     auth_mode: Literal["dev", "supabase"] = Field("dev", alias="AUTH_MODE")
     dev_user_email: str = Field("faculty.dev@example.edu", alias="DEV_USER_EMAIL")
+    supabase_url: str | None = Field(None, alias="SUPABASE_URL")
+    supabase_publishable_key: str | None = Field(None, alias="SUPABASE_PUBLISHABLE_KEY")
+    supabase_secret_key: str | None = Field(None, alias="SUPABASE_SECRET_KEY")
+    supabase_jwks_url: str | None = Field(None, alias="SUPABASE_JWKS_URL")
     supabase_jwt_secret: str | None = Field(None, alias="SUPABASE_JWT_SECRET")
 
     # LLM
@@ -68,6 +72,14 @@ class Settings(BaseSettings):
     @property
     def is_sqlite(self) -> bool:
         return self.database_url.startswith("sqlite")
+
+    @property
+    def jwks_url(self) -> str | None:
+        if self.supabase_jwks_url:
+            return self.supabase_jwks_url
+        if self.supabase_url:
+            return f"{self.supabase_url.rstrip('/')}/auth/v1/.well-known/jwks.json"
+        return None
 
 
 @lru_cache

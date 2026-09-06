@@ -180,7 +180,7 @@ def split_topics_heuristic(text: str) -> list[dict]:
             continue
         m = _TOPIC_LINE.match(line)
         title = (m.group(1) if m else line).strip(" .;")
-        if len(title) < 4 or len(title) > 200:
+        if len(title) < 2 or len(title) > 200:
             continue
         topics.append({"code": f"T-{len(topics) + 1:02d}", "title": title})
     return topics[:60]

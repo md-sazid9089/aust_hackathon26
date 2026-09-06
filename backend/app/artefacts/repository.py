@@ -39,6 +39,7 @@ class ArtefactRepo:
             .where(Question.artefact_id == artefact_id)
             .options(selectinload(Question.co_links), selectinload(Question.topic_links))
             .order_by(Question.sort_order, Question.number)
+            .execution_options(populate_existing=True)
         )
         return list((await self.db.execute(stmt)).scalars().all())
 

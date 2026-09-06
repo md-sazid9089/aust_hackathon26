@@ -97,11 +97,12 @@ class ArtefactService:
             artefact.extracted_text = cleaned
         self.db.add(artefact)
         await self.db.flush()
+        out = await self._out(artefact, with_counts=False)
         await self.db.commit()  # visible to the background task's own session
         schedule_extraction(artefact.id, self.user.id)
-        artefact.status = ExtractionStatus.extracting
+        out.status = ExtractionStatus.extracting  # reported state; ORM row is left untouched
         log.info("artefact.uploaded", artefact_id=str(artefact.id), kind=kind.value)
-        return await self._out(artefact, with_counts=False)
+        return out
 
     async def list(self, course_id: uuid.UUID, *, kind: ArtefactKind | None, status: ExtractionStatus | None) -> list[ArtefactOut]:
         await get_owned_course(self.db, course_id, self.user)
@@ -132,10 +133,11 @@ class ArtefactService:
             raise Conflict("ARTEFACT_IN_USE", "Artefact is referenced by a completed run; upload a new version instead")
         artefact.status = ExtractionStatus.pending
         artefact.error = None
+        out = await self._out(artefact, with_counts=False)
         await self.db.commit()
         schedule_extraction(artefact.id, self.user.id)
-        artefact.status = ExtractionStatus.extracting
-        return await self._out(artefact, with_counts=False)
+        out.status = ExtractionStatus.extracting
+        return out
 
     # --- questions ----------------------------------------------------------
     async def questions(self, artefact_id: uuid.UUID) -> list[QuestionOut]:
@@ -175,7 +177,6 @@ class ArtefactService:
         if artefact.status == ExtractionStatus.failed and items:
             artefact.status, artefact.error = ExtractionStatus.done, None
         await self.db.flush()
-        self.db.expire_all()
         return await self.questions(artefact_id)
 
     async def set_co_map(self, artefact_id: uuid.UUID, items: list[QuestionCoMapIn]) -> list[QuestionOut]:
@@ -193,5 +194,4 @@ class ArtefactService:
                 rows.append(QuestionCoMap(question_id=item.question_id, co_id=co, source=MapSource.faculty, confidence=1.0))
         await self.repo.replace_co_map([i.question_id for i in items], rows)
         await self.db.flush()
-        self.db.expire_all()
         return await self.questions(artefact_id)

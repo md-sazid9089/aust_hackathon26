@@ -1,16 +1,25 @@
 from __future__ import annotations
 
 import uuid
-from datetime import datetime
+from datetime import UTC, datetime
 from typing import Generic, TypeVar
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 T = TypeVar("T")
 
 
 class ApiModel(BaseModel):
     model_config = ConfigDict(from_attributes=True, populate_by_name=True)
+
+    @model_validator(mode="after")
+    def _utc_timestamps(self):
+        # SQLite returns naive datetimes; the API contract is ISO-8601 UTC.
+        for name in type(self).model_fields:
+            v = getattr(self, name, None)
+            if isinstance(v, datetime) and v.tzinfo is None:
+                object.__setattr__(self, name, v.replace(tzinfo=UTC))
+        return self
 
 
 class Page(BaseModel, Generic[T]):

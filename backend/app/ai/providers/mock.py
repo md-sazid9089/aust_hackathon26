@@ -15,7 +15,20 @@ STOPWORDS = {
     "given", "using", "use", "write", "state", "explain", "describe", "define", "list", "draw",
     "design", "compare", "distinguish", "briefly", "suitable", "example", "examples", "following",
     "than", "more", "least", "all", "any", "between", "two", "one", "system", "course", "students",
+    "appropriate", "required", "information", "techniques", "strategies", "statements", "purpose",
+    "main", "type", "types", "major", "fundamental", "concepts", "involving", "retrieve", "showing",
+    "containing", "exceeds", "exceed", "having", "find", "names", "name", "plan", "workload",
 }
+
+
+def _stem(tok: str) -> str:
+    if tok.endswith("ies") and len(tok) > 4:
+        return tok[:-3] + "y"
+    if tok.endswith("es") and len(tok) > 4 and tok[-3] in "sxz":
+        return tok[:-2]
+    if tok.endswith("s") and not tok.endswith("ss") and len(tok) > 3:
+        return tok[:-1]
+    return tok
 
 BLOOM_VERBS: dict[str, tuple[str, ...]] = {
     "remember": ("define", "list", "state", "name", "recall", "identify", "label", "recite"),
@@ -29,16 +42,19 @@ BLOOM_VERBS: dict[str, tuple[str, ...]] = {
 EMBED_DIM = 256
 
 
+SYNONYMS = {"query": "sql", "average": "aggregate", "group": "aggregate", "having": "aggregate",
+            "count": "aggregate", "sum": "aggregate", "3nf": "bcnf", "normalize": "normalise", "locking": "concurrency"}
+
+
 def tokens(text: str) -> set[str]:
-    return {t for t in re.findall(r"[a-z][a-z0-9+\-]{2,}", text.lower()) if t not in STOPWORDS}
+    raw = re.findall(r"[a-z0-9][a-z0-9+]{1,}", text.lower())
+    return {SYNONYMS.get(_stem(t), _stem(t)) for t in raw if t not in STOPWORDS and len(t) > 2}
 
 
 def hashed_embedding(text: str, dim: int = EMBED_DIM) -> list[float]:
     """Deterministic bag-of-words hashing vector; only for offline/mock mode."""
     vec = [0.0] * dim
-    for tok in re.findall(r"[a-z][a-z0-9+\-]{2,}", text.lower()):
-        if tok in STOPWORDS:
-            continue
+    for tok in tokens(text):
         h = int(hashlib.md5(tok.encode()).hexdigest(), 16)  # noqa: S324 - not security related
         vec[h % dim] += 1.0 if (h >> 8) % 2 else -1.0
     norm = math.sqrt(sum(v * v for v in vec)) or 1.0
@@ -134,8 +150,8 @@ class MockProvider(AIProvider):
         for q in ctx.get("questions", []):
             co_scores = sorted(((_overlap(q["text"], c["text"]), c["code"]) for c in cos), reverse=True)
             topic_scores = sorted(((_overlap(q["text"], t["title"]), t["code"]) for t in topics), reverse=True)
-            best_co = [code for s, code in co_scores[:1] if s >= 0.15]
-            best_topics = [code for s, code in topic_scores[:1] if s >= 0.15]
+            best_co = [code for s, code in co_scores[:1] if s >= 0.12]
+            best_topics = [code for s, code in topic_scores[:1] if s >= 0.12]
             conf = round(min(1.0, co_scores[0][0] * 2), 3) if co_scores and best_co else 0.0
             items.append(
                 {

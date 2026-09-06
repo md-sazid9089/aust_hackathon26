@@ -55,7 +55,8 @@ class RunService:
             inputs = ExamAuditInputs.model_validate(data.inputs)
             params = ExamAuditParams.model_validate(data.params)
         except ValidationError as exc:
-            raise ApiError("VALIDATION_ERROR", 422, "Invalid inputs/params for exam_audit", {"errors": exc.errors(include_url=False)}) from exc
+            raise ApiError("VALIDATION_ERROR", 422, "Invalid inputs/params for exam_audit",
+                           {"errors": [{"loc": list(e["loc"]), "msg": e["msg"], "type": e["type"]} for e in exc.errors()]}) from exc
         if await OutcomeRepo(self.db).count_cos(course_id) == 0:
             raise Conflict("COURSE_HAS_NO_OUTCOMES", "Add course outcomes before running an exam audit")
         arepo = ArtefactRepo(self.db)

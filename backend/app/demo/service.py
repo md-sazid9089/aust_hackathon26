@@ -16,7 +16,17 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.config import get_settings
 from app.db.enums import ArtefactKind, BloomLevel, ExtractionStatus, MapSource, TextLang
-from app.db.models import Artefact, CoPoMap, Course, CourseOutcome, Profile, ProgramOutcome, Question, QuestionCoMap, Topic
+from app.db.models import (
+    Artefact,
+    CoPoMap,
+    Course,
+    CourseOutcome,
+    Profile,
+    ProgramOutcome,
+    Question,
+    QuestionCoMap,
+    Topic,
+)
 from app.errors import ApiError
 from app.logging import get_logger
 
