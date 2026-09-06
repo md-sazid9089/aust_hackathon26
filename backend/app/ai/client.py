@@ -248,6 +248,7 @@ async def structured_call(
         model_key = model or getattr(provider, "model", provider.name)
         if breaker.is_open(model_key):
             warnings.append(f"model {model_key} skipped: circuit open")
+            last_error = last_error or f"circuit_open: {model_key}"
             continue
         repair: list[dict[str, str]] | None = None
         tries = 0

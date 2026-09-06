@@ -41,7 +41,7 @@ function CourseNav({ courseId }: { courseId: string }) {
 }
 
 export function AppShell() {
-  const { profile, signOut, mode } = useAuth();
+  const { profile, signOut } = useAuth();
   const { theme, toggle } = useTheme();
   const { id: courseId } = useParams();
   const loc = useLocation();
@@ -123,7 +123,6 @@ export function AppShell() {
               <LogOut aria-hidden /> Sign out
             </Button>
           </div>
-          {mode === 'mock' && <p className="mt-2 px-2 text-xs text-muted-foreground">Demo mode · in-browser data</p>}
         </div>
       </aside>
 

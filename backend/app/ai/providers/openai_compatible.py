@@ -192,6 +192,13 @@ class OpenAICompatibleProvider(AIProvider):
                 retry_after=_retry_after(r.headers.get("retry-after")),
             )
         if r.status_code >= 500:
+            # Some pools answer 5xx when *no backend supports the request shape* (e.g. response_format).
+            # That is a capability rejection, not an outage: let the client downgrade instead of retrying.
+            if _error_type(r) in _CAPABILITY_ERROR_TYPES:
+                raise ProviderError(
+                    f"Gateway has no backend for this request shape ({r.status_code}: {_error_type(r)})",
+                    retryable=False, status=r.status_code, kind="bad_request",
+                )
             raise ProviderError(f"Gateway returned {r.status_code}", retryable=True, status=r.status_code, kind="server")
         if r.status_code in (401, 403):
             raise ProviderError(f"Gateway rejected credentials ({r.status_code})", retryable=False, status=r.status_code, kind="auth")
@@ -212,3 +219,16 @@ def _retry_after(value: str | None) -> float | None:
         return max(0.0, float(value))
     except ValueError:
         return None  # HTTP-date form: fall back to exponential backoff
+
+
+_CAPABILITY_ERROR_TYPES = {"no_providers", "unsupported_parameter", "invalid_request_error"}
+
+
+def _error_type(r: httpx.Response) -> str | None:
+    try:
+        err = r.json().get("error")
+    except ValueError:
+        return None
+    if isinstance(err, dict):
+        return err.get("type") or err.get("code")
+    return None

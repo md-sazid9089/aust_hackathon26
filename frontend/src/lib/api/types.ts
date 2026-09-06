@@ -6,7 +6,7 @@ export interface RunEventHandlers {
   onError: (err: unknown) => void;
 }
 
-/** Single seam between UI and transport (architecture §12). Implemented by HttpApi and MockApi. */
+/** Single seam between UI and transport (architecture §12). Implemented by HttpApi. */
 export interface Api {
   // auth
   me(): Promise<T.Profile>;

@@ -101,29 +101,32 @@ class RunService:
         run_params = params.model_dump()
         if hasattr(inputs, "threshold"):
             run_params["threshold"] = inputs.threshold
+        course_pk, owner_pk, module = course.id, self.user.id, data.module  # plain values survive a rollback
         run = Run(
-            course_id=course.id, owner_id=self.user.id, module=data.module, status=RunStatus.queued,
+            course_id=course_pk, owner_id=owner_pk, module=module, status=RunStatus.queued,
             inputs=inputs_json, params=run_params, idempotency_key=idempotency_key,
         )
         try:
             self.db.add(run)
             await self.db.flush()
-            self.db.add_all(RunInput(run_id=run.id, artefact_id=aid, role=role) for aid, role in roles)
-            self.db.add(RunEvent(run_id=run.id, seq=0, stage="queued", message="Run queued", pct=0))
+            run_pk = run.id
+            self.db.add_all(RunInput(run_id=run_pk, artefact_id=aid, role=role) for aid, role in roles)
+            self.db.add(RunEvent(run_id=run_pk, seq=0, stage="queued", message="Run queued", pct=0))
             await self.db.commit()  # background task needs to see the row
         except IntegrityError:
             await self.db.rollback()
+            self.db.expunge_all()
             if not idempotency_key:
                 raise
             # A concurrent request with the same Idempotency-Key won the race; wait for its commit and replay it.
-            for _ in range(20):
-                existing = await self.repo.by_idempotency(self.user.id, idempotency_key)
+            for _ in range(40):
+                existing = await self.repo.by_idempotency(owner_pk, idempotency_key)
                 if existing is not None:
-                    return self._replay(existing, course.id, data.module, inputs_json)
+                    return self._replay(existing, course_pk, module, inputs_json)
                 await asyncio.sleep(0.05)
             raise
-        orchestrator.enqueue(run.id, self.user.id, course.id, run.module, run.params)
-        log.info("run.created", run_id=str(run.id), module=run.module.value)
+        orchestrator.enqueue(run_pk, owner_pk, course_pk, module, run_params)
+        log.info("run.created", run_id=str(run_pk), module=module.value)
         return RunOut.model_validate(run)
 
     @staticmethod

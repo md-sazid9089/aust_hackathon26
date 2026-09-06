@@ -1,13 +1,13 @@
 import { useState } from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
-import { ClipboardCheck, ArrowRight } from 'lucide-react';
-import { useAuth, DEMO_USERS } from '@/auth/AuthProvider';
+import { ClipboardCheck } from 'lucide-react';
+import { useAuth } from '@/auth/AuthProvider';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Field, Input } from '@/components/ui/input';
 
 export function LoginPage() {
-  const { status, profile, mode, authMode, lastError, signInMock, signInDev, signInWithPassword } = useAuth();
+  const { status, profile, authMode, lastError, signInDev, signInWithPassword } = useAuth();
   const loc = useLocation() as { state?: { from?: string } };
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -64,17 +64,15 @@ export function LoginPage() {
           <CardHeader>
             <CardTitle className="font-heading text-2xl">Sign in</CardTitle>
             <CardDescription>
-              {mode === 'mock'
-                ? 'Demo mode — choose a role to explore with seeded data.'
-                : authMode === 'dev'
-                  ? 'Local development — the backend runs with a fixed faculty account.'
-                  : authMode === 'local'
-                    ? 'Sign in with your seeded account (e.g. teacher@aust.edu / admin@aust.edu).'
-                    : 'Use your university account.'}
+              {authMode === 'dev'
+                ? 'Local development — the backend runs with a fixed faculty account.'
+                : authMode === 'local'
+                  ? 'Sign in with your account.'
+                  : 'Use your university account.'}
             </CardDescription>
           </CardHeader>
           <CardContent className="flex flex-col gap-4">
-            {mode === 'live' && authMode === 'dev' ? (
+            {authMode === 'dev' ? (
               <>
                 {lastError && (
                   <p role="alert" className="rounded-md border border-destructive/40 bg-destructive/5 p-3 text-sm text-destructive">
@@ -85,21 +83,6 @@ export function LoginPage() {
                   Continue as local faculty
                 </Button>
               </>
-            ) : mode === 'mock' ? (
-              DEMO_USERS.map((u) => (
-                <button
-                  key={u.id}
-                  type="button"
-                  onClick={() => signInMock(u.id)}
-                  className="group flex w-full items-center justify-between rounded-lg border bg-card p-4 text-left transition-colors duration-fast hover:border-primary hover:bg-primary/5 cursor-pointer"
-                >
-                  <span>
-                    <span className="block font-semibold">{u.label}</span>
-                    <span className="block text-sm text-muted-foreground">{u.hint}</span>
-                  </span>
-                  <ArrowRight className="h-5 w-5 text-muted-foreground transition-transform duration-fast group-hover:translate-x-0.5" aria-hidden />
-                </button>
-              ))
             ) : (
               <form onSubmit={submit} className="flex flex-col gap-4" noValidate>
                 <Field id="email" label="Email">

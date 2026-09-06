@@ -323,17 +323,31 @@ def run_modules_via_api(base: str, creds: dict[str, str]) -> None:
     import httpx
 
     api = base.rstrip("/") + "/api/v1"
+
+    def call(c: httpx.Client, method: str, url: str, **kw: Any) -> httpx.Response:
+        for attempt in range(6):  # a --reload backend may restart mid-run
+            try:
+                return c.request(method, url, **kw)
+            except httpx.TransportError:
+                time.sleep(2 * (attempt + 1))
+        return c.request(method, url, **kw)
+
+    def items(body: Any) -> list[dict]:
+        return body if isinstance(body, list) else body.get("items", [])
+
     with httpx.Client(base_url=api, timeout=60) as c:
         for a in C.ACCOUNTS:
             if a["role"] != "faculty":
                 continue
-            r = c.post("/auth/login", json={"email": a["email"], "password": creds[a["email"].lower()]})
+            r = call(c, "POST", "/auth/login", json={"email": a["email"], "password": creds[a["email"].lower()]})
             r.raise_for_status()
             h = {"Authorization": f"Bearer {r.json()['access_token']}"}
-            courses = c.get("/courses", headers=h, params={"page_size": 50}).json()["items"]
+            courses = items(call(c, "GET", "/courses", headers=h, params={"page_size": 50}).json())
             course_ids = [k["id"] for k in courses]
             for course in courses:
-                arts = c.get(f"/courses/{course['id']}/artefacts", headers=h).json()
+                arts = call(c, "GET", f"/courses/{course['id']}/artefacts", headers=h).json()
+                done = {r["module"] for r in items(call(c, "GET", f"/courses/{course['id']}/runs", headers=h, params={"page_size": 50}).json())
+                        if r["status"] in ("completed", "partial")}
                 by_kind: dict[str, list[dict]] = {}
                 for art in arts:
                     by_kind.setdefault(art["kind"], []).append(art)
@@ -349,7 +363,10 @@ def run_modules_via_api(base: str, creds: dict[str, str]) -> None:
                 if by_kind.get("syllabus") and others:
                     jobs.append(("syllabus_check", {"syllabus_artefact_id": by_kind["syllabus"][0]["id"], "compare_course_ids": others[:3]}))
                 for module, inputs in jobs:
-                    r = c.post(f"/courses/{course['id']}/runs", headers=h, json={"module": module, "inputs": inputs, "params": {}})
+                    if module in done:
+                        print(f"  {a['email']:28s} {course['code']:9s} {module:15s} = already run")
+                        continue
+                    r = call(c, "POST", f"/courses/{course['id']}/runs", headers=h, json={"module": module, "inputs": inputs, "params": {}})
                     if r.status_code != 202:
                         print(f"  ! {course['code']} {module}: {r.status_code} {r.text[:160]}")
                         continue
@@ -357,20 +374,19 @@ def run_modules_via_api(base: str, creds: dict[str, str]) -> None:
                     status = "queued"
                     for _ in range(90):
                         time.sleep(1)
-                        status = c.get(f"/runs/{run_id}", headers=h).json()["status"]
+                        status = call(c, "GET", f"/runs/{run_id}", headers=h).json()["status"]
                         if status in ("completed", "partial", "failed"):
                             break
                     print(f"  {a['email']:28s} {course['code']:9s} {module:15s} → {status}")
                     if module == "exam_audit" and status in ("completed", "partial"):
-                        body = c.get(f"/runs/{run_id}/findings", headers=h, params={"page_size": 50}).json()
-                        findings = body if isinstance(body, list) else body.get("items", [])
+                        findings = items(call(c, "GET", f"/runs/{run_id}/findings", headers=h, params={"page_size": 50}).json())
                         for f in findings:
                             if f["severity"] == "high" and f["status"] == "open":
-                                c.patch(f"/findings/{f['id']}", headers=h, json={"status": "accepted"})
+                                call(c, "PATCH", f"/findings/{f['id']}", headers=h, json={"status": "accepted"})
                                 break
                         for f in findings:
                             if f["severity"] == "info" and f["status"] == "open":
-                                c.patch(f"/findings/{f['id']}", headers=h, json={"status": "dismissed"})
+                                call(c, "PATCH", f"/findings/{f['id']}", headers=h, json={"status": "dismissed"})
                                 break
 
 

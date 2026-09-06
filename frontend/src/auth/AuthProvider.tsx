@@ -1,13 +1,10 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
 import type { Session } from '@supabase/supabase-js';
-import { API_MODE, ApiContext, type Api } from '@/lib/api';
+import { ApiContext, type Api } from '@/lib/api';
 import { HttpApi } from '@/lib/api/http';
-import { MockApi } from '@/lib/api/mock/MockApi';
-import { ids } from '@/lib/api/mock/fixtures';
 import { getSupabase } from '@/lib/supabase';
 import type { Profile } from '@/lib/types/api';
 
-const MOCK_USER_KEY = 'fc-mock-user';
 const LOCAL_TOKEN_KEY = 'fc-local-token';
 const BASE_URL = (import.meta.env.VITE_API_BASE_URL as string | undefined) ?? '/api/v1';
 /** Pairs with backend `AUTH_MODE`: `dev` = no token, fixed faculty user (never in prod); `local` = email+password → HS256 JWT from `/auth/login`; `supabase` = Supabase Auth session. */
@@ -15,18 +12,11 @@ export type AuthMode = 'dev' | 'local' | 'supabase';
 const rawAuthMode = import.meta.env.VITE_AUTH_MODE as string | undefined;
 export const AUTH_MODE: AuthMode = rawAuthMode === 'dev' || rawAuthMode === 'local' ? rawAuthMode : 'supabase';
 
-export const DEMO_USERS = [
-  { id: ids.faculty, label: 'Faculty', hint: 'Dr. Farhana Rahman · owns CSE 2201 & CSE 2101' },
-  { id: ids.admin, label: 'Admin', hint: 'Prof. Kamal Hossain · read-only department view' },
-] as const;
-
 interface AuthState {
   status: 'loading' | 'anonymous' | 'authenticated';
   profile: Profile | null;
-  mode: 'mock' | 'live';
   authMode: AuthMode;
   lastError: string | null;
-  signInMock: (userId: string) => void;
   signInDev: () => Promise<void>;
   signInWithPassword: (email: string, password: string) => Promise<string | null>;
   signOut: () => Promise<void>;
@@ -115,18 +105,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, [clear]);
 
-  /* ---- mock mode ---- */
-  const signInMock = useCallback((userId: string) => {
-    const mock = new MockApi(userId);
-    sessionStorage.setItem(MOCK_USER_KEY, userId);
-    setApi(mock);
-    void mock.me().then((p) => {
-      setProfile(p);
-      setStatus('authenticated');
-    });
-  }, []);
-
-  /* ---- live mode ---- */
+  /* ---- supabase mode ---- */
   const bootLive = useCallback(
     async (session: Session | null) => {
       const sb = getSupabase();
@@ -150,12 +129,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   );
 
   useEffect(() => {
-    if (API_MODE === 'mock') {
-      const saved = sessionStorage.getItem(MOCK_USER_KEY);
-      if (saved && (saved === ids.faculty || saved === ids.admin)) signInMock(saved);
-      else setStatus('anonymous');
-      return;
-    }
     if (AUTH_MODE === 'dev') {
       void signInDev();
       return;
@@ -177,7 +150,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (event === 'SIGNED_IN') void bootLive(session);
     });
     return () => sub.subscription.unsubscribe();
-  }, [bootLive, bootLocal, clear, signInMock, signInDev]);
+  }, [bootLive, bootLocal, clear, signInDev]);
 
   const signInWithPassword = useCallback(
     async (email: string, password: string) => {
@@ -191,15 +164,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   );
 
   const signOut = useCallback(async () => {
-    sessionStorage.removeItem(MOCK_USER_KEY);
-    const sb = API_MODE === 'live' && AUTH_MODE === 'supabase' ? getSupabase() : null;
+    const sb = AUTH_MODE === 'supabase' ? getSupabase() : null;
     if (sb) await sb.auth.signOut();
     clear();
   }, [clear]);
 
   const value = useMemo<AuthState>(
-    () => ({ status, profile, mode: API_MODE, authMode: AUTH_MODE, lastError, signInMock, signInDev, signInWithPassword, signOut }),
-    [status, profile, lastError, signInMock, signInDev, signInWithPassword, signOut],
+    () => ({ status, profile, authMode: AUTH_MODE, lastError, signInDev, signInWithPassword, signOut }),
+    [status, profile, lastError, signInDev, signInWithPassword, signOut],
   );
 
   return (
