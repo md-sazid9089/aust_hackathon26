@@ -157,22 +157,29 @@ Base `/api/v1`. Auth header `Authorization: Bearer <token>` in `supabase` mode; 
 | GET | `/courses/{id}/artefacts` · `/artefacts/{id}` · `/artefacts/{id}/text` | status polling |
 | DELETE / POST | `/artefacts/{id}` · `/artefacts/{id}/reextract` | `409 ARTEFACT_IN_USE` if a finished run uses it |
 | GET/PUT | `/artefacts/{id}/questions` · PUT `/questions/co-map` | faculty confirm/edit step; faculty mapping overrides AI |
-| POST | `/courses/{id}/runs` `{module:"exam_audit", inputs:{draft_artefact_id, past_artefact_ids[]}, params?}` | `202 RunOut`; `Idempotency-Key` supported |
+| POST | `/courses/{id}/runs` `{module, inputs, params?}` | `202 RunOut`; `Idempotency-Key` supported (same key + different payload → `409 IDEMPOTENCY_KEY_REUSED`). Modules: `exam_audit {draft_artefact_id, past_artefact_ids[]}` · `attainment {marks_artefact_id, paper_artefact_id, threshold}` · `syllabus_check {syllabus_artefact_id, compare_course_ids[]}` · `calibration {rubric_artefact_id, answer_set_artefact_id}` |
 | GET | `/courses/{id}/runs` · `/runs/{id}` · `/runs/{id}/events` (SSE) | progress: `queued → analyzing → completed|partial|failed` |
 | GET | `/runs/{id}/findings?type&status&severity` | findings ordered by severity |
 | PATCH | `/findings/{id}` `{status: accepted|dismissed|open}` | faculty decision |
-| GET | `/runs/{id}/export?include=accepted|all` | Markdown report |
+| GET | `/runs/{id}/export?format=md|pdf&include=accepted|all` | Markdown report (`503 EXPORT_PDF_UNAVAILABLE` without WeasyPrint) |
+| GET | `/runs/compare?a&b` · `/runs/{id}/attainment` · `/runs/{id}/prescores` · POST `/runs/{id}/suggest-questions` | module-specific results (Tier 1) |
+| GET/PUT | `/artefacts/{id}/marks` (GET) · `/artefacts/{id}/rubric` · `/artefacts/{id}/answers` | Tier 1 artefact data (marks_sheet / rubric / answer_set) |
+| GET | `/dashboard/summary` | cross-course summary |
+| GET/PATCH | `/admin/users` · `/admin/runs` · `/admin/usage` · `/admin/department/{attainment|exam-audits}` · POST `/admin/demo/reset` | admin (role=admin, read-only over faculty data) |
+| POST/GET | `/auth/login` · `/auth/logout` · `/auth/change-password` · `/auth/permissions` | `AUTH_MODE=local` email+password sign-in |
+| POST | `/assistant/chat` | scoped assistant over the caller's own data |
 | POST | `/demo/seed` | one-click demo course (labelled sample data) |
+| GET | `/health` · `/readyz` | liveness / readiness (db + llm) |
 
-Error codes: `VALIDATION_ERROR 422`, `UNAUTHENTICATED 401`, `FORBIDDEN/USER_INACTIVE 403`, `*_NOT_FOUND 404`,
-`COURSE_CODE_EXISTS / OUTCOME_IN_USE / ARTEFACT_IN_USE / ARTEFACT_NOT_READY / COURSE_HAS_NO_OUTCOMES / RUN_NOT_COMPLETED 409`,
-`FILE_TOO_LARGE 413`, `UNSUPPORTED_FILE_TYPE 415`, `ARTEFACT_NO_TEXT / ARTEFACT_KIND_NOT_SUPPORTED / MODULE_NOT_IMPLEMENTED 422`,
-`RATE_LIMITED 429`, `INTERNAL 500`, `DB_UNAVAILABLE / LLM_UNAVAILABLE 503`.
+Error codes: `VALIDATION_ERROR 422`, `UNAUTHENTICATED 401`, `FORBIDDEN / USER_INACTIVE / PERMISSION_DENIED 403`, `*_NOT_FOUND 404`,
+`COURSE_CODE_EXISTS / OUTCOME_IN_USE / ARTEFACT_IN_USE / ARTEFACT_NOT_READY / COURSE_HAS_NO_OUTCOMES / RUN_NOT_COMPLETED / IDEMPOTENCY_KEY_REUSED / SCORES_EXCEED_RUBRIC 409`,
+`FILE_TOO_LARGE 413`, `UNSUPPORTED_FILE_TYPE 415`, `ARTEFACT_NO_TEXT 422`, `RATE_LIMITED 429`, `INTERNAL 500`,
+`DB_UNAVAILABLE / LLM_UNAVAILABLE / EXPORT_PDF_UNAVAILABLE / SEED_DATA_MISSING / AUTH_MISCONFIGURED 503`. Full list: `GET /api/v1/openapi.json`.
 
 ## Testing
 
 ```bash
-pytest            # 47 tests: unit (stats, parsers, guard, AI client w/ respx), API (auth, courses, artefacts, runs, edge cases)
+pytest            # 96 tests: unit (stats, parsers, guard, AI client w/ respx, JWT), API (auth, courses, artefacts, runs, Tier 1 modules, QA regressions)
 ```
 
 Tests use SQLite and the deterministic `MockProvider`; **no real LLM calls**. Failure paths covered: invalid JSON from the
@@ -206,8 +213,9 @@ expired/invalid JWTs, rate limiting.
 
 ## Limitations (this build)
 
-- Modules P2/P3/P4 (`attainment`, `syllabus_check`, `calibration`) return `422 MODULE_NOT_IMPLEMENTED`; artefact kinds `marks_sheet/rubric/answer_set` are rejected.
 - Duplicate search is in-process cosine (fine for course-scale data); pgvector can replace it without API changes.
-- Scanned/image PDFs are not OCR'd → `422 ARTEFACT_NO_TEXT` (paste text instead). PDF export not implemented (Markdown only).
+- Scanned/image PDFs are not OCR'd → `422 ARTEFACT_NO_TEXT` (paste text instead). PDF export needs WeasyPrint system libs, otherwise `503 EXPORT_PDF_UNAVAILABLE` (Markdown always works).
+- Uploads are bounded: `MAX_UPLOAD_MB` on the body, ≤200 PDF pages, extracted text capped at 200 000 chars, 20 s parse timeout. The multipart body is still spooled to disk before auth runs (FastAPI form parsing order).
 - Files are stored on local disk (`STORAGE_DIR`); Supabase Storage is a drop-in `StorageBackend`.
-- Rate limiter and run queue are in-process (single worker).
+- Rate limiter and run queue are in-process (run with `--workers 1`). SSE auth via `?access_token=` shows up in uvicorn access logs — use `--no-access-log` in production.
+- `AUTH_MODE=dev` is refused when `ENV=prod`.
