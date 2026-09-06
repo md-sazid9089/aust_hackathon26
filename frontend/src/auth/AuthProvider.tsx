@@ -1,6 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
 import type { Session } from '@supabase/supabase-js';
-import { ApiContext, type Api } from '@/lib/api';
+import { ApiContext, ApiError, type Api } from '@/lib/api';
 import { HttpApi } from '@/lib/api/http';
 import { getSupabase } from '@/lib/supabase';
 import type { Profile } from '@/lib/types/api';
@@ -45,7 +45,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   /* ---- local mode (backend AUTH_MODE=local, HS256 JWT from /auth/login) ---- */
   const bootLocal = useCallback(
-    async (token: string) => {
+    async (token: string, attempt = 0) => {
       sessionStorage.setItem(LOCAL_TOKEN_KEY, token);
       const http = new HttpApi(BASE_URL, async () => sessionStorage.getItem(LOCAL_TOKEN_KEY), clear);
       try {
@@ -54,8 +54,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setProfile(p);
         setStatus('authenticated');
       } catch (e) {
+        // A rejected token is final; a backend hiccup (restart, 5xx, network) is not — retry briefly, then keep the token.
+        if (e instanceof ApiError && (e.status === 401 || e.status === 403)) return clear();
+        if (attempt < 2) {
+          await new Promise((r) => setTimeout(r, 1500 * (attempt + 1)));
+          return bootLocal(token, attempt + 1);
+        }
         setLastError(e instanceof Error ? e.message : 'Backend unreachable');
-        clear();
+        setApi(null);
+        setProfile(null);
+        setStatus('anonymous');
       }
     },
     [clear],
