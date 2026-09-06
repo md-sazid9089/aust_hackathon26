@@ -114,8 +114,12 @@ class MockProvider(AIProvider):
         temperature: float = 0.0,
         timeout_s: float = 60.0,
         context: dict[str, Any] | None = None,
+        max_completion_tokens: int | None = None,
+        seed: int | None = None,
+        response_mode: str = "json_schema",
+        repair: list[dict[str, str]] | None = None,
     ) -> ChatResult:
-        self.calls.append({"purpose": purpose, "schema": schema_name})
+        self.calls.append({"purpose": purpose, "schema": schema_name, "response_mode": response_mode, "repair": bool(repair)})
         q = self._queued.get(purpose)
         if q:
             item = q.popleft()
@@ -153,6 +157,7 @@ class MockProvider(AIProvider):
             best_co = [code for s, code in co_scores[:1] if s >= 0.12]
             best_topics = [code for s, code in topic_scores[:1] if s >= 0.12]
             conf = round(min(1.0, co_scores[0][0] * 2), 3) if co_scores and best_co else 0.0
+            words = q["text"].split()
             items.append(
                 {
                     "number": q["number"],
@@ -160,6 +165,7 @@ class MockProvider(AIProvider):
                     "topic_codes": best_topics,
                     "bloom_level": guess_bloom(q["text"]),
                     "confidence": conf,
+                    "evidence_quote": " ".join(words[:6]),
                     "rationale": (
                         f"Lexical overlap with {best_co[0]} ({co_scores[0][0]:.2f})" if best_co
                         else "No outcome shares enough vocabulary with this question"
@@ -173,12 +179,16 @@ class MockProvider(AIProvider):
         for pair in ctx.get("pairs", []):
             ov = _overlap(pair["draft_text"], pair["other_text"])
             dup = ov >= 0.6 or float(pair.get("similarity", 0)) >= 0.9
+            level = "identical" if ov >= 0.9 else "paraphrase" if dup else "same_concept" if ov >= 0.3 else "distinct"
             out.append(
                 {
                     "draft_number": pair["draft_number"],
                     "other_question_id": pair["other_question_id"],
-                    "is_duplicate": dup,
-                    "rationale": f"Token overlap {ov:.2f}; vector similarity {float(pair.get('similarity', 0)):.2f}. "
+                    "level": level,
+                    "confidence": round(min(1.0, 0.5 + ov / 2), 3),
+                    "evidence_draft": " ".join(pair["draft_text"].split()[:8]),
+                    "evidence_other": " ".join(pair["other_text"].split()[:8]),
+                    "rationale": f"Token overlap {ov:.2f}. "
                     + ("Both ask for the same task on the same concept." if dup else "Shared vocabulary but the task differs."),
                 }
             )

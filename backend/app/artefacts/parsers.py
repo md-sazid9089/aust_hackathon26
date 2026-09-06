@@ -54,6 +54,10 @@ def sniff_extension(filename: str, head: bytes) -> str:
     raise UnsupportedFile(f"Unsupported file type '{ext or 'unknown'}'")
 
 
+MAX_EXTRACTED_CHARS = 200_000  # matches the pasted-text cap; guards against decompression bombs
+MAX_PDF_PAGES = 200
+
+
 def extract_text(ext: str, data: bytes) -> str:
     if ext == "pdf":
         text = _pdf_text(data)
@@ -63,7 +67,7 @@ def extract_text(ext: str, data: bytes) -> str:
         text = _xlsx_csv(data)
     else:
         text = _decode_text(data)
-    text = normalise_text(text)
+    text = normalise_text(text[: MAX_EXTRACTED_CHARS * 2])[:MAX_EXTRACTED_CHARS]
     if len(text) < 20:
         raise NoTextExtracted("No extractable text (scanned/image document?)")
     return text
@@ -107,6 +111,8 @@ def _pdf_text(data: bytes) -> str:
                 reader.decrypt("")
             except Exception as exc:  # noqa: BLE001
                 raise UnsupportedFile("Encrypted PDF") from exc
+        if len(reader.pages) > MAX_PDF_PAGES:
+            raise UnsupportedFile(f"PDF has more than {MAX_PDF_PAGES} pages")
         return "\n".join((page.extract_text() or "") for page in reader.pages)
     except PyPdfError as exc:
         raise UnsupportedFile("Corrupted or unreadable PDF") from exc

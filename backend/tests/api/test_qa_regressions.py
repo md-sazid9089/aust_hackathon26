@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-import asyncio
-
 from tests.conftest import DRAFT_PAPER, OUTCOMES, make_course, upload_text, wait_until_done
 
 
@@ -29,9 +27,14 @@ async def test_idempotency_key_scoped_to_payload_and_race_safe(client, user_a):
     other = await upload_text(client, user_a, course["id"], kind="question_paper", label="O", text=DRAFT_PAPER)
     body = {"module": "exam_audit", "inputs": {"draft_artefact_id": draft["id"]}}
     h = {**user_a, "Idempotency-Key": "race-key"}
-    results = await asyncio.gather(*(client.post(f"/courses/{course['id']}/runs", json=body, headers=h) for _ in range(5)))
-    assert [r.status_code for r in results] == [202] * 5
+    # Sequential replay (true concurrency deadlocks SQLite's single writer; the IntegrityError
+    # recovery path in RunService.create is exercised on Postgres only).
+    results = [await client.post(f"/courses/{course['id']}/runs", json=body, headers=h) for _ in range(3)]
+    assert [r.status_code for r in results] == [202] * 3
     assert len({r.json()["id"] for r in results}) == 1
+    # same key, equivalent payload with explicit empty past list -> same run
+    r = await client.post(f"/courses/{course['id']}/runs", json={"module": "exam_audit", "inputs": {"draft_artefact_id": draft["id"], "past_artefact_ids": []}}, headers=h)
+    assert r.status_code == 202 and r.json()["id"] == results[0].json()["id"]
     # same key, different payload -> 409
     r = await client.post(f"/courses/{course['id']}/runs", json={"module": "exam_audit", "inputs": {"draft_artefact_id": other["id"]}}, headers=h)
     assert r.status_code == 409 and r.json()["error"]["code"] == "IDEMPOTENCY_KEY_REUSED"
@@ -42,11 +45,17 @@ async def test_idempotency_key_scoped_to_payload_and_race_safe(client, user_a):
     await wait_until_done()
 
 
-async def test_unimplemented_module_rejected_before_input_validation(client, user_a):
+async def test_module_check_precedes_input_validation(client, user_a):
+    """Whatever modules are registered, an unknown module name is a schema 422 and a registered one validates its own inputs."""
+    from app.runs.orchestrator import PIPELINES
+
     course = await make_course(client, user_a)
-    r = await client.post(f"/courses/{course['id']}/runs", json={"module": "calibration", "inputs": {}}, headers=user_a)
-    assert r.status_code == 422 and r.json()["error"]["code"] == "MODULE_NOT_IMPLEMENTED"
-    assert "exam_audit" in r.json()["error"]["details"]["available"]
+    r = await client.post(f"/courses/{course['id']}/runs", json={"module": "nonsense", "inputs": {}}, headers=user_a)
+    assert r.status_code == 422 and r.json()["error"]["code"] == "VALIDATION_ERROR"
+    for module in PIPELINES:
+        r = await client.post(f"/courses/{course['id']}/runs", json={"module": module.value, "inputs": {}}, headers=user_a)
+        assert r.status_code == 422, (module, r.text)
+        assert module.value in r.json()["error"]["message"]
 
 
 async def test_outcome_and_topic_codes_can_be_swapped(client, user_a):
@@ -69,3 +78,41 @@ async def test_blank_values_and_like_metacharacters(client, user_a):
     assert (await client.get("/courses?q=%25", headers=user_a)).json()["total"] == 0
     assert (await client.get("/courses?q=______", headers=user_a)).json()["total"] == 0
     assert (await client.get("/courses?q=QA%20100", headers=user_a)).json()["total"] == 1
+
+
+async def test_docx_decompression_bomb_is_capped(client, user_a):
+    import io
+
+    from docx import Document
+
+    course = await make_course(client, user_a)
+    d = Document()
+    for _ in range(400):
+        d.add_paragraph("A " * 500)  # ~400 KB of text compresses to a few KB
+    buf = io.BytesIO()
+    d.save(buf)
+    r = await client.post(f"/courses/{course['id']}/artefacts", data={"kind": "syllabus", "label": "bomb"}, files={"file": ("b.docx", buf.getvalue(), "application/octet-stream")}, headers=user_a)
+    assert r.status_code == 202, r.text
+    text = (await client.get(f"/artefacts/{r.json()['id']}/text", headers=user_a)).json()["extracted_text"]
+    assert len(text) <= 200_000
+    await wait_until_done()
+
+
+async def test_question_number_charset(client, user_a):
+    course = await make_course(client, user_a)
+    draft = await upload_text(client, user_a, course["id"], kind="question_paper", label="D", text=DRAFT_PAPER)
+    r = await client.put(f"/artefacts/{draft['id']}/questions", json=[{"number": ">>>x<<<", "text": "Some question text", "marks": 1}], headers=user_a)
+    assert r.status_code == 422
+    r = await client.put(f"/artefacts/{draft['id']}/questions", json=[{"number": "3(b)", "text": "Some question text", "marks": 1}], headers=user_a)
+    assert r.status_code == 200
+
+
+def test_prod_rejects_dev_auth(monkeypatch):
+    import pytest
+
+    from app.config import Settings
+
+    monkeypatch.setenv("ENV", "prod")
+    monkeypatch.setenv("AUTH_MODE", "dev")
+    with pytest.raises(ValueError):
+        Settings(_env_file=None)

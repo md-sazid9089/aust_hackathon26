@@ -227,4 +227,13 @@ export class HttpApi implements Api {
   adminDeptExamAudits() {
     return this.request<T.DeptAuditRow[]>('/admin/department/exam-audits');
   }
+
+  assistantChat(body: T.AssistantChatRequest) {
+    const fd = new FormData();
+    fd.set('message', body.message);
+    fd.set('history', JSON.stringify(body.history));
+    if (body.course_id) fd.set('course_id', body.course_id);
+    if (body.file) fd.set('file', body.file);
+    return this.request<T.AssistantChatResponse>('/assistant/chat', { method: 'POST', body: fd });
+  }
 }

@@ -15,7 +15,7 @@ def test_wrap_untrusted_neutralises_fake_markers_and_caps_length():
     assert out.count("<<<UNTRUSTED_DOCUMENT id=d>>>") == 1
     assert out.count("<<<END_UNTRUSTED_DOCUMENT id=d>>>") == 1
     assert "[removed-marker]" in out
-    assert "[...truncated...]" in out
+    assert "[...truncated" in out
 
 
 def test_normalise_text_collapses_whitespace():

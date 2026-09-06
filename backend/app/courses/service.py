@@ -32,7 +32,12 @@ class CourseService:
         rows, total = await self.repo.list(
             self.user.id, q=q, offset=(page - 1) * page_size, limit=page_size, sort_desc=desc
         )
-        return [CourseOut.model_validate(c) for c in rows], total
+        out: list[CourseOut] = []
+        for c in rows:
+            o = CourseOut.model_validate(c)
+            o.counts = CourseCounts(**await self.repo.counts(c.id))
+            out.append(o)
+        return out, total
 
     async def create(self, data: CourseCreate) -> CourseOut:
         if await self.repo.get_by_code(self.user.id, data.code):

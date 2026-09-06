@@ -108,7 +108,7 @@ async def execute(env: ToolEnv, name: str, raw_args: dict[str, Any]) -> ToolResu
         return ToolResult(summary=f"{exc.code}: {exc.message}", data={"details": exc.details}, ok=False)
     except (ToolError, ValidationError) as exc:
         return ToolResult(summary=str(exc)[:500], ok=False)
-    except asyncio.TimeoutError:
+    except TimeoutError:
         return ToolResult(summary="Timed out waiting for background work; check the run/artefact page later", ok=False)
 
 
@@ -317,7 +317,7 @@ async def _upload_attachment(env: ToolEnv, a: UploadArgs):  # noqa: ANN202
     )
     env.attachment_used = True
     await _await_task(extraction_task(out.id), WAIT_EXTRACTION_S)
-    env.db.expire_all()
+    env.db.expunge_all()
     return cid, await ArtefactService(env.db, env.user).get(out.id)
 
 
@@ -338,7 +338,7 @@ async def add_text_artefact(env: ToolEnv, a: TextArtefactArgs) -> ToolResult:
     cid = await _resolve_course(env, a.course)
     out = await ArtefactService(env.db, env.user).create(cid, kind=a.kind, label=a.label, year=None, term=None, declared_total_marks=None, file=None, text=a.text)
     await _await_task(extraction_task(out.id), WAIT_EXTRACTION_S)
-    env.db.expire_all()
+    env.db.expunge_all()
     art = await ArtefactService(env.db, env.user).get(out.id)
     return ToolResult(summary=f"Added '{art.label}' ({art.kind.value}); extraction {art.status.value}", data={"artefact": _artefact_brief(art)}, navigate=f"/courses/{cid}")
 
@@ -390,7 +390,7 @@ async def _run_exam_audit(env: ToolEnv, cid: uuid.UUID, draft_id: uuid.UUID | No
     if not wait:
         return ToolResult(summary=f"Exam audit started (run {run.id})", data={"run": _run_brief(run)}, navigate=nav)
     await _await_task(orchestrator.tasks.get(run.id), WAIT_RUN_S)
-    env.db.expire_all()
+    env.db.expunge_all()
     run = await svc.get(run.id)
     findings = await svc.findings(run.id, type_=None, status=None, severity=None)
     by_sev: dict[str, int] = {}

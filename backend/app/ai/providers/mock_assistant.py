@@ -32,6 +32,9 @@ def _guess_kind(text: str, filename: str) -> str:
 
 def _course_ref(msg: str, app: dict[str, Any]) -> str | None:
     lowered = msg.lower()
+    m = re.search(r"\b[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\b", lowered)
+    if m and "course" in lowered:
+        return m.group(0)
     for c in app.get("courses", []):
         code = str(c["code"]).lower()
         if code in lowered or code.replace(" ", "") in lowered.replace(" ", ""):

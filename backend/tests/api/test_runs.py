@@ -81,14 +81,16 @@ async def test_finding_decisions_and_export(client, user_a, user_b, workspace):
     assert f0["title"] in r.text and f1["title"] not in r.text
     r = await client.get(f"/runs/{run['id']}/export?include=all", headers=user_a)
     assert f1["title"] in r.text
-    assert (await client.get(f"/runs/{run['id']}/export?format=pdf", headers=user_a)).status_code == 422
+    r = await client.get(f"/runs/{run['id']}/export?format=pdf", headers=user_a)
+    assert r.status_code == 503 and r.json()["error"]["code"] == "PDF_UNAVAILABLE"
 
 
 async def test_run_validation_errors(client, user_a, workspace):
     cid = workspace["course"]["id"]
     ok_inputs = {"draft_artefact_id": workspace["draft"]["id"], "past_artefact_ids": []}
+    # exam_audit inputs are not valid attainment inputs
     r = await client.post(f"/courses/{cid}/runs", json={"module": "attainment", "inputs": ok_inputs}, headers=user_a)
-    assert r.status_code == 422 and r.json()["error"]["code"] == "MODULE_NOT_IMPLEMENTED"
+    assert r.status_code == 422 and r.json()["error"]["code"] == "VALIDATION_ERROR"
     r = await client.post(f"/courses/{cid}/runs", json={"module": "exam_audit", "inputs": {}}, headers=user_a)
     assert r.status_code == 422 and r.json()["error"]["code"] == "VALIDATION_ERROR"
     r = await client.post(f"/courses/{cid}/runs", json={"module": "exam_audit", "inputs": {"draft_artefact_id": str(uuid.uuid4())}}, headers=user_a)
@@ -138,14 +140,14 @@ async def test_llm_failure_yields_partial_run_with_deterministic_findings(client
 
 async def test_invalid_llm_output_is_retried_then_partial(client, user_a, workspace, mock_provider):
     mock_provider.queue("map_and_bloom", "{ not json")
-    mock_provider.queue("map_and_bloom", json.dumps({"items": [{"number": "1(a)", "co_codes": ["CO1"]}]}))  # schema violation
+    mock_provider.queue("map_and_bloom", json.dumps({"items": [{"number": "1(a)", "co_codes": ["CO1"]}]}))  # schema violation (missing required fields)
     run = await _run(client, user_a, workspace)
     assert run["status"] == "partial"
     assert sum(1 for c in mock_provider.calls if c["purpose"] == "map_and_bloom") == 2
 
 
 async def test_unknown_codes_from_llm_are_dropped(client, user_a, workspace, mock_provider):
-    items = [{"number": n, "co_codes": ["CO99"], "topic_codes": ["T-77"], "bloom_level": "apply", "confidence": 0.9, "rationale": "x"} for n in ["1(a)", "1(b)", "2(a)", "2(b)", "3(a)", "3(b)", "4(a)", "4(b)", "5"]]
+    items = [{"number": n, "co_codes": ["CO99"], "topic_codes": ["T-77"], "bloom_level": "apply", "confidence": 0.9, "evidence_quote": "x", "rationale": "x"} for n in ["1(a)", "1(b)", "2(a)", "2(b)", "3(a)", "3(b)", "4(a)", "4(b)", "5"]]
     mock_provider.queue("map_and_bloom", json.dumps({"items": items}))
     run = await _run(client, user_a, workspace)
     assert run["status"] == "partial" and "Dropped unknown" in run["error"]
@@ -181,10 +183,11 @@ async def test_demo_seed_idempotent_and_runnable(client, user_a):
     r2 = await client.post("/demo/seed", headers=user_a)
     assert r2.json()["created"] is False and r2.json()["course_id"] == cid
     course = (await client.get(f"/courses/{cid}", headers=user_a)).json()
-    assert course["is_demo"] and course["counts"] == {"artefacts": 3, "runs": 0, "outcomes": 6}
+    assert course["is_demo"] and course["counts"] == {"artefacts": 7, "runs": 0, "outcomes": 6}  # 3 papers + syllabus + marks + rubric + answers
     arts = (await client.get(f"/courses/{cid}/artefacts", headers=user_a)).json()
-    draft = next(a for a in arts if a["label"].startswith("[DRAFT]"))
-    past = [a["id"] for a in arts if a["id"] != draft["id"]]
+    papers = [a for a in arts if a["kind"] == "question_paper"]
+    draft = next(a for a in papers if a["label"].startswith("[DRAFT]"))
+    past = [a["id"] for a in papers if a["id"] != draft["id"]]
     r = await client.post(f"/courses/{cid}/runs", json={"module": "exam_audit", "inputs": {"draft_artefact_id": draft["id"], "past_artefact_ids": past}}, headers=user_a)
     assert r.status_code == 202
     await wait_until_done()

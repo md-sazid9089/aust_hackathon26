@@ -104,16 +104,29 @@ async def _extract_questions(db, artefact: Artefact, text: str, ctx: CallContext
     out: ExtractedQuestions = res.value  # type: ignore[assignment]
     seen: set[str] = set()
     order = 0
+    src = " ".join(text.lower().split())
+    suspicious: list[str] = []
     for q in out.questions:
         number = "".join(q.number.split())
         body = q.text.strip()
         if not number or not body or number in seen:
             continue
         seen.add(number)
-        db.add(Question(artefact_id=artefact.id, number=number, text=body[:5000], marks=max(0.0, float(q.marks)), sort_order=order))
+        marks = float(q.marks)
+        if not (0 <= marks <= 100):  # a single question above 100 marks is a misread, not a fact
+            suspicious.append(f"Q{number}: marks {marks:g} out of range, set to 0")
+            marks = 0.0
+        # Verbatim check: the model must not paraphrase the question; use the first 60 chars as a probe.
+        probe = " ".join(body[:60].lower().split())
+        if len(probe) >= 12 and probe not in src:
+            suspicious.append(f"Q{number}: text not found verbatim in the document")
+        db.add(Question(artefact_id=artefact.id, number=number, text=body[:5000], marks=marks, sort_order=order))
         order += 1
     if order == 0:
         return "No questions could be identified in the document"
+    if suspicious:
+        log.warning("extraction.questions_suspicious", artefact_id=str(artefact.id), count=len(suspicious))
+        artefact.error = "Check these extracted items: " + "; ".join(suspicious[:5])  # status stays done; faculty confirms
     return None
 
 

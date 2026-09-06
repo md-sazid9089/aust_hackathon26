@@ -523,4 +523,28 @@ export class MockApi implements Api {
         return { owner_email: r.ownerEmail, course_code: this.courses.find((c) => c.id === r.run.course_id)?.code ?? '', run_id: r.run.id, finished_at: r.run.finished_at ?? '', coverage_pct: s.coverage_pct, duplicates: s.duplicates.length, open_findings: r.findings.filter((f) => f.status === 'open').length };
       });
   }
+
+  /** Minimal in-browser assistant: lists courses / points at pages; real planning lives in the backend. */
+  async assistantChat(body: T.AssistantChatRequest): Promise<T.AssistantChatResponse> {
+    await wait(400);
+    const low = body.message.toLowerCase();
+    const mine = this.courses.filter((c) => c.owner_id === this.userId && !c.deleted_at);
+    if (body.file) {
+      return { reply: `In demo mode I can't upload **${body.file.name}**. Switch to the live API (VITE_API_MODE=live) to let the assistant upload and analyse files.`, actions: [], navigate: null, model: 'mock-fe' };
+    }
+    if (low.includes('course')) {
+      return {
+        reply: mine.length ? `You have ${mine.length} course(s):\n${mine.map((c) => `- **${c.code}** — ${c.title}`).join('\n')}` : 'You have no courses yet.',
+        actions: [{ tool: 'list_courses', status: 'ok', summary: `${mine.length} course(s)` }],
+        navigate: '/courses',
+        model: 'mock-fe',
+      };
+    }
+    return {
+      reply: 'I can list your courses, open pages, and — with the live backend — upload files, run exam audits and decide findings. Try “list my courses”.',
+      actions: [],
+      navigate: null,
+      model: 'mock-fe',
+    };
+  }
 }

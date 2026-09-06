@@ -27,6 +27,18 @@ def cosine(a: list[float], b: list[float]) -> float:
     return dot / (na * nb)
 
 
+def l2_normalise(vec: list[float]) -> list[float]:
+    n = math.sqrt(sum(v * v for v in vec))
+    return [v / n for v in vec] if n else vec
+
+
+class EmbeddingDimensionMismatch(ProviderError):
+    """Vectors of different lengths came back in one request; cosine across them is meaningless."""
+
+    def __init__(self, dims: set[int]) -> None:
+        super().__init__(f"Embedding dimensions differ within one batch: {sorted(dims)}", retryable=False, kind="malformed")
+
+
 async def embed_texts(
     texts: list[str],
     *,
@@ -34,25 +46,31 @@ async def embed_texts(
     db: AsyncSession | None = None,
     provider: AIProvider | None = None,
 ) -> tuple[list[list[float]], str] | None:
-    """Embed in batches; returns (vectors, model) or None when the provider fails (caller degrades)."""
+    """Embed in batches; returns (unit-norm vectors, canonical model id) or None when the provider fails.
+
+    The returned model id is the provider's *configured* embedding model, not whatever alias the
+    gateway echoes back, so cached vectors are recognised on the next run.
+    """
     provider = provider or get_provider()
     settings = get_settings()
     vectors: list[list[float]] = []
-    model = settings.embed_model
+    model = getattr(provider, "embed_model_name", None) or settings.embed_model
     for i in range(0, len(texts), BATCH):
         chunk = texts[i : i + BATCH]
         started = time.perf_counter()
         try:
             res = await provider.embed(chunk, timeout_s=settings.llm_timeout_s)
+            dims = {len(v) for v in res.vectors}
+            if len(dims) != 1 or (vectors and len(vectors[0]) not in dims):
+                raise EmbeddingDimensionMismatch(dims | ({len(vectors[0])} if vectors else set()))
         except ProviderError as exc:
-            log.warning("embed.failed", error=str(exc))
+            log.warning("embed.failed", error=str(exc), kind=exc.kind)
             if db is not None:
                 db.add(UsageLog(user_id=ctx.user_id, run_id=ctx.run_id, purpose=UsagePurpose.embedding,
                                 model=model, status="failed",
                                 latency_ms=int((time.perf_counter() - started) * 1000)))
             return None
-        model = res.model
-        vectors.extend(res.vectors)
+        vectors.extend(l2_normalise(v) for v in res.vectors)
         if db is not None:
             db.add(UsageLog(user_id=ctx.user_id, run_id=ctx.run_id, purpose=UsagePurpose.embedding,
                             model=model, tokens_in=res.tokens_in, status="ok",

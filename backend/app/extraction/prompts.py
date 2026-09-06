@@ -1,6 +1,6 @@
 """Prompt constants for artefact extraction. Documents are inserted only via guard.wrap_untrusted()."""
 
-PROMPT_VERSIONS = {"EXTRACT_QUESTIONS": "1.0", "EXTRACT_SYLLABUS": "1.0", "EXTRACT_RUBRIC": "1.0", "EXTRACT_ANSWERS": "1.0"}
+PROMPT_VERSIONS = {"EXTRACT_QUESTIONS": "1.1", "EXTRACT_SYLLABUS": "1.0", "EXTRACT_RUBRIC": "1.0", "EXTRACT_ANSWERS": "1.0"}
 
 COMMON_RULES = """
 Rules:
@@ -17,10 +17,20 @@ EXTRACT_QUESTIONS_SYSTEM = (
     + COMMON_RULES
     + """
 Guidance:
-- Labels follow the paper: main questions '1', '2'; sub-parts '1(a)', '1(b)'. Normalise to that form.
-- If a main question only introduces sub-parts, do not emit it separately.
-- Marks usually appear as '[5]', '(5 marks)' or a trailing number; if absent use 0.
-- Keep instructions such as 'Answer any four' out of the questions list; mention them in `notes`.
+- Labels follow the paper: main questions '1', '2'; sub-parts '1(a)', '1(b)'; deeper parts '1(a)(i)'. Normalise to that
+  form. Convert Bangla digits (১২ → 12) and Bangla part letters (ক, খ, গ → a, b, c) in the label only; keep the text as printed.
+- Emit the smallest gradable unit: if a main question only introduces sub-parts, do not emit it separately. If a main
+  question has its own text AND sub-parts, emit the main question with marks 0 and each sub-part with its own marks.
+- Marks usually appear as '[5]', '(5 marks)', '5' at the end of the line, or in a right-hand column. Compound forms:
+  '2×5=10' or '5+5' mean the total for that unit (10); '2 × 5' next to 'Answer any two' means 5 each. If a mark is printed
+  once for a group of sub-parts, divide equally only when the paper says 'each'; otherwise put the group total on the
+  parent and 0 on sub-parts and explain in `notes`. If absent, use 0 and mention it in `notes`.
+- Choice instructions ('Answer any FOUR', 'attempt 3 of 5', 'যেকোনো তিনটি') are not questions: leave them out of the
+  list and record them in `notes` as e.g. 'Section B: answer any 4 of 6 (Q3–Q8)'. Still list every question.
+- MCQ blocks: one entry per numbered item with its options on one line; do not emit each option as a question.
+- Do not invent labels for unlabelled paragraphs unless they clearly are questions (end with '?' or an imperative verb);
+  then label them sequentially and say so in `notes`.
+- Headers, footers, page numbers, 'Figure 1' captions and rubric lines are not questions.
 """
 )
 

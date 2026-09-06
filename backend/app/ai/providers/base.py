@@ -4,7 +4,6 @@ from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from typing import Any, Literal
 
-
 ErrorKind = Literal[
     "timeout",      # client-side timeout → try the next model immediately
     "rate_limit",   # 429 → next model (same-model retry would just burn budget)
@@ -22,12 +21,19 @@ class ProviderError(Exception):
     """Transport/HTTP/model failure talking to the gateway. `kind` drives the retry policy."""
 
     def __init__(
-        self, message: str, *, retryable: bool = True, status: int | None = None, kind: ErrorKind = "transport"
+        self,
+        message: str,
+        *,
+        retryable: bool = True,
+        status: int | None = None,
+        kind: ErrorKind = "transport",
+        retry_after: float | None = None,
     ) -> None:
         super().__init__(message)
         self.retryable = retryable
         self.status = status
         self.kind = kind
+        self.retry_after = retry_after  # seconds, from the gateway's Retry-After header when present
 
     @property
     def final(self) -> bool:
@@ -44,6 +50,10 @@ class ChatResult:
     finish_reason: str | None = None
     raw: dict[str, Any] = field(default_factory=dict)
 
+    @property
+    def truncated(self) -> bool:
+        return self.finish_reason == "length"
+
 
 @dataclass
 class EmbedResult:
@@ -57,6 +67,8 @@ class AIProvider(ABC):
 
     name: str = "base"
     embed_model_name: str = "base-embed"  # canonical id stored next to vectors; a change forces re-embedding
+    # Response mode the gateway is known to accept ("json_schema" | "json_object" | "prompt"); learned by the client.
+    response_mode: str | None = None
 
     @abstractmethod
     async def chat_json(
@@ -72,8 +84,15 @@ class AIProvider(ABC):
         timeout_s: float = 60.0,
         max_completion_tokens: int | None = None,
         context: dict[str, Any] | None = None,
+        seed: int | None = None,
+        response_mode: str = "json_schema",
+        repair: list[dict[str, str]] | None = None,
     ) -> ChatResult:
-        """`context` is the structured payload the prompt was built from; real providers ignore it."""
+        """`context` is the structured payload the prompt was built from; real providers ignore it.
+
+        `repair` is an optional [assistant, user] message pair appended after the user turn so the
+        model can correct JSON that failed validation.
+        """
 
     @abstractmethod
     async def embed(self, texts: list[str], *, timeout_s: float = 60.0) -> EmbedResult: ...

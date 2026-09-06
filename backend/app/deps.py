@@ -146,6 +146,9 @@ class RateLimiter:
         if not settings.rate_limit_enabled:
             return
         now = time.monotonic()
+        if len(self._hits) > 10_000:  # evict idle users so the map cannot grow without bound
+            for k in [k for k, dq in self._hits.items() if not dq or now - dq[-1] > self.window_s]:
+                del self._hits[k]
         q = self._hits[str(user.id)]
         while q and now - q[0] > self.window_s:
             q.popleft()

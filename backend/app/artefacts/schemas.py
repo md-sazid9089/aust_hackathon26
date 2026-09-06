@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import re
 import uuid
 from datetime import datetime
 
@@ -118,6 +119,8 @@ class QuestionIn(ApiModel):
         v = "".join(v.split())
         if not v:
             raise ValueError("number must not be blank")
+        if not re.fullmatch(r"[A-Za-z0-9().\-]+", v):
+            raise ValueError("number may only contain letters, digits, parentheses, dots and hyphens")
         return v
 
 

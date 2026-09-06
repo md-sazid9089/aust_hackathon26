@@ -8,7 +8,6 @@ Inputs: rubric_artefact_id (rubric), answer_set_artefact_id (answer_set with ≥
 from __future__ import annotations
 
 import statistics
-import uuid
 from dataclasses import dataclass, field
 from typing import Any
 
@@ -17,7 +16,7 @@ from sqlalchemy import select
 from app.ai.client import CallContext, structured_call
 from app.ai.guard import wrap_untrusted
 from app.db.enums import FindingSeverity, FindingType, TargetKind, UsagePurpose
-from app.db.models import Answer, Artefact, Run, RunInput, RubricCriterion
+from app.db.models import Answer, Artefact, RubricCriterion, Run, RunInput
 from app.db.session import session_scope
 from app.modules import tier1_prompts as P
 from app.modules.base import FindingDraft, RunContext, StageFailed

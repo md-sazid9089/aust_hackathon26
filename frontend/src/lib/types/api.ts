@@ -405,3 +405,27 @@ export interface DeptAuditRow {
   duplicates: number;
   open_findings: number;
 }
+
+/* ---- assistant ---- */
+export interface ChatMessage {
+  role: 'user' | 'assistant';
+  content: string;
+}
+export interface AssistantAction {
+  tool: string;
+  status: 'ok' | 'error';
+  summary: string;
+  data?: Record<string, unknown> | null;
+}
+export interface AssistantChatRequest {
+  message: string;
+  history: ChatMessage[];
+  course_id?: UUID;
+  file?: File;
+}
+export interface AssistantChatResponse {
+  reply: string;
+  actions: AssistantAction[];
+  navigate: string | null;
+  model: string | null;
+}

@@ -16,7 +16,18 @@ from sqlalchemy.orm import selectinload
 from app.ai.client import CallContext, structured_call
 from app.artefacts.parsers import normalize_qnum
 from app.db.enums import FindingSeverity, FindingType, TargetKind, UsagePurpose
-from app.db.models import Artefact, CoPoMap, Course, CourseOutcome, MarksColumn, MarksRow, ProgramOutcome, Question, Run, RunInput
+from app.db.models import (
+    Artefact,
+    CoPoMap,
+    Course,
+    CourseOutcome,
+    MarksColumn,
+    MarksRow,
+    ProgramOutcome,
+    Question,
+    Run,
+    RunInput,
+)
 from app.db.session import session_scope
 from app.modules import tier1_prompts as P
 from app.modules.base import FindingDraft, RunContext, StageFailed

@@ -10,6 +10,8 @@ from app.ai.providers.base import AIProvider, ChatResult, EmbedResult, ProviderE
 
 # Models that accept `reasoning_effort` on chat completions (OpenAI direct). Older gpt-4* reject it.
 _REASONING_MODEL_RE = re.compile(r"(^|/)(gpt-5|o[1-9])", re.IGNORECASE)
+MAX_RESPONSE_BYTES = 8 * 1024 * 1024  # a JSON reply larger than this is a broken gateway, not a result
+CONNECT_TIMEOUT_S = 10.0
 
 
 def is_reasoning_model(model: str) -> bool:
@@ -63,21 +65,31 @@ class OpenAICompatibleProvider(AIProvider):
         schema_name: str,
         temperature: float,
         max_completion_tokens: int | None,
+        seed: int | None = None,
+        response_mode: str = "json_schema",
+        repair: list[dict[str, str]] | None = None,
     ) -> dict[str, Any]:
         model_id = model or self.model
-        body: dict[str, Any] = {
-            "model": model_id,
-            "messages": [
-                {"role": "system", "content": system},
-                {"role": "user", "content": user},
-            ],
-            "response_format": {
+        messages: list[dict[str, str]] = [
+            {"role": "system", "content": system},
+            {"role": "user", "content": user},
+        ]
+        if repair:
+            messages.extend(repair)
+        body: dict[str, Any] = {"model": model_id, "messages": messages}
+        if response_mode == "json_schema":
+            body["response_format"] = {
                 "type": "json_schema",
                 "json_schema": {"name": schema_name, "strict": True, "schema": json_schema},
-            },
-        }
+            }
+        elif response_mode == "json_object":
+            body["response_format"] = {"type": "json_object"}
+        # "prompt": the client has already appended the schema to the system message.
         if max_completion_tokens:
-            body["max_completion_tokens"] = int(max_completion_tokens)
+            # OpenAI renamed the field; most other gateways still only know `max_tokens`.
+            body["max_completion_tokens" if self.is_openai else "max_tokens"] = int(max_completion_tokens)
+        if seed is not None:
+            body["seed"] = int(seed)
         reasoning = is_reasoning_model(model_id)
         if reasoning and self.reasoning_effort:
             if self.is_openrouter:
@@ -104,10 +116,14 @@ class OpenAICompatibleProvider(AIProvider):
         timeout_s: float = 60.0,
         max_completion_tokens: int | None = None,
         context: dict[str, Any] | None = None,
+        seed: int | None = None,
+        response_mode: str = "json_schema",
+        repair: list[dict[str, str]] | None = None,
     ) -> ChatResult:
         body = self.build_chat_body(
             model=model, system=system, user=user, json_schema=json_schema, schema_name=schema_name,
-            temperature=temperature, max_completion_tokens=max_completion_tokens,
+            temperature=temperature, max_completion_tokens=max_completion_tokens, seed=seed,
+            response_mode=response_mode, repair=repair,
         )
         data = await self._post(f"{self.base_url}/chat/completions", body, timeout_s)
         try:
@@ -121,10 +137,9 @@ class OpenAICompatibleProvider(AIProvider):
         finish_reason = choice.get("finish_reason")
         if message.get("refusal"):
             raise ProviderError("Model refused the request", retryable=False, kind="refusal")
-        if finish_reason == "length":
-            raise ProviderError("Output truncated (max_completion_tokens)", retryable=False, kind="truncated")
         if finish_reason == "content_filter":
             raise ProviderError("Output blocked by content filter", retryable=False, kind="refusal")
+        # finish_reason=length is reported, not raised: the client decides whether the partial JSON is usable.
         usage = data.get("usage") or {}
         return ChatResult(
             content=content or "",
@@ -164,20 +179,36 @@ class OpenAICompatibleProvider(AIProvider):
         self, url: str, body: dict[str, Any], timeout_s: float, headers: dict[str, str] | None = None
     ) -> dict[str, Any]:
         try:
-            r = await self._client.post(url, json=body, timeout=timeout_s, headers=headers)
+            r = await self._client.post(
+                url, json=body, timeout=httpx.Timeout(timeout_s, connect=min(CONNECT_TIMEOUT_S, timeout_s)), headers=headers
+            )
         except httpx.TimeoutException as exc:
             raise ProviderError("Model request timed out", retryable=True, kind="timeout") from exc
         except httpx.HTTPError as exc:
             raise ProviderError(f"Transport error: {type(exc).__name__}", retryable=True, kind="transport") from exc
         if r.status_code == 429:
-            raise ProviderError("Gateway rate-limited the request (429)", retryable=True, status=429, kind="rate_limit")
+            raise ProviderError(
+                "Gateway rate-limited the request (429)", retryable=True, status=429, kind="rate_limit",
+                retry_after=_retry_after(r.headers.get("retry-after")),
+            )
         if r.status_code >= 500:
             raise ProviderError(f"Gateway returned {r.status_code}", retryable=True, status=r.status_code, kind="server")
         if r.status_code in (401, 403):
             raise ProviderError(f"Gateway rejected credentials ({r.status_code})", retryable=False, status=r.status_code, kind="auth")
         if r.status_code >= 400:
             raise ProviderError(f"Gateway rejected request ({r.status_code})", retryable=False, status=r.status_code, kind="bad_request")
+        if len(r.content) > MAX_RESPONSE_BYTES:
+            raise ProviderError("Gateway response too large", retryable=True, kind="server")
         try:
             return r.json()
         except ValueError as exc:
             raise ProviderError("Gateway returned non-JSON body", retryable=True, kind="server") from exc
+
+
+def _retry_after(value: str | None) -> float | None:
+    if not value:
+        return None
+    try:
+        return max(0.0, float(value))
+    except ValueError:
+        return None  # HTTP-date form: fall back to exponential backoff

@@ -15,7 +15,7 @@ from typing import Any
 from sqlalchemy import select
 from sqlalchemy.orm import selectinload
 
-from app.ai.client import CallContext, structured_call
+from app.ai.client import CallContext, get_provider, structured_call
 from app.ai.embeddings import cosine, embed_texts
 from app.ai.guard import wrap_untrusted
 from app.config import get_settings
@@ -69,6 +69,16 @@ class State:
 
 def _hash(obj: Any) -> str:
     return hashlib.sha256(json.dumps(obj, sort_keys=True, default=str).encode()).hexdigest()[:16]
+
+
+def _norm(s: str) -> str:
+    return " ".join(s.lower().split())
+
+
+def quote_is_verbatim(quote: str, source: str, *, min_len: int = 4) -> bool:
+    """Whitespace/case-insensitive containment; guards against the model paraphrasing its 'verbatim' evidence."""
+    q = _norm(quote)
+    return len(q) >= min_len and q in _norm(source)
 
 
 async def run_exam_audit(ctx: RunContext) -> dict[str, Any]:
@@ -153,7 +163,8 @@ async def _load_inputs(ctx: RunContext) -> State:
 
 
 async def _embed_questions(ctx: RunContext, state: State) -> bool:
-    model = get_settings().embed_model
+    provider = get_provider()
+    model = getattr(provider, "embed_model_name", None) or get_settings().embed_model
     need = [q for q in state.draft + state.past if not q.embedding or q.embedding_model != model]
     if need:
         res = await embed_texts([q.text for q in need], ctx=CallContext(ctx.owner_id, ctx.run_id))
@@ -167,6 +178,11 @@ async def _embed_questions(ctx: RunContext, state: State) -> bool:
                 row = await db.get(Question, q.id)
                 if row is not None:
                     row.embedding, row.embedding_model = vec, used_model
+    # Cached vectors from a differently-sized model would silently score 0.0 in cosine.
+    dims = {len(q.embedding) for q in state.draft + state.past if q.embedding}
+    if len(dims) > 1:
+        await ctx.warn("embed_questions", f"Mixed embedding dimensions {sorted(dims)}; duplicate detection skipped")
+        return False
     return True
 
 
@@ -198,15 +214,22 @@ async def _map_and_bloom(ctx: RunContext, state: State) -> None:
             ctx.model_used = res.model
             out: MapAndBloomOut = res.value  # type: ignore[assignment]
             by_number = {q.number: q for q in batch}
-            prov = {"model": res.model, "prompt_version": P.PROMPT_VERSIONS["MAP_AND_BLOOM"], "input_hash": _hash(context)}
+            prov = {
+                "model": res.model, "prompt_version": P.PROMPT_VERSIONS["MAP_AND_BLOOM"], "input_hash": _hash(context),
+                "prompt_hash": res.prompt_hash, "response_mode": res.response_mode, "repaired": res.repaired,
+            }
             for item in out.items:
                 q = by_number.get("".join(item.number.split()))
                 if q is None:
                     continue
-                valid_cos = [c for c in dict.fromkeys(item.co_codes) if c in co_by_code]
-                valid_topics = [t for t in dict.fromkeys(item.topic_codes) if t in topic_by_code]
+                valid_cos = [c for c in dict.fromkeys(item.co_codes) if c in co_by_code][:2]
+                valid_topics = [t for t in dict.fromkeys(item.topic_codes) if t in topic_by_code][:2]
                 if len(valid_cos) != len(set(item.co_codes)) or len(valid_topics) != len(set(item.topic_codes)):
-                    deferred_warnings.append(f"Dropped unknown CO/topic codes suggested for question {q.number}")
+                    deferred_warnings.append(f"Dropped unknown or surplus CO/topic codes suggested for question {q.number}")
+                evidence_ok = quote_is_verbatim(item.evidence_quote, q.text)
+                if not evidence_ok:
+                    deferred_warnings.append(f"AI evidence for question {q.number} is not a verbatim quote; confidence reduced")
+                confidence = item.confidence if evidence_ok else min(item.confidence, 0.5)
                 row = await db.get(Question, q.id, options=[selectinload(Question.co_links), selectinload(Question.topic_links)])
                 if row is None:
                     continue
@@ -214,19 +237,19 @@ async def _map_and_bloom(ctx: RunContext, state: State) -> None:
                     for l in list(row.co_links):
                         await db.delete(l)
                     await db.flush()
-                    db.add_all(QuestionCoMap(question_id=q.id, co_id=co_by_code[c].id, confidence=item.confidence, source=MapSource.ai) for c in valid_cos)
+                    db.add_all(QuestionCoMap(question_id=q.id, co_id=co_by_code[c].id, confidence=confidence, source=MapSource.ai) for c in valid_cos)
                     q.co_codes, q.co_source = valid_cos, MapSource.ai if valid_cos else None
                 for l in list(row.topic_links):
                     await db.delete(l)
                 await db.flush()
-                db.add_all(QuestionTopicMap(question_id=q.id, topic_id=topic_by_code[t].id, confidence=item.confidence, source=MapSource.ai) for t in valid_topics)
+                db.add_all(QuestionTopicMap(question_id=q.id, topic_id=topic_by_code[t].id, confidence=confidence, source=MapSource.ai) for t in valid_topics)
                 q.topic_codes = valid_topics
                 if q.bloom_source != MapSource.faculty:
                     row.bloom_level, row.bloom_source = item.bloom_level, MapSource.ai
                     q.bloom, q.bloom_source = item.bloom_level, MapSource.ai
-                q.map_rationale = item.rationale
-                q.map_confidence = item.confidence
-                q.prov = prov
+                q.map_rationale = f"{item.rationale} Evidence: “{item.evidence_quote}”" if evidence_ok else item.rationale
+                q.map_confidence = confidence
+                q.prov = {**prov, "evidence_verbatim": evidence_ok}
     for w in deferred_warnings:  # emitted after the write session closed (SQLite single-writer)
         await ctx.warn("map_and_bloom", w)
     if failed_batches:
@@ -251,8 +274,9 @@ async def _find_duplicates(ctx: RunContext, state: State, params: dict[str, Any]
             pairs.append({"draft_number": d.number, "draft_id": did, "other_question_id": oid, "draft_text": d.text, "other_text": o.text, "similarity": sim})
     if not pairs:
         return
+    # Similarity is deliberately NOT shown to the model (anchoring); it stays in `pairs` for provenance/findings.
     pairs_txt = "\n\n".join(
-        f"PAIR draft_number={p['draft_number']} other_question_id={p['other_question_id']} similarity={p['similarity']}\n"
+        f"PAIR draft_number={p['draft_number']} other_question_id={p['other_question_id']}\n"
         f"DRAFT: {wrap_untrusted(p['draft_text'], 'draft', 2000)}\nOTHER ({by_id[p['other_question_id']].artefact_label} {by_id[p['other_question_id']].number}): "
         f"{wrap_untrusted(p['other_text'], 'other', 2000)}"
         for p in pairs
@@ -269,13 +293,22 @@ async def _find_duplicates(ctx: RunContext, state: State, params: dict[str, Any]
             _add_duplicate(state, p, by_id, confirmed=False, rationale="Not confirmed by AI (provider unavailable); vector similarity only.", prov={})
         return
     ctx.model_used = ctx.model_used or res.model
-    prov = {"model": res.model, "prompt_version": P.PROMPT_VERSIONS["CONFIRM_DUPLICATES"], "input_hash": _hash([p["draft_id"] + p["other_question_id"] for p in pairs])}
+    prov = {
+        "model": res.model, "prompt_version": P.PROMPT_VERSIONS["CONFIRM_DUPLICATES"],
+        "input_hash": _hash([p["draft_id"] + p["other_question_id"] for p in pairs]),
+        "prompt_hash": res.prompt_hash, "response_mode": res.response_mode,
+    }
     verdicts = {(v.draft_number, v.other_question_id): v for v in res.value.items}  # type: ignore[union-attr]
     for p in pairs:
         v = verdicts.get((p["draft_number"], p["other_question_id"]))
         if v is None or not v.is_duplicate:
             continue
-        _add_duplicate(state, p, by_id, confirmed=True, rationale=v.rationale, prov=prov)
+        d, o = by_id[p["draft_id"]], by_id[p["other_question_id"]]
+        verbatim = quote_is_verbatim(v.evidence_draft, d.text) and quote_is_verbatim(v.evidence_other, o.text)
+        rationale = f"{v.rationale} ({v.level}, confidence {v.confidence:.2f})"
+        if verbatim:
+            rationale += f' Draft: “{v.evidence_draft}” — {o.artefact_label}: “{v.evidence_other}”.'
+        _add_duplicate(state, p, by_id, confirmed=True, rationale=rationale, prov={**prov, "level": v.level, "confidence": v.confidence, "evidence_verbatim": verbatim})
 
 
 def _add_duplicate(state: State, p: dict[str, Any], by_id: dict[str, QView], *, confirmed: bool, rationale: str, prov: dict) -> None:

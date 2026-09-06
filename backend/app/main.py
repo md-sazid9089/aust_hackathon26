@@ -6,6 +6,7 @@ from contextlib import asynccontextmanager
 from fastapi import APIRouter, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+from app.admin.router import router as admin_router
 from app.ai.client import get_provider
 from app.artefacts.router import router as artefacts_router
 from app.assistant.router import router as assistant_router
@@ -13,6 +14,7 @@ from app.auth.router import router as auth_router
 from app.auth.service import ensure_seed_users, sync_role_permissions
 from app.config import get_settings
 from app.courses.router import router as courses_router
+from app.dashboard.router import router as dashboard_router
 from app.db.session import get_engine, session_scope
 from app.demo.router import router as demo_router
 from app.demo.service import ensure_program_outcomes
@@ -95,6 +97,8 @@ def create_app() -> FastAPI:
     api.include_router(artefacts_router)
     api.include_router(runs_router)
     api.include_router(demo_router)
+    api.include_router(dashboard_router)
+    api.include_router(admin_router)
     api.include_router(assistant_router)
     app.include_router(api)
     return app

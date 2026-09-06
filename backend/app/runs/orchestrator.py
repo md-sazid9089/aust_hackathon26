@@ -9,14 +9,22 @@ from app.db.enums import RunModule, RunStatus
 from app.db.models import Run, utcnow
 from app.db.session import session_scope
 from app.logging import get_logger
+from app.modules.attainment.graph import run_attainment
 from app.modules.base import RunContext, StageFailed, append_terminal_event
+from app.modules.calibration.graph import run_calibration
 from app.modules.exam_audit.graph import run_exam_audit
+from app.modules.syllabus_check.graph import run_syllabus_check
 
 log = get_logger(__name__)
 
 Pipeline = Callable[[RunContext], Awaitable[dict[str, Any]]]
 
-PIPELINES: dict[RunModule, Pipeline] = {RunModule.exam_audit: run_exam_audit}
+PIPELINES: dict[RunModule, Pipeline] = {
+    RunModule.exam_audit: run_exam_audit,
+    RunModule.attainment: run_attainment,
+    RunModule.syllabus_check: run_syllabus_check,
+    RunModule.calibration: run_calibration,
+}
 
 
 class RunOrchestrator:

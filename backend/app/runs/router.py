@@ -23,7 +23,18 @@ from app.db.enums import (
 from app.db.models import Run, RunEvent
 from app.db.session import session_scope
 from app.deps import DbDep, UserDep, require_permission, runs_rate_limit
-from app.runs.schemas import FindingOut, FindingPatch, RunCreate, RunEventOut, RunOut
+from app.errors import ApiError
+from app.runs.schemas import (
+    AttainmentOut,
+    CompareOut,
+    FindingOut,
+    FindingPatch,
+    PrescoreOut,
+    RunCreate,
+    RunEventOut,
+    RunOut,
+    SuggestIn,
+)
 from app.runs.service import RunService
 from app.schemas import ERROR_RESPONSES, Page
 
@@ -39,8 +50,10 @@ SSE_HEARTBEAT_S = 15
     status_code=status.HTTP_202_ACCEPTED,
     summary="Start an analysis run",
     description=(
-        "Creates a run and processes it in the background. exam_audit inputs: "
-        "`{draft_artefact_id, past_artefact_ids[]}`; all artefacts must be question papers with status `done`. "
+        "Creates a run and processes it in the background. Inputs per module — exam_audit: "
+        "`{draft_artefact_id, past_artefact_ids[]}` · attainment: `{marks_artefact_id, paper_artefact_id, threshold}` · "
+        "syllabus_check: `{syllabus_artefact_id, compare_course_ids[]}` · calibration: `{rubric_artefact_id, answer_set_artefact_id}`. "
+        "All artefacts must have status `done`. "
         "Optional `Idempotency-Key` header returns the existing run for a repeated request. Poll `GET /runs/{id}` or stream `/runs/{id}/events`."
     ),
     responses=ERROR_RESPONSES,
@@ -70,9 +83,36 @@ async def list_runs(
     return Page(items=items, page=page, page_size=page_size, total=total)
 
 
+@router.get("/runs/compare", response_model=CompareOut, summary="Diff two finished runs of the same course (F-108)", responses=ERROR_RESPONSES)
+async def compare_runs(a: uuid.UUID, b: uuid.UUID, db: DbDep, user: UserDep) -> CompareOut:
+    return await RunService(db, user).compare(a, b)
+
+
 @router.get("/runs/{run_id}", response_model=RunOut, summary="Run status and summary", responses=ERROR_RESPONSES)
 async def get_run(run_id: uuid.UUID, db: DbDep, user: UserDep) -> RunOut:
     return await RunService(db, user).get(run_id)
+
+
+@router.get("/runs/{run_id}/attainment", response_model=AttainmentOut, summary="CO/PO attainment table of an attainment run", responses=ERROR_RESPONSES)
+async def get_attainment(run_id: uuid.UUID, db: DbDep, user: UserDep) -> AttainmentOut:
+    return await RunService(db, user).attainment(run_id)
+
+
+@router.get("/runs/{run_id}/prescores", response_model=list[PrescoreOut], summary="AI pre-scores of a calibration run", responses=ERROR_RESPONSES)
+async def get_prescores(run_id: uuid.UUID, db: DbDep, user: UserDep) -> list[PrescoreOut]:
+    return await RunService(db, user).prescores(run_id)
+
+
+@router.post(
+    "/runs/{run_id}/suggest-questions",
+    response_model=list[FindingOut],
+    summary="Suggest one question per uncovered CO (F-107)",
+    description="Bounded suggestion for a finished exam audit; creates `suggestion` findings (idempotent per CO). Body `{co_ids?: []}`.",
+    responses={**ERROR_RESPONSES, 503: {"description": "LLM_UNAVAILABLE"}},
+    dependencies=[Depends(require_permission(Permission.runs_start)), Depends(runs_rate_limit)],
+)
+async def suggest_questions(run_id: uuid.UUID, db: DbDep, user: UserDep, data: SuggestIn | None = None) -> list[FindingOut]:
+    return await RunService(db, user).suggest_questions(run_id, (data or SuggestIn()).co_ids)
 
 
 @router.get(
@@ -147,16 +187,18 @@ async def decide_finding(finding_id: uuid.UUID, data: FindingPatch, db: DbDep, u
 @router.get(
     "/runs/{run_id}/export",
     summary="Export findings as Markdown",
-    description="Downloads a Markdown report. `include=accepted` (default) exports only faculty-accepted findings.",
+    description="Downloads a Markdown report. `include=accepted` (default) exports only faculty-accepted findings. `format=pdf` returns `503 PDF_UNAVAILABLE` on this build (clients fall back to Markdown).",
     response_class=PlainTextResponse,
-    responses={**ERROR_RESPONSES, 200: {"content": {"text/markdown": {}}}},
+    responses={**ERROR_RESPONSES, 200: {"content": {"text/markdown": {}}}, 503: {"description": "PDF_UNAVAILABLE"}},
 )
 async def export_run(
     run_id: uuid.UUID,
     db: DbDep,
     user: UserDep,
-    format: Annotated[Literal["md"], Query()] = "md",
+    format: Annotated[Literal["md", "pdf"], Query()] = "md",
     include: Annotated[Literal["accepted", "all"], Query()] = "accepted",
 ) -> Response:
+    if format == "pdf":
+        raise ApiError("PDF_UNAVAILABLE", 503, "PDF export is not available on this server; use format=md")
     md, filename = await RunService(db, user).export_markdown(run_id, include)
     return Response(content=md, media_type="text/markdown; charset=utf-8", headers={"Content-Disposition": f'attachment; filename="{filename}"'})

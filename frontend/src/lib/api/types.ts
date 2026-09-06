@@ -68,6 +68,9 @@ export interface Api {
   adminDemoReset(): Promise<{ course_id: string }>;
   adminDeptAttainment(): Promise<T.DeptAttainmentRow[]>;
   adminDeptExamAudits(): Promise<T.DeptAuditRow[]>;
+
+  // assistant
+  assistantChat(body: T.AssistantChatRequest): Promise<T.AssistantChatResponse>;
 }
 
 export class ApiError extends Error {

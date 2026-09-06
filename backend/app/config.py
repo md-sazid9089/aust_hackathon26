@@ -4,7 +4,7 @@ from functools import lru_cache
 from pathlib import Path
 from typing import Literal
 
-from pydantic import Field, field_validator
+from pydantic import Field, field_validator, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 BACKEND_DIR = Path(__file__).resolve().parents[1]
@@ -52,6 +52,8 @@ class Settings(BaseSettings):
     llm_fallback_models: str = Field("", alias="LLM_FALLBACK_MODELS")
     llm_timeout_s: float = Field(60.0, alias="LLM_TIMEOUT_S")
     llm_max_retries: int = Field(1, alias="LLM_MAX_RETRIES", ge=0, le=3)
+    # Best-effort determinism for temperature-0 calls (OpenAI `seed`); ignored by gateways that lack it.
+    llm_seed: int | None = Field(42, alias="LLM_SEED")
     embed_base_url: str | None = Field(None, alias="EMBED_BASE_URL")
     embed_api_key: str | None = Field(None, alias="EMBED_API_KEY")
     embed_model: str = Field("openai/text-embedding-3-small", alias="EMBED_MODEL")
@@ -63,6 +65,12 @@ class Settings(BaseSettings):
     @classmethod
     def _strip(cls, v: str) -> str:
         return v.strip()
+
+    @model_validator(mode="after")
+    def _no_dev_auth_in_prod(self) -> Settings:
+        if self.env == "prod" and self.auth_mode == "dev":
+            raise ValueError("AUTH_MODE=dev is not allowed when ENV=prod")
+        return self
 
     @field_validator("storage_dir", "seed_data_dir")
     @classmethod

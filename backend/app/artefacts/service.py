@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import asyncio
 import uuid
 
 from fastapi import UploadFile
@@ -34,6 +35,7 @@ from app.outcomes.repository import OutcomeRepo
 log = get_logger(__name__)
 
 SAFE_LABEL_MAX = 200
+PARSE_TIMEOUT_S = 20.0
 
 
 class ArtefactService:
@@ -89,7 +91,11 @@ class ArtefactService:
                 raise ApiError("VALIDATION_ERROR", 422, "Empty file")
             try:
                 ext = parsers.sniff_extension(file.filename, data[:1024])
-                extracted = parsers.extract_text(ext, data)
+                extracted = await asyncio.wait_for(
+                    asyncio.to_thread(parsers.extract_text, ext, data), timeout=PARSE_TIMEOUT_S
+                )
+            except TimeoutError as exc:
+                raise ApiError("UNSUPPORTED_FILE_TYPE", 415, "Document took too long to parse") from exc
             except parsers.UnsupportedFile as exc:
                 raise ApiError("UNSUPPORTED_FILE_TYPE", 415, str(exc)) from exc
             except parsers.NoTextExtracted as exc:

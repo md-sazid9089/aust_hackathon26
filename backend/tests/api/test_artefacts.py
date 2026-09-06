@@ -90,9 +90,7 @@ async def test_upload_validation_errors(client, user_a):
     assert r.status_code == 422
     r = await client.post(url, data={"kind": "question_paper", "label": "x", "text": DRAFT_PAPER}, files={"file": ("a.txt", b"hello world text", "text/plain")}, headers=user_a)
     assert r.status_code == 422
-    # unsupported kind in this build
-    r = await client.post(url, data={"kind": "marks_sheet", "label": "x", "text": DRAFT_PAPER}, headers=user_a)
-    assert r.status_code == 422 and r.json()["error"]["code"] == "ARTEFACT_KIND_NOT_SUPPORTED"
+    # unknown kind rejected by enum validation
     r = await client.post(url, data={"kind": "bogus", "label": "x", "text": DRAFT_PAPER}, headers=user_a)
     assert r.status_code == 422
     r = await client.post(url, data={"kind": "question_paper", "label": "x", "text": "short"}, headers=user_a)
