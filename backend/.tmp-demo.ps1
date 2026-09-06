@@ -20,10 +20,10 @@ $run = Invoke-RestMethod -Method Post "$B/courses/$cid/runs" -Headers $H -Conten
 
 $deadline = (Get-Date).AddMinutes(4)
 do {
-    Start-Sleep -Seconds 4
-    $run = Invoke-RestMethod "$B/runs/$($run.id)" -Headers $H
-    "  $(Get-Date -Format HH:mm:ss) status=$($run.status) progress=$($run.progress)"
-} while ($run.status -in @('queued', 'running') -and (Get-Date) -lt $deadline)
+  Start-Sleep -Seconds 4
+  $run = Invoke-RestMethod "$B/runs/$($run.id)" -Headers $H
+  "  $(Get-Date -Format HH:mm:ss) status=$($run.status) progress=$($run.progress)"
+} while ($run.status -in @('queued','running') -and (Get-Date) -lt $deadline)
 
 "FINAL status=$($run.status) error=$($run.error)"
 $run.summary | ConvertTo-Json -Depth 5 -Compress
