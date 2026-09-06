@@ -7,7 +7,7 @@
 
 - **Name:** aust_hackathon26 — working title **Faculty Assessment & Curriculum Copilot**
 - **Purpose:** AI tool for AUST faculty (AI Build Hackathon final, theme "AI for Academic Life"). Faculty upload syllabi, question papers, marks sheets, rubrics + answers → AI evaluates/compares → evidence-backed findings faculty accept or dismiss. AI advises; faculty decide.
-- **Status:** Architecture designed (`architecture.md`, v1.0); implementation not started
+- **Status:** Backend Tier 0 implemented and tested (`backend/`, 47 pytest tests green; P1 Exam Auditor end-to-end). **Frontend complete against the documented API** (`frontend/`, all pages/states, mock + live data layers; typecheck/tests/build green). Architecture in `architecture.md` v1.1 — see D-024–D-026 for implementation deviations.
 - **Repository:** md-sazid9089/aust_hackathon26 (branch `main`)
 
 ## 2. Goals & Non-Goals
@@ -24,19 +24,19 @@
 
 ## 3. Tech Stack
 
-| Layer                     | Choice                                                                                                                                                                                                                                                  | Notes                                                                                                                                                                                                                                                |
-| ------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Frontend                  | React 18 + Vite 5 + TS 5, Tailwind + shadcn/ui, React Router v6, TanStack Query v5, RHF + zod, Recharts, native `EventSource`                                                                                                                           | SPA; Supabase JS used **only** for auth                                                                                                                                                                                                              |
-| Backend                   | Python 3.12, FastAPI 0.115, SQLAlchemy 2 async + asyncpg, LangGraph ≥ 1.2 + `langchain-openrouter` / `langchain-openai`, slowapi, structlog, rapidfuzz; pypdf / python-docx / openpyxl; Jinja2 + WeasyPrint (PDF optional)                              | REST `/api/v1` + SSE; runs = asyncio tasks + `run_events`                                                                                                                                                                                            |
-| Database / Auth / Storage | **Supabase** Postgres 15 + pgvector (1536-d HNSW), Auth, Storage                                                                                                                                                                                        | SQL migrations `0001–0013`; RLS via `SET LOCAL app.user_id/app.role`; role `app_backend NOBYPASSRLS`                                                                                                                                                 |
-| AI                        | Adapter selected by `LLM_PROVIDER`: **`openai`** direct (team key; `gpt-5.6-luna`, `text-embedding-3-small`), **`openrouter`** (`openai/gpt-5.6-luna` via `ChatOpenRouter`, fallback `google/gemini-3.5-flash-lite`), `freellmpool` dev, `mock` (gated) | Strict JSON schema + Pydantic, temp 0, no seed; run deadline 27 s, per-call `min(12 s, remaining−2)`; retry only on validation/`length`, timeout → fallback model; `llm_cache` + per-model breaker; embeddings 1536-d pinned (`architecture.md` §28) |
-| Tooling                   | FE Vitest + RTL + MSW + Playwright · BE pytest + httpx + respx · DB SQL tests · GitHub Actions · docker-compose                                                                                                                                         |                                                                                                                                                                                                                                                      |
+| Layer                     | Choice                                                              | Notes                                |
+| ------------------------- | ------------------------------------------------------------------- | ------------------------------------ |
+| Frontend                  | React 18.3 + Vite 5.4 + TS 5.6 strict, Tailwind 3.4 + Radix primitives (shadcn-style, in-repo), lucide-react, React Router 6.26, TanStack Query 5, Recharts 2, sonner, `@fontsource` Atkinson Hyperlegible / Crimson Pro / Noto Sans Bengali; Vitest 2 + RTL | SPA; Supabase JS **only** for auth; single `Api` interface with `HttpApi` (live) / `MockApi` (in-browser demo) selected by `VITE_API_MODE` (D-025) |
+| Backend                   | Python 3.11+ (dev on 3.14), FastAPI 0.141, SQLAlchemy 2 async (asyncpg prod / aiosqlite dev+tests), Alembic, pydantic-settings, httpx, structlog, PyJWT, sse-starlette; pypdf / python-docx | REST `/api/v1` + SSE; runs = asyncio tasks + `run_events`; **no LangChain/LangGraph, no slowapi** (D-026) |
+| Database / Auth / Storage | Postgres 17 (Supabase) in prod, **SQLite locally**; Alembic migrations (`backend/alembic/`); auth `AUTH_MODE=dev` or Supabase HS256/ES256 JWT; files on local disk via `StorageBackend` seam | Ownership enforced in service layer; RLS/pgvector/Supabase Storage deferred (D-026) |
+| AI                        | `ai/providers`: `OpenAICompatibleProvider` (OpenRouter/OpenAI, `response_format=json_schema` strict) + `MockProvider` (deterministic lexical heuristics); `ai/client.structured_call` validates with Pydantic, 1 retry, fallback models, `usage_logs` | Temp 0, 60 s; LLM stage failure → run `partial`, deterministic stages still run |
+| Tooling                   | BE pytest + pytest-asyncio + httpx + respx + ruff · FE Vitest + RTL (Playwright planned) | |
 
-Environment variables (names only): backend `DATABASE_URL`, `SUPABASE_URL`, `SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, `SUPABASE_JWT_SECRET` (opt), `STORAGE_BUCKET`, `LLM_PROVIDER`, `LLM_BASE_URL`, `LLM_API_KEY`, `LLM_MODEL`, `LLM_FALLBACK_MODELS`, `LLM_RUN_DEADLINE_S`, `LLM_CALL_TIMEOUT_S`, `LLM_CACHE`, `EMBED_BASE_URL` (opt), `EMBED_API_KEY` (opt), `EMBED_MODEL`, `MAX_UPLOAD_MB`, `CORS_ORIGINS`, `ENV` · frontend `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`, `VITE_API_BASE_URL` · db scripts `SUPABASE_DB_URL`, `DEMO_OWNER_EMAIL` (`architecture.md` §31).
+Environment variables (names only; full list with comments in `backend/.env.example`): backend `ENV`, `LOG_LEVEL`, `DATABASE_URL`, `CORS_ORIGINS`, `MAX_UPLOAD_MB`, `STORAGE_DIR`, `SEED_DATA_DIR`, `RATE_LIMIT_ENABLED`, `AUTH_MODE`, `DEV_USER_EMAIL`, `SUPABASE_JWT_SECRET`, `LLM_PROVIDER`, `LLM_BASE_URL`, `LLM_API_KEY`, `LLM_MODEL`, `LLM_FALLBACK_MODELS`, `LLM_TIMEOUT_S`, `LLM_MAX_RETRIES`, `EMBED_BASE_URL`, `EMBED_API_KEY`, `EMBED_MODEL` · frontend `VITE_API_MODE` (`mock`|`live`, default `mock`), `VITE_API_BASE_URL` (default `/api/v1`), `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`, `VITE_PROXY_TARGET` (dev proxy, default `http://localhost:8000`).
 
-**MCP servers (dev tooling, `.vscode/mcp.json`):**
+**MCP servers (dev tooling, `.vscode/mcp.json` for VS Code, `.mcp.json` for Claude Code):**
 
-- `supabase` — schema inspection, SQL, migrations, RLS/advisor checks against the project DB. Prompts for project ref + personal access token on first start (never stored in the file).
+- `supabase` — hosted HTTP endpoint `https://mcp.supabase.com/mcp?project_ref=etzxqeilgohiavdeybbw&features=…` (docs, account, database, debugging, development, functions, branching). Auth is OAuth in the browser on first use — no access token stored anywhere.
 - `context7` — version-accurate docs lookup for whatever frontend/backend libs the architect picks. No secrets.
 - Add nothing else unless needed (keep ≤5 servers). Playwright MCP is optional later for E2E of the demo flow.
 
@@ -46,13 +46,39 @@ Environment variables (names only): backend `DATABASE_URL`, `SUPABASE_URL`, `SUP
 aust_hackathon26/
 ├── .github/
 │   └── copilot-instructions.md   # Copilot-specific rules (points here)
+├── .mcp.json                     # Claude Code MCP config: supabase (hosted HTTP)
 ├── .vscode/
-│   └── mcp.json                  # MCP servers: supabase, context7 (secrets via ${input:…})
+│   └── mcp.json                  # VS Code MCP servers: supabase (hosted HTTP), context7
 ├── AGENTS.md                     # generic agent rules (points here)
 ├── CLAUDE.md                     # Claude entry point, imports AGENTS.md
 ├── PROJECT_CONTEXT.md            # this file — single source of truth
 ├── architecture.md               # approved architecture: API §19, schema §21, contracts §38, plan §39, ADRs §42
-└── edge_cases.md                 # pre-judging test plan v2: §A CONFIRM decisions, 16 sections, ~365 P0–P2 cases, hand-check fixtures
+├── edge_cases.md                 # pre-judging test plan v2: §A CONFIRM decisions, 17 sections (~365 P0–P2 cases, §17 access-pattern queries), hand-check fixtures
+├── database_implementation_plan.md  # DB engineer's ordered build plan: migrations 0001–0012, RLS matrix, seeds, tests, gates
+├── design-system/                # MASTER.md (tokens, rationale) + per-page overrides — the only place UI decisions are documented
+├── data/seed-data/               # demo fixtures (TXT/CSV, 2 courses)
+├── backend/                      # FastAPI app (see backend/README.md): app/{auth,courses,artefacts,extraction,modules/exam_audit,runs,findings,demo,ai,db}, alembic/, tests/
+└── frontend/                     # Vite SPA
+    ├── index.html                # theme bootstrap (no-flash dark mode)
+    ├── vite.config.ts            # alias @→src, /api proxy, vendor chunks, vitest (jsdom)
+    ├── tailwind.config.ts        # tokens mapped from CSS vars (measure / ai.* / sev.*)
+    └── src/
+        ├── main.tsx · router.tsx · index.css · vite-env.d.ts
+        ├── auth/                 # AuthProvider (mock role picker | Supabase password), guards (RequireAuth, RequireRole)
+        ├── lib/
+        │   ├── types/api.ts      # all API DTOs (mirrors architecture.md §19)
+        │   ├── api/              # Api interface (types.ts), HttpApi (http.ts, SSE via EventSource), mock/{fixtures,engine,MockApi}
+        │   ├── queries.ts        # TanStack hooks + query keys
+        │   └── format.ts · query-client.ts · supabase.ts
+        ├── hooks/                # useTheme, useShortcuts (J/K/A/D), useRunEvents (SSE → cache)
+        ├── components/
+        │   ├── ui/               # button, card, badge, input, dialog, primitives (Radix), table
+        │   ├── feedback/states.tsx  # PageHeader, Empty/Error/Loading, QueryBoundary
+        │   ├── layout/AppShell.tsx  # rail nav by role, skip link, theme, sign out
+        │   ├── domain/           # trust (Computed/AI labels), RunProgress, FindingList/Card, ExportButton, ArtefactUploader, ExtractionConfirm, charts
+        │   └── data/EditableTable.tsx
+        ├── features/             # auth/LoginPage · courses/{CoursesPage,CoursePage} · runs/{NewRunPage,RunPage,*Results,ComparePage} · dashboard · admin/AdminPages
+        └── test/setup.ts         # jest-dom + jsdom shims
 ```
 
 Planned, not yet created (`architecture.md` §9–10): `frontend/`, `backend/`, `database/`, `docker-compose.yml`, `.env.example`, `.github/workflows/ci.yml`.
@@ -60,21 +86,28 @@ Planned, not yet created (`architecture.md` §9–10): `frontend/`, `backend/`, 
 ## 5. How to Run
 
 ```bash
-# planned (architecture.md §31, §5) — not yet scaffolded
-# database: supabase start (or linked project) && database/scripts/apply.sh && psql -f database/seeds/seed_admin.sql
-# backend:  cd backend && uv sync && uvicorn app.main:app --reload   (port 8000)
-# frontend: cd frontend && npm i && npm run dev                      (port 5173)
-# all:      docker compose up   (optional profile `free` starts freellmpool on 127.0.0.1:8080)
-# test:     npm test / pytest / database/scripts/run_tests.sh
+# backend (no Postgres needed locally — SQLite default)
+cd backend
+python3 -m venv .venv && source .venv/bin/activate      # if ensurepip missing: python3 -m venv --without-pip .venv && pip3 --python .venv/bin/python install pip
+pip install -r requirements.txt
+cp .env.example .env                                     # set LLM_PROVIDER=openrouter + LLM_API_KEY for real AI; mock works offline
+alembic upgrade head
+uvicorn app.main:app --reload                            # http://localhost:8000/docs
+pytest                                                   # 47 tests
+# demo: POST /api/v1/demo/seed → POST /api/v1/courses/{id}/runs {module: exam_audit, inputs:{draft_artefact_id, past_artefact_ids}} → GET /runs/{id}/findings
+# frontend
+cd frontend && npm i && cp .env.example .env             # default VITE_API_MODE=mock → runs fully in-browser, no backend needed
+npm run dev                                              # http://localhost:5173 ; /login → pick Faculty or Admin
+# live backend: VITE_API_MODE=live (+ VITE_SUPABASE_URL / VITE_SUPABASE_ANON_KEY); /api is proxied to VITE_PROXY_TARGET (default :8000)
+npm run typecheck && npm test && npm run build           # tsc --noEmit · vitest · vite build
 ```
 
-**MCP server setup (once per machine, VS Code + Copilot Chat):**
+**MCP server setup (once per machine):**
 
-1. Requires Node.js ≥ 18 (`npx`). Open the repo; VS Code detects `.vscode/mcp.json` and asks to trust/start the servers — accept.
-2. `supabase` prompts for **project ref** (Supabase dashboard → Project Settings → General) and a **personal access token** (dashboard → Account → Access Tokens). Values are kept in VS Code's secret store, never in the repo.
-3. `context7` starts with no input.
-4. Check status: Command Palette → `MCP: List Servers` (restart/stop from there). Tools appear in Chat under the tools picker.
-5. Reuse guidance: ask the agent to inspect schema / write migrations via the Supabase tools rather than pasting SQL by hand; ask for library docs via Context7 before guessing APIs.
+1. VS Code + Copilot Chat: open the repo; VS Code detects `.vscode/mcp.json` and asks to trust/start the servers — accept. `supabase` opens a browser OAuth flow on first start (sign in to Supabase, grant access). `context7` needs Node.js ≥ 18 (`npx`), no input.
+2. Claude Code: `.mcp.json` is picked up automatically; run `claude /mcp` in a regular terminal → select `supabase` → Authenticate. (Equivalent to `claude mcp add --scope project --transport http supabase "<url>"`, already done.)
+3. Check status: Command Palette → `MCP: List Servers` (restart/stop from there). Tools appear in Chat under the tools picker.
+4. Reuse guidance: ask the agent to inspect schema / write migrations via the Supabase tools rather than pasting SQL by hand; ask for library docs via Context7 before guessing APIs.
 
 ## 6. Architecture & Key Decisions
 
@@ -99,18 +132,24 @@ Planned, not yet created (`architecture.md` §9–10): `frontend/`, `backend/`, 
 | D-017 | 2026-09-06 | Merge audit vs an external "versioned assessment platform" design: adopted copy-at-write + provenance columns (`runs.context_snapshot`, `runs.model`, `runs.prompt_versions`, `findings.provenance`, `findings.decided_by`, `questions/topics.embedding_model`, `artefacts.declared_total_marks`, finding `marks_total_mismatch`, `409 SCORES_EXCEED_RUBRIC`); rejected paper/CLO versioning tables, persisted similarity-match table, SIS/sections/released results/blind grading | Reproducible, defensible findings at column-level cost; rejected items violate §2 non-goals and would re-introduce the only partition-scale table (ADR-13)                                                                                       |
 | D-018 | 2026-09-06 | Add OpenAI direct API as a first-class `LLM_PROVIDER=openai` (base `https://api.openai.com/v1`, unprefixed model ids, no OpenRouter `extra_body`); OpenRouter kept as alternate. Extends D-014 / ADR-05                                                                                                                                                                                                                                                                            | Team holds an OpenAI key; two paid providers hedge venue-day outages/quota; same 1536-d embeddings so schema unchanged                                                                                                                           |
 | D-019 | 2026-09-06 | Models: `gpt-5.6-luna` primary (`reasoning.effort=none`), `google/gemini-3.5-flash-lite` fallback (`effort=minimal`); embeddings `text-embedding-3-small` pinned, **never** a fallback list. Supersedes the `gpt-4o-mini` / `gemini-2.5-flash` choice (ADR-14)                                                                                                                                                                                                                     | Research 2026-09-06: v1.0 models are legacy/scheduled for shutdown; luna is the current cost tier with reasoning-off; flash-lite has the lowest published structured-output error; a different-dim embedding fallback would break `vector(1536)` |
-| D-020 | 2026-09-06 | Adapter factory: `ChatOpenRouter` (`langchain-openrouter`) for `openrouter`, `ChatOpenAI` for `openai`/`freellmpool`, one `structured_call` with `include_raw=True`; no `seed` (ADR-15)                                                                                                                                                                                                                                                                                            | LangChain documents that `ChatOpenAI` + OpenRouter base_url drops `reasoning`/provider-routing fields; `seed` + `require_parameters` can exclude every Gemini endpoint                                                                           |
+| D-020 | 2026-09-06 | Adapter factory: `ChatOpenRouter` (`langchain-openrouter`) for `openrouter`, `ChatOpenAI` for `openai`/`freellmpool`, one `structured_call` with `include_raw=True`; no `seed` (ADR-15). **Superseded by D-026:** same requirements met by the in-house `OpenAICompatibleProvider` (httpx) that sends `provider`/`models`/`reasoning` directly — no LangChain                                                                                                                                                                                                                                                                                            | LangChain documents that `ChatOpenAI` + OpenRouter base_url drops `reasoning`/provider-routing fields; `seed` + `require_parameters` can exclude every Gemini endpoint                                                                           |
 | D-021 | 2026-09-06 | Latency budget: run deadline 27 s, per-call `min(12 s, remaining−2)`, retry once only on `ValidationError`/`length` (halved batch), client timeout → one attempt on fallback model, no retry under 8 s; batches 5–6 items, `max_completion_tokens` per purpose; extraction has its own 45 s budget. Supersedes "60 s + 1 retry" (ADR-16)                                                                                                                                           | 60 s × 2 × 3 stages = 72 s violated NF-003; OpenRouter `models` failover fires on upstream errors only, not on client timeout                                                                                                                    |
 | D-022 | 2026-09-06 | P1 coverage/overweight/fairness computed from faculty-confirmed `question_co_map`; LLM only fills unmapped questions + Bloom; unknown codes normalised (`CO-1`→`CO1`) then → `needs_review`, never dropped; evidence quotes verified (NFC + `rapidfuzz.partial_ratio ≥ 90`) with source-text fallback (ADR-17)                                                                                                                                                                     | Keeps AI-004 true for P1 and preserves numbers when LLM nodes fail; dropping codes would fabricate "uncovered CO" findings                                                                                                                       |
 | D-023 | 2026-09-06 | Offline path: `llm_cache` table (`0013`, key = model+purpose+schema_version+canonical inputs; warmed for the seed course) served when the per-model circuit breaker is open, UI-labelled "cached"; `LLM_PROVIDER=mock` only when `ENV=demo` **and** `course.is_demo` (ADR-18). Prompt injection defence = Spotlighting delimiting + sandwich, deterministic sentinel, no datamarking                                                                                               | Mock output for a real course would show fabricated findings to judges; random sentinels/UUIDs in prompts would bust the cache; datamarking breaks verbatim-quote checks and Bangla                                                              |
+| D-024 | 2026-09-06 | Three-lens DB review (security / integrity / pragmatist) → ADR-19: `course_owner()` hides soft-deleted courses; functions SECURITY INVOKER, `seed_demo`/`reset_demo` assert owner-or-admin; explicit `run_events`/`usage_logs` RLS; `run_inputs` → nullable artefact/course + `run_input_role` enum; `attainment_results.target_code` copied; `normalize_qnum()` on both `questions.number` and `marks_rows.question_number` + `marks_question_mismatch` finding; IDENTITY not bigserial; final run stage single tx; RLS lands Phase 1 (app-layer ownership checks mandatory from Phase 0); hosted Supabase only (no local Docker); demo fixtures TXT/CSV-first + second course `CSE 2101`, authored in Phase 0; `0006` P2 tables may slip to Phase 4 | Fixes 3 High security findings (deleted-course leak, demo-fn abuse, cross-owner vector search), the silent marks-join drop, and the two biggest schedule risks (RLS in Phase 0, fixtures in Phase 2) without dropping the DB-as-authz principle |
+| D-025 | 2026-09-06 | Frontend data layer = one `Api` interface with two implementations: `HttpApi` (fetch + `EventSource`, Supabase JWT bearer, 401 → sign-out) and `MockApi` (in-browser deterministic engine over seed fixtures, simulated SSE, `partial`/`failed` toggles via `window.__fcDemo`, finished runs persisted in `localStorage`). Selected by `VITE_API_MODE`; UI never branches on mode; UI only calls endpoints documented in `architecture.md` §19 | Demo must survive venue network loss and backend outages; typed mocks keep the FE/BE contract honest ("do not ship UI the backend cannot serve"); one seam to delete when live is stable |
+| D-026 | 2026-09-06 | Backend Tier 0 implementation deviations from `architecture.md` v1.1: no LangChain/LangGraph (plain `httpx` OpenAI-compatible provider + Pydantic validation), no slowapi (own per-process limiter), Alembic instead of SQL-file migrations, SQLite for dev/tests with Postgres in prod, ownership enforced in the service layer with RLS/pgvector/Supabase Storage deferred, local-disk `StorageBackend`. Supersedes D-013/D-020/D-021 for the hackathon build | One-day build: fewer moving parts, offline tests; every deferred item keeps a seam (`StorageBackend`, provider adapter, `RunOrchestrator.enqueue`) so the architecture target is unchanged |
 
 ## 7. Conventions
 
 - Commits: Conventional Commits with scope `feat(fe|be|db): …`; branches `fe/<task>`, `be/<task>`, `db/<task>`; one task ID per PR; squash-merge (architecture.md §40)
 - Ownership: `frontend/**` FE, `backend/**` + compose/CI/.env.example BE, `database/**` DB. Never edit another engineer's files; contract artefacts (`backend/openapi.json`, `backend/app/db/models.py`) have single writers (§37)
-- API: `/api/v1`, error envelope `{error:{code,message,details,request_id}}`, pagination `items/page/page_size/total` (§19)
-- DB: snake_case, plural tables, uuid PKs, `created_at/updated_at`, every table RLS-enabled, FKs with explicit ON DELETE (§20–§21)
-- AI: all calls via `ai/client.structured_call` (cache → model → validate); documents wrapped by `ai/guard.wrap_untrusted`; temperature 0, no `seed`; every output schema `extra='forbid'`, all fields required, has `rationale` (+ `evidence_quote` when citing a document); prompts reference codes/question numbers, never UUIDs; prompt constants versioned `NAME@vN` and recorded in `runs.prompt_versions`
+- API: `/api/v1`, error envelope `{error:{code,message,details,request_id}}`, pagination `items/page/page_size/total` (§19); `X-Request-Id` on every response
+- DB: snake_case, plural tables, uuid PKs, `created_at/updated_at`, FKs with explicit ON DELETE; enums stored as varchar(32) (portable); Alembic `revision --autogenerate` after model changes
+- AI: all calls via `ai/client.structured_call`; documents wrapped by `ai/guard.wrap_untrusted`; temperature 0, no `seed`; every output schema `extra='forbid'`, all fields required, has `rationale` (+ `evidence_quote` when citing a document); prompts reference codes/question numbers, never UUIDs; prompts live in `*/prompts.py` with `PROMPT_VERSIONS` (`NAME@vN`, recorded in `runs.prompt_versions`); never log document text or tokens
+- Background work: `RunContext.emit/warn` write `run_events` in their own short transaction — never emit while another write session is open (SQLite single-writer)
+- Tests: `pytest` from `backend/`; API tests go through httpx `ASGITransport` with `X-Dev-User` per user; use `mock_provider.queue(purpose, raw|Exception)` for failure paths
+- Frontend: tokens only (no raw hex/px outside `index.css`/`tailwind.config.ts`); lucide-react is the only icon family, no emoji; deterministic numbers carry `ComputedLabel`/`text-measure`, LLM prose carries `AiLabel`/`AiBlock`; every data view renders loading/empty/error/partial via `QueryBoundary`; no `dangerouslySetInnerHTML` (SEC-004); all API access through `useApi()`/`lib/queries.ts`, never `fetch` in components; Bangla text gets `lang="bn"`; body ≥ 16 px, visible focus rings, `prefers-reduced-motion` respected. Design decisions live in `design-system/`, not in code comments
 
 ## 8. Current State / What's Done
 
@@ -121,13 +160,18 @@ Planned, not yet created (`architecture.md` §9–10): `frontend/`, `backend/`, 
 - [x] `architecture.md` written: stack, 45 sections, API contract, DB schema (24 tables, RLS, functions, views), file-level plan for 3 engineers; merge-audit amendments applied (ADR-13 / D-017)
 - [x] `.vscode/mcp.json` with Supabase + Context7 MCP servers
 - [x] AI-layer research + critique (2026-09-06): verified current model/provider/library facts against official docs; `architecture.md` v1.1 §28 rewritten (budget, batching, cache, validation, smoke-test list), ADR-14–18, `llm_cache` table `0013`
+- [x] Backend Supabase auth: `AUTH_MODE=supabase` verifies ES256/RS256 tokens via JWKS (HS256 fallback); `backend/.env` has `SUPABASE_URL`/`SUPABASE_PUBLISHABLE_KEY`/`SUPABASE_JWKS_URL` filled for project `etzxqeilgohiavdeybbw`, `SUPABASE_SECRET_KEY` left for the developer to paste locally
+- [x] **Backend Tier 0** (`backend/`): FastAPI app, config, structlog + request ids, error envelope, SQLite/Postgres ORM (15 tables) + Alembic initial migration, auth (dev/Supabase JWT), courses CRUD, COs/POs/CO–PO map/topics replace-all, artefact upload (pdf/docx/txt/paste, magic-byte + size validation) with background extraction, faculty confirm/edit of questions + CO map, `exam_audit` pipeline (embed → map & Bloom → duplicate confirm → deterministic stats → findings), runs + SSE events + idempotency, findings accept/dismiss/reopen, Markdown export, demo seed from `data/seed-data`, `/health` `/readyz`, Swagger/ReDoc. 47 tests green; live smoke test on demo data reproduces planted flaws (CO6 uncovered, 58 vs 60 marks, 3 duplicate pairs, Bloom skew).
+- [x] **Design system** (`design-system/MASTER.md` + page overrides): tokens, type scale (Atkinson Hyperlegible body / Crimson Pro headings / Noto Sans Bengali fallback), one accent, severity + trust (`measure` vs `ai.*`) colour roles, light/dark, DESIGN RATIONALE table
+- [x] **Frontend — complete** (`frontend/`, D-025): every page in §12 — `/login` (mock role picker or Supabase password), `/` courses (search, seed demo, new course), `/courses/:id` (module launch cards; tabs Artefacts / Outcomes / CO→PO / Topics / Runs with editable tables), `/courses/:id/<module>/new` wizards (artefact select/upload, extraction review + edit per kind), `/courses/:id/<module>/:runId` (SSE progress with stage log, partial/failed banners; results: coverage table + Bloom chart w/ table toggle + question suggestions; CO/PO attainment bars vs threshold; overlap matrix; grader-vs-AI prescore table + rubric diff), `/courses/:id/exam-audit/compare` (resolved / persisting / new), `/dashboard`, `/admin` (users role/active, runs browser, LLM usage by user/day, typed-`RESET` demo reset, department attainment + audit tabs). Finding cards: severity → computed numbers → AI rationale → evidence → accept/dismiss/reopen; URL-persisted filters, bulk actions, J/K/A/D keys. Export MD/PDF (PDF 503 → MD fallback). Admin is read-only on run pages. `MockApi` reproduces the planted flaws and persists finished runs in `localStorage`. `npm run typecheck`, 5 unit tests, `vite build` green; browser smoke test: login → audit run → suggest → accept → reload → export.
 
 ## 9. Next Steps / TODO
 
 - [x] Lock requirements (Prompt 1)
 - [x] Architecture design (Prompt 2) → `architecture.md`
-- [ ] Phase 0 contracts: Supabase project (Auth providers, `artefacts` bucket), `database/migrations/0001–0008`, backend Pydantic schemas + `openapi.json`
-- [ ] Phase 1 foundation: FE scaffold + auth, BE skeleton + `/me` + ORM parity, DB indexes/RLS/functions/views
+- [ ] Phase 0 contracts: hosted Supabase project (Auth providers, `artefacts` bucket), `database/migrations/0001–0005, 0007–0008` (+`0006` if P2 stays in T0), backend Pydantic schemas + `openapi.json`, **demo fixtures authored (TXT/CSV, 2 courses)**
+- [x] FE scaffold + auth + all pages (mock + live data layer) — see §8
+- [ ] Phase 1 foundation: BE skeleton + `/me` + ORM parity + service-layer ownership checks, DB indexes/RLS/functions/views + `seed_demo` idempotency test
 - [ ] Phase 2–3 (Tier 0): ingestion/extraction, P1 Exam Auditor, findings + accept/dismiss, demo seed → W1 live
 - [ ] Tier 1: P4, P3, P2, export, question suggestion
 - [ ] Tier 2: SSE progress, Bangla support, system-admin panel (users, runs, LLM usage)
@@ -136,7 +180,7 @@ Planned, not yet created (`architecture.md` §9–10): `frontend/`, `backend/`, 
 - [ ] AI smoke test before BE-06 merge (`architecture.md` §28.9): flash-lite param set under `require_parameters`, `include_raw` refusal/length surface, 6-question MAP_AND_BLOOM p95 ≤ 10 s, evidence threshold on Bangla seed text, schema lint + warm-up on both models
 - [ ] DB: add `0013_llm_cache.sql` (schema §21.2) and `usage_logs` columns `attempt`, `fallback_used`, `finish_reason`, status `cache_hit`
 - [ ] Lock the 17 `CONFIRM:` decisions in `edge_cases.md` §A (dup threshold 0.80 vs 0.75, multi-CO attribution, missing-marks convention, PO formula, `≥` vs `>` divergence, rounding, 404-vs-403 policy, …) before implementing stats
-- [ ] Run `edge_cases.md` checklist before judging (order: §A → §0 → §5 → §14 → §9 → §8 → §11 → §1 → §3 → §10)
+- [ ] Run `edge_cases.md` checklist before judging (order: §A → §0 → §5 → §14 → §9 → §8 → §11 → §1 → §3 → §10 → §12 FE cases against the built UI)
 
 ## 10. Known Issues & Gotchas
 
@@ -147,13 +191,25 @@ Planned, not yet created (`architecture.md` §9–10): `frontend/`, `backend/`, 
 - First LLM call with a new schema pays a provider-side schema-compile latency; warm every schema × model at `/readyz`.
 - Scanned/image PDFs are unsupported — prompt faculty to paste text.
 - Demo data is on the critical path: 1 course, 5–6 COs, 2 past papers, 1 draft paper with deliberate gaps/duplicates, marks CSV with one weak CO, rubric + 6 typed answers × 2 graders (2 divergent). Seed both a faculty and an admin account. Cache last successful analysis JSON for the seed course as offline fallback. Watch LLM quota during the pitch.
-- `grader_scores.score ≤ rubric_criteria.max_score` cannot be a DB CHECK (rubric and answers are separate artefacts) — enforced in backend at calibration run start (`409 SCORES_EXCEED_RUBRIC`).
-- Doc nits still open in `architecture.md`: `compute_co_attainment` signature differs between §11.3 and §21.3 (use §21.3); `backend/alembic/` should be removed from the tree listing; IDs `AI-005/006`, `DATA-002`, `NF-005`, `OPT-*` referenced there are not defined in §12 below.
+- `grader_scores.score ≤ rubric_criteria.max_score` cannot be a DB CHECK (rubric and answers are separate artefacts) — enforced in backend at calibration run start (`409 SCORES_EXCEED_RUBRIC`). Same for `marks_rows.question_number` → `questions.number`: no FK possible; both sides pass through `normalize_qnum()` and unmatched numbers become a `marks_question_mismatch` finding.
+- Doc nits still open in `architecture.md`: IDs `AI-005/006`, `DATA-002`, `NF-005`, `OPT-*` referenced there are not defined in §12 below.
+- Migrations `0001` (role creation) and `0003` (trigger on `auth.users`) need the superuser `SUPABASE_DB_URL`, not `app_backend`.
 - Transaction pooler (6543): use `SET LOCAL` (never `SET`) for RLS vars; asyncpg `statement_cache_size=0`.
-- Supabase JWT may be ES256 (JWKS) or HS256 (legacy secret) — verify in Phase 1.
-- WeasyPrint needs system libs; run backend in Docker or accept md-only export locally.
+- Supabase project ref `etzxqeilgohiavdeybbw`, region ap-south-1. Prefer the IPv4 shared pooler `aws-0-ap-south-1.pooler.supabase.com` (user `postgres.etzxqeilgohiavdeybbw`): 6543 transaction mode for the app, 5432 session mode for migrations/psql. Direct host `db.etzxqeilgohiavdeybbw.supabase.co:5432` (user `postgres`) is IPv6-only. `DATABASE_URL` must use `postgresql+asyncpg://`, no `?pgbouncer=true` (Prisma-only); percent-encode special characters in the password. Password lives only in gitignored `backend/.env`.
+- Supabase dashboard's ORM quick-start suggests Prisma — **not used**; backend ORM is SQLAlchemy 2 + asyncpg (D-013). Ignore `npm install prisma` / `prisma init` steps.
+- Optional: `npx skills add supabase/agent-skills` installs Supabase agent skills for AI tooling (not required by the build).
+- Supabase JWT may be ES256 (JWKS) or HS256 (legacy secret) — both supported by `backend/app/auth/jwt.py`; real-token check against the live project still pending (needs frontend login flow).
+- `backend/tests` occasionally fail with `sqlite3.OperationalError: attempt to write a readonly database` when run inside the VS Code terminal sandbox; delete `backend/tests/.test.db*` and rerun (full suite: 51 passed).
+- WeasyPrint needs system libs; run backend in Docker or accept md-only export locally (current build: Markdown export only).
+- Backend background tasks (extraction, runs) are in-process asyncio tasks: run **one uvicorn worker**; on restart, in-flight runs are marked `failed` at startup. Rate limiter is per-process.
+- SQLite is single-writer: never call `RunContext.emit/warn` while another `session_scope()` write is open (caused `database is locked` → run `failed`). Deferred-warnings pattern in `exam_audit/graph.py`.
+- Do not mutate ORM objects after `db.commit()` inside a request when a background task owns the row — the request's final commit overwrote the task's status (fixed in `ArtefactService`).
+- `MockProvider` heuristics are lexical; with `LLM_PROVIDER=mock` the demo still reproduces CO6-uncovered / marks mismatch / duplicates, but CO mapping quality is only indicative. Use a real key for judging.
+- Python 3.14 venv: `ensurepip` may be missing → `python3 -m venv --without-pip .venv && pip3 --python .venv/bin/python install pip`.
 - Spec ambiguities surfaced by the edge-case review (`edge_cases.md` §A): `dup_threshold` default 0.80 (§19) vs 0.75 (§28.3); "intra-draft duplicates" claimed in §28 but `similar_questions()` excludes same artefact; multi-CO attribution, missing-marks handling, PO formula and rounding rule unspecified — numbers in §4/§5 fixtures flip depending on the choice. Decide before coding `stats.py` / `compute_co_attainment`.
 - FE `http.ts` gotchas: `body?.error.code` throws on a non-envelope error body (FastAPI default `{detail}`); `listCourses`/`listRuns` hardcode `page_size=100`; `createRun` mints a new `Idempotency-Key` per call so double-click guard must be UI-side; SSE reconnect must re-call `getToken()` or it loops on 401 with the stale URL token.
+- Frontend `MockApi` keeps finished runs in `localStorage` key `fc-mock-runs`; uploads/course edits made in mock mode are still in-memory and vanish on reload. Admin **Demo data → Reset** clears the stored runs.
+- Vite HMR re-instantiates `MockApi`; in-flight (non-terminal) mock runs are dropped on hot reload — re-run, do not debug.
 
 ## 12. Locked Product Scope (Prompt 1 output, 2026-09-06)
 
@@ -191,3 +247,9 @@ Planned, not yet created (`architecture.md` §9–10): `frontend/`, `backend/`, 
 | 2026-09-06 | Copilot | `edge_cases.md` v2 — merged 4 specialist reviews (security, API contract, deterministic-math fixtures, E2E/demo): §A CONFIRM list (17 spec ambiguities), hand-verifiable fixtures for coverage/attainment/calibration/duplicates, per-endpoint contract cases, LLM-output validation, http.ts/SSE/TanStack cases, rehearsal script; ~365 cases in 16 sections |
 | 2026-09-06 | Copilot | Added OpenAI direct API as `LLM_PROVIDER=openai` alongside OpenRouter (D-018, ADR-05, architecture.md §5/§27/§31, edge_cases §12)                                                                                                                                                                                                                             |
 | 2026-09-06 | Copilot | AI-layer research (OpenAI/OpenRouter/Gemini/LangChain docs + architect critique): models → `gpt-5.6-luna` / `gemini-3.5-flash-lite`, `ChatOpenRouter` adapter, 27 s run deadline, confirmed-map P1 stats, `llm_cache` + breaker, gated mock (D-019–D-023, ADR-14–18, architecture.md v1.1 §5/§10/§11/§21/§27/§28/§31/§44, edge_cases §12)                     |
+| 2026-09-06 | Copilot | Multi-agent DB review (security/integrity/pragmatist) → ADR-19 / D-024 (renumbered on merge from ADR-14 / D-018): RLS hardening, `run_inputs` redesign, `normalize_qnum`, `target_code`, IDENTITY, phase re-sequencing, fixture plan; fixed `compute_co_attainment` signature + removed `alembic/` |
+| 2026-09-06 | Copilot | Added `database_implementation_plan.md` (user-requested): per-migration contents, RLS policy matrix, seed spec, SQL test list, phase gates, BE contracts |
+| 2026-09-06 | Copilot | `edge_cases.md`: added access-pattern queries Q1–Q16 with volume/latency budgets and per-query edge cases (now §17 after the v2 merge; Q4/Q5/Q8/Q9/Q16 flagged out of scope) |
+| 2026-09-06 | Copilot | Design system: `design-system/MASTER.md` + page overrides with DESIGN RATIONALE (tokens, type, trust/severity roles, light+dark, a11y) |
+| 2026-09-06 | Copilot | Frontend built end-to-end (D-025): Vite/React/TS app, `Api` seam with `HttpApi`/`MockApi`, all §12 pages and states, finding workflow, SSE progress, exports, admin panel; typecheck/tests/build green; smoke-tested in browser |
+| 2026-09-06 | Copilot | Merged `origin/main` (backend Tier 0 + DB review): resolved doc conflicts — decisions renumbered (DB review → D-024, ADR-19), D-026 records backend deviations, `edge_cases.md` §17 access-pattern queries, architecture §21/§36/§42/§44 unioned; removed prototype `App.tsx`/`api-client.ts`/`utils/supabase.ts` superseded by the full frontend |

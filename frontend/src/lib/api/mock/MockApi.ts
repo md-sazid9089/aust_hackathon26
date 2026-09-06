@@ -71,14 +71,22 @@ export class MockApi implements Api {
 
   async listCourses(q?: string) {
     await wait();
-    const items = this.courses.filter((c) => !q || `${c.code} ${c.title}`.toLowerCase().includes(q.toLowerCase()));
+    const items = this.courses
+      .filter((c) => !q || `${c.code} ${c.title}`.toLowerCase().includes(q.toLowerCase()))
+      .map((c) => ({ ...c, counts: this.countsFor(c.id) }));
     return { items: clone(items), page: 1, page_size: 100, total: items.length };
+  }
+  private countsFor(id: string) {
+    return {
+      artefacts: this.artefacts.filter((a) => a.course_id === id).length,
+      runs: [...this.runs.values()].filter((r) => r.run.course_id === id).length,
+      outcomes: (this.outcomes[id] ?? []).length,
+    };
   }
   async getCourse(id: string) {
     await wait();
     const c = this.courses.find((x) => x.id === id) ?? this.notFound('COURSE_NOT_FOUND', 'Course');
-    const runs = [...this.runs.values()].filter((r) => r.run.course_id === id).length;
-    return { ...clone(c), counts: { artefacts: this.artefacts.filter((a) => a.course_id === id).length, runs, outcomes: (this.outcomes[id] ?? []).length } };
+    return { ...clone(c), counts: this.countsFor(id) };
   }
   async createCourse(body: T.CourseCreate) {
     await wait();

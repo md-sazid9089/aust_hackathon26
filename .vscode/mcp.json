@@ -1,29 +1,8 @@
 {
-  "inputs": [
-    {
-      "id": "supabase-project-ref",
-      "type": "promptString",
-      "description": "Supabase project ref (from Project Settings → General)",
-      "password": false
-    },
-    {
-      "id": "supabase-access-token",
-      "type": "promptString",
-      "description": "Supabase personal access token (supabase.com/dashboard/account/tokens)",
-      "password": true
-    }
-  ],
   "servers": {
     "supabase": {
-      "command": "npx",
-      "args": [
-        "-y",
-        "@supabase/mcp-server-supabase@latest",
-        "--project-ref=${input:supabase-project-ref}"
-      ],
-      "env": {
-        "SUPABASE_ACCESS_TOKEN": "${input:supabase-access-token}"
-      }
+      "type": "http",
+      "url": "https://mcp.supabase.com/mcp?project_ref=etzxqeilgohiavdeybbw&features=docs%2Caccount%2Cdatabase%2Cdebugging%2Cdevelopment%2Cfunctions%2Cbranching"
     },
     "context7": {
       "command": "npx",

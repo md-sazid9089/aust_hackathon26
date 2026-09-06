@@ -585,3 +585,42 @@ Expected (`≥`): flagged A1·C1, A2·C2 → `divergent_answers=2`, `criteria_fl
 | "Can an admin change my results?" | Admin PATCH finding → 403 (§9) |
 | "How do you stop prompt injection?" | Spotlighting fence + sandwich + schema + code whitelist; live injected-paper demo (§9) |
 | "How fast / how much does it cost?" | `/admin/usage` tokens per run; 27 s deadline; `usage_logs` |
+
+## 17. Access-pattern queries — P1 (volume / latency budgets to verify under load)
+
+Each row is a user question the system must answer; tick when the query is implemented, IDOR-safe (§9), and measured within budget on the seed dataset.
+
+| ID  | Question                                                                                                  | Volume                              | Latency target          | Who                                |
+| --- | --------------------------------------------------------------------------------------------------------- | ----------------------------------- | ----------------------- | ---------------------------------- |
+| Q1  | "For this draft paper, which CLO does each question cover, and which CLOs are uncovered?"                | ~500/day, bursty near exam weeks    | < 500 ms                | Faculty                            |
+| Q2  | "Has a question like this one been asked in this course in the last five years?"                         | ~5,000/day                          | < 2 s (async acceptable) | Faculty (and AI agent)             |
+| Q3  | "How are the marks distributed across CLOs and Bloom levels in this paper?"                              | ~2,000/day (recomputed per save)    | < 300 ms                | Faculty                            |
+| Q4  | "Which sections under me have no submitted paper with the exam three days out?"                          | ~50/day                             | < 1 s                   | Head of dept / exam committee      |
+| Q5  | "Show me every version of this paper and who changed what, when."                                        | ~200/day                            | < 1 s                   | Faculty, exam committee            |
+| Q6  | "Open this script with the rubric and whatever I had already scored."                                    | Peak ~30/sec during a grading window | < 200 ms               | Grader (faculty)                   |
+| Q7  | "On this assessment, where do the two graders disagree most?"                                            | ~300/day                            | < 2 s                   | Moderator / second examiner        |
+| Q8  | "What was this student's mark before the re-check, who changed it, and why?"                             | ~20/day                             | < 1 s                   | Admin, appeals committee           |
+| Q9  | "Which syllabus version and CLO set was in force for CSE-3101 in Spring 2026?"                           | ~1,000/day                          | < 200 ms                | AI agent, accreditation officer    |
+| Q10 | "The CLO list changed — re-analyse every draft paper affected."                                          | A few/day                           | Minutes (batch)         | Background job                     |
+| Q11 | "Rank the past questions most similar to this one, with source paper and year."                          | ~5,000/day                          | < 1 s                   | Faculty, AI agent                  |
+| Q12 | "Is this grader marking systematically harder or softer than the department mean?"                       | ~30/day                             | < 3 s                   | Head of dept                       |
+| Q13 | "Why did the AI suggest this mark? Which model and prompt produced it?"                                  | ~500/day                            | < 300 ms                | Faculty, appeals                   |
+| Q14 | "Which CLOs of this course have not been assessed at all in the last three terms?"                       | ~100/day                            | < 2 s                   | Faculty, QA cell                   |
+| Q15 | "Is this person allowed to see this paper right now?"                                                    | ~500/sec (every request)            | < 10 ms                 | System, on every read              |
+| Q16 | "Give me all questions in the bank tagged CLO-3, Bloom-Apply, that I haven't used in two years."         | TODO                                | TODO                    | Faculty                            |
+
+Edge cases per query:
+
+- [ ] Q1/Q3: paper with 0 questions, or question mapped to 0 / 2+ CLOs → shares still sum to 100% or explicit "unmapped" bucket.
+- [ ] Q2/Q11: no past papers, null embeddings, same-artefact self-match excluded; "last five years" boundary inclusive; results scoped to caller's courses only.
+- [ ] Q4: section with a paper `status=draft` (not submitted) counts as missing; exam date null; timezone at the 3-day boundary.
+- [ ] Q5: version history for a paper with one version; diff after a version is soft-deleted; another user's paper → 404.
+- [ ] Q6: 30 req/s burst on one script → no lock contention; partial scores from a previous session restored exactly.
+- [ ] Q8: mark never changed → empty history, not error; change reason missing → rejected at write time.
+- [ ] Q9: term with no syllabus version → "none in force", not latest; two versions overlapping the same term → deterministic pick, flagged.
+- [ ] Q10: CLO change while runs are `analyzing` → batch waits/queues, no duplicate runs; batch failure mid-way leaves earlier runs intact (§8).
+- [ ] Q12: grader with < N scores → "insufficient data"; department mean with a single grader.
+- [ ] Q13: prompt/model provenance present for every AI prescore; mock-provider runs labelled as such.
+- [ ] Q14: course with no offerings in the window; CLO added mid-window.
+- [ ] Q15: measured on the hot path with RLS (`SET LOCAL`) — pooler leak test from §9 applies.
+- [ ] Q16: "haven't used" = not in any paper authored by caller in 2 years; bank empty; tag filters combine with AND.
