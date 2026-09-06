@@ -15,7 +15,7 @@ import { BLOOM_LABEL, BLOOM_ORDER, cn } from '@/lib/format';
 function CoverageHeatmap({ cells }: { cells: ExamAuditSummary['coverage'] }) {
   const cos = cells.filter((c) => c.target_kind === 'course_outcome');
   return (
-    <section aria-labelledby="cov-h" className="rounded-lg border bg-card p-4">
+    <section aria-labelledby="cov-h" className="min-w-0 rounded-lg border bg-card p-4">
       <div className="mb-3 flex items-center justify-between">
         <h3 id="cov-h" className="font-semibold">CO coverage by marks</h3>
         <ComputedLabel />
@@ -67,7 +67,7 @@ export function ExamAuditResults({ run, findings, courseId, readOnly }: { run: R
         <Stat label="Open findings" value={findings.filter((f) => f.status === 'open').length} hint={`${findings.filter((f) => f.status === 'accepted').length} accepted`} />
       </section>
 
-      <div className="grid gap-4 lg:grid-cols-2">
+      <div className="grid gap-4 lg:grid-cols-2 [&>*]:min-w-0">
         <CoverageHeatmap cells={s.coverage} />
         <BarWithTable title="Bloom distribution (questions per level)" data={bloomData} valueLabel="Questions" unit="" />
       </div>

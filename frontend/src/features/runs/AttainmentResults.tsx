@@ -22,7 +22,7 @@ export function AttainmentResults({ run, findings, readOnly }: { run: Run; findi
       {att.isPending && <LoadingState rows={3} />}
       {att.isError && <ErrorState error={att.error} onRetry={() => att.refetch()} />}
       {att.data && (
-        <div className="grid gap-4 lg:grid-cols-2">
+        <div className="grid gap-4 lg:grid-cols-2 [&>*]:min-w-0">
           <BarWithTable
             title="CO attainment (% of students at or above threshold)"
             valueLabel="Attained"

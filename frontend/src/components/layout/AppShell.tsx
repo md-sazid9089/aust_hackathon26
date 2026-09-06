@@ -50,7 +50,7 @@ export function AppShell() {
   const inCourse = courseId && loc.pathname.startsWith('/courses/');
 
   return (
-    <div className="flex min-h-dvh bg-background text-foreground">
+    <div className="flex min-h-dvh overflow-x-clip bg-background text-foreground">
       <a href="#main" className="skip-link">
         Skip to main content
       </a>

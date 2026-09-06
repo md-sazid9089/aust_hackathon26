@@ -213,7 +213,7 @@ export function CoursePage() {
           </section>
 
           <Tabs defaultValue="artefacts">
-            <TabsList aria-label="Course sections">
+            <TabsList aria-label="Course sections" className="no-scrollbar max-w-full overflow-x-auto">
               <TabsTrigger value="artefacts">Artefacts</TabsTrigger>
               <TabsTrigger value="outcomes">Outcomes</TabsTrigger>
               <TabsTrigger value="copo">CO→PO map</TabsTrigger>
