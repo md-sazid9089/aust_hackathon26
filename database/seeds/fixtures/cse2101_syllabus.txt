@@ -1,0 +1,23 @@
+CSE 2101 Data Structures
+Credits: 3.0 | Prerequisite: CSE 1101 Structured Programming
+
+Course Outcomes
+CO1 Explain the time and space complexity of basic operations using asymptotic notation.
+CO2 Implement linear data structures (arrays, linked lists, stacks, queues) and their operations.
+CO3 Implement tree-based structures (binary search trees, heaps) and analyse their operations.
+CO4 Apply hashing techniques and collision-resolution strategies.
+CO5 Apply graph representations and traversal algorithms to solve problems.
+
+Topics
+T01 Complexity basics: Big-O notation, best/average/worst case
+T02 Recursion and simple recurrence relations
+T03 Arrays, linked lists, stacks and queues
+T04 Sorting algorithms: insertion, merge and quick sort
+T05 Binary heaps and priority queues; heap sort
+T06 Binary search trees and balanced trees (AVL)
+T07 Hash tables, hash functions, collision resolution
+T08 Graph representations; breadth-first and depth-first search
+T09 Introduction to shortest paths: Dijkstra's algorithm
+T10 Introduction to minimum spanning trees: Prim's algorithm
+
+Assessment: Midterm 20%, Final 50%, Lab 30%

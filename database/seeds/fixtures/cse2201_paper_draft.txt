@@ -1,0 +1,17 @@
+CSE 2201 Design and Analysis of Algorithms
+Final Examination, Spring 2026 (DRAFT)
+Time: 3 hours | Full marks: 100
+
+1. State the formal definition of Big-O notation. Explain with an example why constant factors are ignored. [10]
+
+2. Trace merge sort on the array [38, 27, 43, 3, 9, 82, 10]. Write the recurrence for merge sort and state its solution. [15]
+
+3. Show the partition step of quicksort on [5, 3, 8, 4, 2, 7, 1] with the last element as pivot. Explain when quicksort degrades to O(n^2). [15]
+
+4. Consider the 0/1 knapsack problem with item weights {2, 3, 4, 5}, values {3, 4, 5, 6} and knapsack capacity 5. Construct the dynamic programming table and report the optimal value. [15]
+
+5. Build a max-heap from [4, 10, 3, 5, 1] and show the array after each step of heap sort. [10]
+
+6. Solve the fractional knapsack instance with weights {10, 20, 30}, values {60, 100, 120} and capacity 50 using the greedy method. [10]
+
+7. Explain the difference between the classes P and NP. Name two NP-complete problems and describe them briefly. [15]

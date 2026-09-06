@@ -1,1 +1,8 @@
-# covered by root .gitignore; frontend-only extras go here
+# mostly covered by root .gitignore; frontend-only extras go here
+node_modules
+dist
+.env.local
+.env.*.local
+coverage
+playwright-report
+test-results

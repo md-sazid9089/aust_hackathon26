@@ -102,6 +102,22 @@ uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload   # on the LAN
 - Swagger UI: http://localhost:8000/docs · ReDoc: http://localhost:8000/redoc · OpenAPI: `/api/v1/openapi.json`
 - Liveness `GET /api/v1/health` → `{"status":"ok"}` · Readiness `GET /api/v1/readyz` → `{db, llm, provider, env}`
 
+## Deploying to Render
+
+`render.yaml` at the repo root is a Render Blueprint (Dashboard → New → Blueprint → select this repo). It creates one
+free-tier Python web service with `rootDir: backend`, Python 3.12 (`PYTHON_VERSION` / `.python-version`),
+`buildCommand: pip install -r requirements.txt` and
+`startCommand: alembic upgrade head && uvicorn app.main:app --host 0.0.0.0 --port $PORT --workers 1`
+(migrations run at start because `preDeployCommand` is paid-only). Health check: `/api/v1/health`.
+
+Set these secrets in the Render UI (marked `sync: false`): `DATABASE_URL` (Supabase **transaction pooler 6543**,
+`postgresql+asyncpg://`, password percent-encoded), `CORS_ORIGINS` (deployed frontend origin), `SUPABASE_URL`,
+`SUPABASE_PUBLISHABLE_KEY`, `SUPABASE_SECRET_KEY`, `LLM_API_KEY`. Everything else has a value in the blueprint.
+
+Notes: the free instance sleeps after 15 min idle (first request ~30–60 s) and its disk is **ephemeral** — uploaded
+files in `STORAGE_DIR` vanish on redeploy (DB rows survive in Supabase). Attach a Render Disk and point `STORAGE_DIR`
+at its mount path if persistence matters. Keep `--workers 1` (in-process runs + rate limiter).
+
 ## API (summary)
 
 Base `/api/v1`. Auth header `Authorization: Bearer <token>` in `supabase` mode; nothing needed in `dev` mode.
