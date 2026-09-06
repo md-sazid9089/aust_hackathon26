@@ -2,10 +2,11 @@ from __future__ import annotations
 
 import uuid
 
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
 
+from app.db.enums import Permission
 from app.demo.service import seed_demo
-from app.deps import DbDep, UserDep
+from app.deps import DbDep, UserDep, require_permission
 from app.schemas import ERROR_RESPONSES, ApiModel
 
 router = APIRouter(prefix="/demo", tags=["demo"])
@@ -26,6 +27,7 @@ class SeedOut(ApiModel):
         "into the caller's workspace. Idempotent: returns the existing demo course if already seeded."
     ),
     responses=ERROR_RESPONSES,
+    dependencies=[Depends(require_permission(Permission.demo_seed))],
 )
 async def seed(db: DbDep, user: UserDep) -> SeedOut:
     course, created = await seed_demo(db, user)

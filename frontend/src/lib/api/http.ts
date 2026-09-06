@@ -69,7 +69,7 @@ export class HttpApi implements Api {
     return this.request<void>(`/courses/${id}`, { method: 'DELETE' });
   }
   listRuns(courseId: string, filter?: { module?: T.RunModule; status?: T.RunStatus }) {
-    return this.request<T.Page<T.Run>>(`/courses/${courseId}/runs`, { query: { ...filter, page_size: 100, sort: 'created_at:desc' } });
+    return this.request<T.Page<T.Run>>(`/courses/${courseId}/runs`, { query: { ...filter, page_size: 100 } });
   }
   seedDemo() {
     return this.request<{ course_id: string; created: boolean }>('/demo/seed', { method: 'POST' });
@@ -109,6 +109,7 @@ export class HttpApi implements Api {
     fd.set('label', body.label);
     if (body.year) fd.set('year', String(body.year));
     if (body.term) fd.set('term', body.term);
+    if (body.declared_total_marks != null) fd.set('declared_total_marks', String(body.declared_total_marks));
     if (body.file) fd.set('file', body.file);
     if (body.text) fd.set('text', body.text);
     if (body.grader_labels) fd.set('grader_labels', JSON.stringify(body.grader_labels));

@@ -56,6 +56,8 @@ class ProfileOut(ApiModel):
     role: str
     is_active: bool
     created_at: datetime
+    permissions: list[str] = Field(default_factory=list)
+    dashboards: list[str] = Field(default_factory=list)
 
 
 ERROR_RESPONSES = {

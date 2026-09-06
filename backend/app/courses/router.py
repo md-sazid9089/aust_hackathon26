@@ -3,14 +3,16 @@ from __future__ import annotations
 import uuid
 from typing import Annotated
 
-from fastapi import APIRouter, Query, Response, status
+from fastapi import APIRouter, Depends, Query, Response, status
 
 from app.courses.schemas import CourseCreate, CourseOut, CourseUpdate
 from app.courses.service import CourseService
-from app.deps import DbDep, UserDep
+from app.db.enums import Permission
+from app.deps import DbDep, UserDep, require_permission
 from app.schemas import ERROR_RESPONSES, Page
 
 router = APIRouter(prefix="/courses", tags=["courses"])
+WRITE = [Depends(require_permission(Permission.courses_write))]
 
 
 @router.get("", response_model=Page[CourseOut], summary="List my courses", responses=ERROR_RESPONSES)
@@ -33,6 +35,7 @@ async def list_courses(
     summary="Create a course workspace",
     description="Course code is upper-cased and must be unique per owner (`409 COURSE_CODE_EXISTS`).",
     responses=ERROR_RESPONSES,
+    dependencies=WRITE,
 )
 async def create_course(data: CourseCreate, db: DbDep, user: UserDep) -> CourseOut:
     return await CourseService(db, user).create(data)
@@ -48,7 +51,7 @@ async def get_course(course_id: uuid.UUID, db: DbDep, user: UserDep) -> CourseOu
     return await CourseService(db, user).get(course_id)
 
 
-@router.patch("/{course_id}", response_model=CourseOut, summary="Update a course", responses=ERROR_RESPONSES)
+@router.patch("/{course_id}", response_model=CourseOut, summary="Update a course", responses=ERROR_RESPONSES, dependencies=WRITE)
 async def update_course(course_id: uuid.UUID, data: CourseUpdate, db: DbDep, user: UserDep) -> CourseOut:
     return await CourseService(db, user).update(course_id, data)
 
@@ -58,6 +61,7 @@ async def update_course(course_id: uuid.UUID, data: CourseUpdate, db: DbDep, use
     status_code=status.HTTP_204_NO_CONTENT,
     summary="Soft-delete a course",
     responses=ERROR_RESPONSES,
+    dependencies=WRITE,
 )
 async def delete_course(course_id: uuid.UUID, db: DbDep, user: UserDep) -> Response:
     await CourseService(db, user).delete(course_id)

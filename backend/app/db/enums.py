@@ -13,6 +13,65 @@ class AppRole(StrEnum):
     admin = "admin"
 
 
+class Permission(StrEnum):
+    """Dashboards (`dashboard:*`) and actions a role may use. Persisted in `role_permissions`."""
+
+    dashboard_courses = "dashboard:courses"
+    dashboard_course_workspace = "dashboard:course_workspace"
+    dashboard_exam_audit = "dashboard:exam_audit"
+    dashboard_attainment = "dashboard:attainment"
+    dashboard_syllabus_check = "dashboard:syllabus_check"
+    dashboard_calibration = "dashboard:calibration"
+    dashboard_overview = "dashboard:overview"
+    dashboard_admin = "dashboard:admin"
+    dashboard_admin_department = "dashboard:admin_department"
+    courses_write = "courses:write"
+    artefacts_write = "artefacts:write"
+    runs_start = "runs:start"
+    findings_decide = "findings:decide"
+    demo_seed = "demo:seed"
+    admin_users = "admin:users"
+    admin_runs = "admin:runs"
+    admin_usage = "admin:usage"
+
+
+# Role → permissions. Faculty own and decide; admins are read-only oversight (SEC-009).
+ROLE_PERMISSIONS: dict[AppRole, frozenset[Permission]] = {
+    AppRole.faculty: frozenset(
+        {
+            Permission.dashboard_courses,
+            Permission.dashboard_course_workspace,
+            Permission.dashboard_exam_audit,
+            Permission.dashboard_attainment,
+            Permission.dashboard_syllabus_check,
+            Permission.dashboard_calibration,
+            Permission.dashboard_overview,
+            Permission.courses_write,
+            Permission.artefacts_write,
+            Permission.runs_start,
+            Permission.findings_decide,
+            Permission.demo_seed,
+        }
+    ),
+    AppRole.admin: frozenset(
+        {
+            Permission.dashboard_courses,
+            Permission.dashboard_course_workspace,
+            Permission.dashboard_exam_audit,
+            Permission.dashboard_attainment,
+            Permission.dashboard_syllabus_check,
+            Permission.dashboard_calibration,
+            Permission.dashboard_overview,
+            Permission.dashboard_admin,
+            Permission.dashboard_admin_department,
+            Permission.admin_users,
+            Permission.admin_runs,
+            Permission.admin_usage,
+        }
+    ),
+}
+
+
 class ArtefactKind(StrEnum):
     syllabus = "syllabus"
     question_paper = "question_paper"

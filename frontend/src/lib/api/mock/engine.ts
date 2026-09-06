@@ -68,17 +68,37 @@ export function examAudit(runId: string, inputs: T.RunInputsExamAudit, params: R
     coverage.push({ target_kind: 'topic', target_code: t.code, marks: m, share: total ? m / total : 0, expected_share: 1 / 10, status: m === 0 ? 'uncovered' : 'covered' });
   }
   const covered = cos.filter((co) => coverage.find((c) => c.target_code === co.code)?.status !== 'uncovered').length;
-  const bloom: Partial<Record<T.BloomLevel, number>> = {};
-  for (const x of draft) if (x.bloom_level) bloom[x.bloom_level] = (bloom[x.bloom_level] ?? 0) + 1;
+  const bloomCounts: Partial<Record<T.BloomLevel, number>> = {};
+  const bloomMarks: Partial<Record<T.BloomLevel, number>> = {};
+  let lower = 0;
+  let higher = 0;
+  for (const x of draft) {
+    if (!x.bloom_level) continue;
+    bloomCounts[x.bloom_level] = (bloomCounts[x.bloom_level] ?? 0) + 1;
+    bloomMarks[x.bloom_level] = (bloomMarks[x.bloom_level] ?? 0) + x.marks;
+    if (x.bloom_level === 'remember' || x.bloom_level === 'understand') lower += x.marks;
+    if (x.bloom_level === 'analyze' || x.bloom_level === 'evaluate' || x.bloom_level === 'create') higher += x.marks;
+  }
 
-  const duplicates = [{ draft_number: '4', past_label: 'Final Exam 2024', past_number: '3', similarity: 0.94 }];
+  const duplicates = [{ draft_number: '4', other_label: 'Final Exam 2024', other_number: '3', similarity: 0.94, confirmed: true }];
 
   const summary: T.ExamAuditSummary = {
     coverage_pct: Math.round((covered / cos.length) * 100),
     coverage,
-    bloom,
+    bloom: {
+      counts: bloomCounts,
+      marks: bloomMarks,
+      lower_order_share: total ? lower / total : 0,
+      higher_order_share: total ? higher / total : 0,
+      unclassified: draft.filter((x) => !x.bloom_level).length,
+    },
+    marks_total: { computed: total, declared: null, mismatch: false },
     duplicates,
-    fairness: { deviation_score: 0.31, notes: 'Marks are concentrated on CO2 (50 of 100). Q5 and Q7 carry 15 marks each for procedural tracing.' },
+    fairness: {
+      deviation_score: 0.31,
+      heavy_questions: [],
+      notes: ['Marks are concentrated on CO2 (50 of 100). Q5 and Q7 carry 15 marks each for procedural tracing.'],
+    },
   };
 
   const findings: T.Finding[] = [];
@@ -136,7 +156,7 @@ export function examAudit(runId: string, inputs: T.RunInputsExamAudit, params: R
       target_kind: 'none',
       target_id: null,
       target_label: null,
-      payload: { bloom },
+      payload: { bloom: bloomCounts },
     }),
     mkFinding(runId, {
       type: 'fairness',

@@ -7,7 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Field, Input } from '@/components/ui/input';
 
 export function LoginPage() {
-  const { status, profile, mode, signInMock, signInWithPassword } = useAuth();
+  const { status, profile, mode, authMode, lastError, signInMock, signInDev, signInWithPassword } = useAuth();
   const loc = useLocation() as { state?: { from?: string } };
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -63,10 +63,27 @@ export function LoginPage() {
         <Card className="w-full max-w-md">
           <CardHeader>
             <CardTitle className="font-heading text-2xl">Sign in</CardTitle>
-            <CardDescription>{mode === 'mock' ? 'Demo mode — choose a role to explore with seeded data.' : 'Use your university account.'}</CardDescription>
+            <CardDescription>
+              {mode === 'mock'
+                ? 'Demo mode — choose a role to explore with seeded data.'
+                : authMode === 'dev'
+                  ? 'Local development — the backend runs with a fixed faculty account.'
+                  : 'Use your university account.'}
+            </CardDescription>
           </CardHeader>
           <CardContent className="flex flex-col gap-4">
-            {mode === 'mock' ? (
+            {mode === 'live' && authMode === 'dev' ? (
+              <>
+                {lastError && (
+                  <p role="alert" className="rounded-md border border-destructive/40 bg-destructive/5 p-3 text-sm text-destructive">
+                    Could not reach the backend: {lastError}
+                  </p>
+                )}
+                <Button type="button" onClick={() => void signInDev()} loading={status === 'loading'}>
+                  Continue as local faculty
+                </Button>
+              </>
+            ) : mode === 'mock' ? (
               DEMO_USERS.map((u) => (
                 <button
                   key={u.id}

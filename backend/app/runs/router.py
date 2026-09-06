@@ -11,10 +11,18 @@ from fastapi.responses import PlainTextResponse
 from sqlalchemy import select
 from sse_starlette.sse import EventSourceResponse
 
-from app.db.enums import TERMINAL_RUN_STATUSES, FindingSeverity, FindingStatus, FindingType, RunModule, RunStatus
+from app.db.enums import (
+    TERMINAL_RUN_STATUSES,
+    FindingSeverity,
+    FindingStatus,
+    FindingType,
+    Permission,
+    RunModule,
+    RunStatus,
+)
 from app.db.models import Run, RunEvent
 from app.db.session import session_scope
-from app.deps import DbDep, UserDep, runs_rate_limit
+from app.deps import DbDep, UserDep, require_permission, runs_rate_limit
 from app.runs.schemas import FindingOut, FindingPatch, RunCreate, RunEventOut, RunOut
 from app.runs.service import RunService
 from app.schemas import ERROR_RESPONSES, Page
@@ -36,7 +44,7 @@ SSE_HEARTBEAT_S = 15
         "Optional `Idempotency-Key` header returns the existing run for a repeated request. Poll `GET /runs/{id}` or stream `/runs/{id}/events`."
     ),
     responses=ERROR_RESPONSES,
-    dependencies=[Depends(runs_rate_limit)],
+    dependencies=[Depends(require_permission(Permission.runs_start)), Depends(runs_rate_limit)],
 )
 async def create_run(
     course_id: uuid.UUID,
@@ -128,8 +136,9 @@ async def list_findings(
     "/findings/{finding_id}",
     response_model=FindingOut,
     summary="Accept / dismiss / reopen a finding",
-    description="The faculty decision step. Only the owning faculty member may decide (admins are read-only).",
+    description="The faculty decision step. Only the owning faculty member may decide (admins are read-only, `403 PERMISSION_DENIED`).",
     responses=ERROR_RESPONSES,
+    dependencies=[Depends(require_permission(Permission.findings_decide))],
 )
 async def decide_finding(finding_id: uuid.UUID, data: FindingPatch, db: DbDep, user: UserDep) -> FindingOut:
     return await RunService(db, user).decide(finding_id, data.status)

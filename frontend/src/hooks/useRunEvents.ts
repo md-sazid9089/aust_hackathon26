@@ -24,7 +24,7 @@ export function useRunEvents(run: Run | undefined) {
       onProgress: (e) => {
         lastSeq.current = Math.max(lastSeq.current, e.seq);
         setEvents((prev) => (prev.some((p) => p.seq === e.seq) ? prev : [...prev, e]));
-        qc.setQueryData<Run>(qk.run(runId), (old) => (old ? { ...old, progress_pct: e.pct, current_stage: e.stage, status: old.status === 'queued' ? 'analyzing' : old.status } : old));
+        qc.setQueryData<Run>(qk.run(runId), (old) => (old ? { ...old, progress_pct: e.pct ?? old.progress_pct, current_stage: e.stage, status: old.status === 'queued' ? 'analyzing' : old.status } : old));
       },
       onDone: () => {
         void qc.invalidateQueries({ queryKey: qk.run(runId) });

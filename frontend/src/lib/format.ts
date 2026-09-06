@@ -61,6 +61,7 @@ export const FINDING_TYPE_LABEL: Record<FindingType, string> = {
   duplicate: 'Repeated question',
   fairness: 'Fairness',
   marks_total_mismatch: 'Marks total mismatch',
+  untagged_question: 'Unmapped question',
   suggestion: 'Suggested question',
   co_underperformance: 'CO under target',
   po_underperformance: 'PO under target',

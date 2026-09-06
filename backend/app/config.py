@@ -27,8 +27,15 @@ class Settings(BaseSettings):
     seed_data_dir: Path = Field(BACKEND_DIR.parent / "data" / "seed-data", alias="SEED_DATA_DIR")
 
     # auth
-    auth_mode: Literal["dev", "supabase"] = Field("dev", alias="AUTH_MODE")
+    auth_mode: Literal["dev", "local", "supabase"] = Field("dev", alias="AUTH_MODE")
     dev_user_email: str = Field("faculty.dev@example.edu", alias="DEV_USER_EMAIL")
+    # AUTH_MODE=local: email+password sign-in, HS256 JWT signed with JWT_SECRET (no sign-up endpoint).
+    jwt_secret: str | None = Field(None, alias="JWT_SECRET", min_length=32)
+    jwt_ttl_s: int = Field(12 * 3600, alias="JWT_TTL_S", ge=300, le=7 * 24 * 3600)
+    seed_faculty_email: str | None = Field(None, alias="SEED_FACULTY_EMAIL")
+    seed_faculty_password: str | None = Field(None, alias="SEED_FACULTY_PASSWORD", min_length=8)
+    seed_admin_email: str | None = Field(None, alias="SEED_ADMIN_EMAIL")
+    seed_admin_password: str | None = Field(None, alias="SEED_ADMIN_PASSWORD", min_length=8)
     supabase_url: str | None = Field(None, alias="SUPABASE_URL")
     supabase_publishable_key: str | None = Field(None, alias="SUPABASE_PUBLISHABLE_KEY")
     supabase_secret_key: str | None = Field(None, alias="SUPABASE_SECRET_KEY")
@@ -56,6 +63,12 @@ class Settings(BaseSettings):
     @classmethod
     def _strip(cls, v: str) -> str:
         return v.strip()
+
+    @field_validator("storage_dir", "seed_data_dir")
+    @classmethod
+    def _anchor_relative_paths(cls, v: Path) -> Path:
+        # Relative paths in .env are relative to backend/, not to the process cwd.
+        return v if v.is_absolute() else (BACKEND_DIR / v).resolve()
 
     @property
     def cors_origin_list(self) -> list[str]:

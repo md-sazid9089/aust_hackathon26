@@ -76,6 +76,19 @@ class Profile(Base, TimestampMixin):
         enum_col(E.AppRole, "app_role"), default=E.AppRole.faculty, nullable=False
     )
     is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
+    # Local sign-in only (AUTH_MODE=local); NULL for Supabase/dev users. PBKDF2 string, see auth/passwords.py.
+    password_hash: Mapped[str | None] = mapped_column(Text)
+    last_login_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+
+
+class RolePermission(Base):
+    """Which dashboards/actions each role may use. Rows mirror `enums.ROLE_PERMISSIONS` (synced at startup)."""
+
+    __tablename__ = "role_permissions"
+
+    role: Mapped[E.AppRole] = mapped_column(enum_col(E.AppRole, "app_role"), primary_key=True)
+    permission: Mapped[str] = mapped_column(String(64), primary_key=True)
+    description: Mapped[str | None] = mapped_column(Text)
 
 
 class Course(Base, TimestampMixin):

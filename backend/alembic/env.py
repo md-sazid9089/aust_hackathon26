@@ -44,9 +44,12 @@ def _do_run_migrations(connection) -> None:  # noqa: ANN001
 
 
 async def run_migrations_online() -> None:
-    connectable = async_engine_from_config(
-        config.get_section(config.config_ini_section, {}), prefix="sqlalchemy.", poolclass=pool.NullPool
-    )
+    url = config.get_main_option("sqlalchemy.url") or ""
+    kwargs: dict = {"prefix": "sqlalchemy.", "poolclass": pool.NullPool}
+    if "+asyncpg" in url:
+        # Same workaround as app/db/session.py for the Supabase transaction pooler (6543).
+        kwargs["connect_args"] = {"statement_cache_size": 0}
+    connectable = async_engine_from_config(config.get_section(config.config_ini_section, {}), **kwargs)
     async with connectable.connect() as connection:
         await connection.run_sync(_do_run_migrations)
     await connectable.dispose()

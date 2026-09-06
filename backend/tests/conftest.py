@@ -48,11 +48,13 @@ async def _database():
     engine = get_engine()
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
+    from app.auth.service import sync_role_permissions
     from app.db.session import session_scope
     from app.demo.service import ensure_program_outcomes
 
     async with session_scope() as db:  # lifespan is not run by ASGITransport
         await ensure_program_outcomes(db)
+        await sync_role_permissions(db)
     yield
     await engine.dispose()
     import shutil

@@ -55,7 +55,7 @@ export function ExamAuditResults({ run, findings, courseId, readOnly }: { run: R
   const hasSuggestions = findings.some((f) => f.type === 'suggestion');
 
   if (!s) return null;
-  const bloomData = BLOOM_ORDER.map((b) => ({ label: BLOOM_LABEL[b], value: s.bloom[b] ?? 0 }));
+  const bloomData = BLOOM_ORDER.map((b) => ({ label: BLOOM_LABEL[b], value: s.bloom?.counts?.[b] ?? 0 }));
   const topics = s.coverage.filter((c) => c.target_kind === 'topic');
 
   return (
@@ -63,7 +63,7 @@ export function ExamAuditResults({ run, findings, courseId, readOnly }: { run: R
       <section aria-label="Summary" className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
         <Stat label="CO coverage" value={`${Math.round(s.coverage_pct)}%`} hint={`${s.coverage.filter((c) => c.target_kind === 'course_outcome' && c.status !== 'uncovered').length} of ${s.coverage.filter((c) => c.target_kind === 'course_outcome').length} COs assessed`} />
         <Stat label="Repeated questions" value={s.duplicates.length} hint={s.duplicates[0] ? `Top similarity ${(s.duplicates[0].similarity * 100).toFixed(0)}%` : 'No matches ≥ 80%'} />
-        <Stat label="Fairness deviation" value={s.fairness.deviation_score.toFixed(2)} hint={s.fairness.notes} />
+        <Stat label="Fairness deviation" value={s.fairness.deviation_score.toFixed(2)} hint={s.fairness.notes.join(' ') || 'Marks are evenly distributed.'} />
         <Stat label="Open findings" value={findings.filter((f) => f.status === 'open').length} hint={`${findings.filter((f) => f.status === 'accepted').length} accepted`} />
       </section>
 

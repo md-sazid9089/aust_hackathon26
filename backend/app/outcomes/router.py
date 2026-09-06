@@ -2,14 +2,16 @@ from __future__ import annotations
 
 import uuid
 
-from fastapi import APIRouter, Body
+from fastapi import APIRouter, Body, Depends
 
-from app.deps import DbDep, UserDep
+from app.db.enums import Permission
+from app.deps import DbDep, UserDep, require_permission
 from app.outcomes.schemas import CoPoCell, CourseOutcomeIn, CourseOutcomeOut, ProgramOutcomeOut, TopicIn, TopicOut
 from app.outcomes.service import OutcomeService
 from app.schemas import ERROR_RESPONSES
 
 router = APIRouter(tags=["outcomes"])
+WRITE = [Depends(require_permission(Permission.courses_write))]
 
 
 @router.get("/program-outcomes", response_model=list[ProgramOutcomeOut], summary="Global programme outcomes (PO1–PO12)")
@@ -28,6 +30,7 @@ async def list_outcomes(course_id: uuid.UUID, db: DbDep, user: UserDep) -> list[
     summary="Replace all course outcomes",
     description="Replace-all in one transaction. Omitted existing COs are deleted; `409 OUTCOME_IN_USE` if a deleted CO is mapped to questions.",
     responses=ERROR_RESPONSES,
+    dependencies=WRITE,
 )
 async def replace_outcomes(
     course_id: uuid.UUID, db: DbDep, user: UserDep, items: list[CourseOutcomeIn] = Body(max_length=50)
@@ -40,7 +43,7 @@ async def co_po_map(course_id: uuid.UUID, db: DbDep, user: UserDep) -> list[CoPo
     return await OutcomeService(db, user).co_po_map(course_id)
 
 
-@router.put("/courses/{course_id}/co-po-map", response_model=list[CoPoCell], summary="Replace CO→PO map", responses=ERROR_RESPONSES)
+@router.put("/courses/{course_id}/co-po-map", response_model=list[CoPoCell], summary="Replace CO→PO map", responses=ERROR_RESPONSES, dependencies=WRITE)
 async def replace_co_po_map(
     course_id: uuid.UUID, db: DbDep, user: UserDep, cells: list[CoPoCell] = Body(max_length=600)
 ) -> list[CoPoCell]:
@@ -58,6 +61,7 @@ async def topics(course_id: uuid.UUID, db: DbDep, user: UserDep) -> list[TopicOu
     summary="Replace all syllabus topics",
     description="Used to confirm/edit topics after syllabus extraction.",
     responses=ERROR_RESPONSES,
+    dependencies=WRITE,
 )
 async def replace_topics(
     course_id: uuid.UUID, db: DbDep, user: UserDep, items: list[TopicIn] = Body(max_length=200)

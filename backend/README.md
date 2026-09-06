@@ -79,10 +79,35 @@ All configuration is read from `backend/.env` (never committed). See `.env.examp
 | Variable | Purpose |
 |---|---|
 | `DATABASE_URL` | `sqlite+aiosqlite:///./dev.db` (default) or `postgresql+asyncpg://user:pass@host:6543/postgres` |
-| `AUTH_MODE` | `dev` = fixed local faculty user, optional `X-Dev-User: email` header · `supabase` = verify HS256 JWT with `SUPABASE_JWT_SECRET` |
+| `AUTH_MODE` | `dev` = fixed local faculty user, optional `X-Dev-User: email` header · `local` = email+password sign-in → HS256 JWT (see below) · `supabase` = verify Supabase JWT (JWKS / `SUPABASE_JWT_SECRET`) |
+| `JWT_SECRET`, `JWT_TTL_S`, `SEED_*_EMAIL/PASSWORD` | `local` mode: signing secret (≥32 chars), token lifetime, the faculty and admin accounts created at startup |
 | `LLM_PROVIDER` | `mock` (offline heuristics, tests) · `openrouter` · `openai_compatible` |
 | `LLM_BASE_URL`, `LLM_API_KEY`, `LLM_MODEL`, `LLM_FALLBACK_MODELS` | model gateway; `EMBED_*` default to the same gateway |
-| `CORS_ORIGINS`, `MAX_UPLOAD_MB`, `STORAGE_DIR`, `SEED_DATA_DIR`, `RATE_LIMIT_ENABLED` | runtime knobs |
+| `CORS_ORIGINS`, `MAX_UPLOAD_MB`, `STORAGE_DIR`, `SEED_DATA_DIR`, `RATE_LIMIT_ENABLED` | runtime knobs (relative paths resolve against `backend/`) |
+
+### Sign-in (`AUTH_MODE=local`)
+
+There is **no sign-up**. Accounts come from `SEED_FACULTY_*` / `SEED_ADMIN_*` in `.env` (created or password-refreshed on every startup) or are inserted by an operator. Passwords are PBKDF2-HMAC-SHA256 in `profiles.password_hash`.
+
+```bash
+curl -s localhost:8000/api/v1/auth/login -H 'content-type: application/json' \
+  -d '{"email":"teacher@aust.edu","password":"Teacher#2026"}'
+# → {"access_token":"…","token_type":"bearer","expires_at":…,"user":{…,"role":"faculty","dashboards":[…],"permissions":[…]}}
+curl -s localhost:8000/api/v1/me -H "Authorization: Bearer $TOKEN"
+```
+
+- Token claims: `sub` (profile id), `email`, `role`, `iss=faculty-copilot-api`, `aud=faculty-copilot`, `exp`. The `role` claim is informational only — permissions are always read from `profiles.role` in the DB.
+- SSE: pass `?access_token=` (EventSource cannot set headers).
+- `POST /auth/change-password`, `POST /auth/logout` (stateless; client drops the token).
+- `GET /auth/permissions` (public) returns the role → dashboards/permissions matrix; the same rows live in the `role_permissions` table (synced from `app/db/enums.py::ROLE_PERMISSIONS` at startup).
+
+| Dashboard / action | faculty | admin |
+|---|---|---|
+| `/` courses, course workspace, exam-audit, attainment, syllabus-check, calibration, `/dashboard` | ✓ | ✓ (read-only, own view) |
+| `/admin`, `/admin/department`, `admin:users/runs/usage` | – | ✓ |
+| create/edit courses & outcomes, upload/confirm artefacts, start runs, accept/dismiss findings, demo seed | ✓ | – (`403 PERMISSION_DENIED`) |
+
+Live check of the whole flow (sign-in → every page → run → decide → export): `python scripts/audit_auth_flow.py http://localhost:8000`.
 
 ## Database
 

@@ -9,6 +9,8 @@ import type { Profile } from '@/lib/types/api';
 
 const MOCK_USER_KEY = 'fc-mock-user';
 const BASE_URL = (import.meta.env.VITE_API_BASE_URL as string | undefined) ?? '/api/v1';
+/** `dev` pairs with backend `AUTH_MODE=dev` (no token, fixed faculty user). Never set in production. */
+export const AUTH_MODE: 'dev' | 'supabase' = (import.meta.env.VITE_AUTH_MODE as string) === 'dev' ? 'dev' : 'supabase';
 
 export const DEMO_USERS = [
   { id: ids.faculty, label: 'Faculty', hint: 'Dr. Farhana Rahman · owns CSE 2201 & CSE 2101' },
@@ -19,7 +21,10 @@ interface AuthState {
   status: 'loading' | 'anonymous' | 'authenticated';
   profile: Profile | null;
   mode: 'mock' | 'live';
+  authMode: 'dev' | 'supabase';
+  lastError: string | null;
   signInMock: (userId: string) => void;
+  signInDev: () => Promise<void>;
   signInWithPassword: (email: string, password: string) => Promise<string | null>;
   signOut: () => Promise<void>;
 }
@@ -36,12 +41,29 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [status, setStatus] = useState<AuthState['status']>('loading');
   const [profile, setProfile] = useState<Profile | null>(null);
   const [api, setApi] = useState<Api | null>(null);
+  const [lastError, setLastError] = useState<string | null>(null);
 
   const clear = useCallback(() => {
     setApi(null);
     setProfile(null);
     setStatus('anonymous');
   }, []);
+
+  /* ---- dev mode (backend AUTH_MODE=dev, no token) ---- */
+  const signInDev = useCallback(async () => {
+    setStatus('loading');
+    setLastError(null);
+    const http = new HttpApi(BASE_URL, async () => null, clear);
+    try {
+      const p = await http.me();
+      setApi(http);
+      setProfile(p);
+      setStatus('authenticated');
+    } catch (e) {
+      setLastError(e instanceof Error ? e.message : 'Backend unreachable');
+      clear();
+    }
+  }, [clear]);
 
   /* ---- mock mode ---- */
   const signInMock = useCallback((userId: string) => {
@@ -69,7 +91,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setApi(http);
         setProfile(p);
         setStatus('authenticated');
-      } catch {
+      } catch (e) {
+        setLastError(e instanceof Error ? e.message : 'Backend unreachable');
         clear();
       }
     },
@@ -83,6 +106,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       else setStatus('anonymous');
       return;
     }
+    if (AUTH_MODE === 'dev') {
+      void signInDev();
+      return;
+    }
     const sb = getSupabase();
     if (!sb) {
       setStatus('anonymous');
@@ -94,7 +121,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (event === 'SIGNED_IN') void bootLive(session);
     });
     return () => sub.subscription.unsubscribe();
-  }, [bootLive, clear, signInMock]);
+  }, [bootLive, clear, signInMock, signInDev]);
 
   const signInWithPassword = useCallback(async (email: string, password: string) => {
     const sb = getSupabase();
@@ -110,7 +137,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     clear();
   }, [clear]);
 
-  const value = useMemo<AuthState>(() => ({ status, profile, mode: API_MODE, signInMock, signInWithPassword, signOut }), [status, profile, signInMock, signInWithPassword, signOut]);
+  const value = useMemo<AuthState>(
+    () => ({ status, profile, mode: API_MODE, authMode: AUTH_MODE, lastError, signInMock, signInDev, signInWithPassword, signOut }),
+    [status, profile, lastError, signInMock, signInDev, signInWithPassword, signOut],
+  );
 
   return (
     <AuthCtx.Provider value={value}>

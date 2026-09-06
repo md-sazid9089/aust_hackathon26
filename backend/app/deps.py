@@ -10,9 +10,9 @@ from fastapi import Depends, Header, Query, Request
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.auth.jwt import verify_supabase_jwt
+from app.auth.jwt import verify_local_jwt, verify_supabase_jwt
 from app.config import Settings, get_settings
-from app.db.enums import AppRole
+from app.db.enums import ROLE_PERMISSIONS, AppRole, Permission
 from app.db.models import Profile
 from app.db.session import get_sessionmaker
 from app.errors import ApiError, Forbidden, Unauthenticated
@@ -66,6 +66,21 @@ async def get_current_user(
         # Local development: fixed faculty user; X-Dev-User overrides the email (tests, isolation checks).
         email = (x_dev_user or settings.dev_user_email).strip().lower()
         profile = await _get_or_create_profile(db, user_id=None, email=email, full_name="Dev Faculty")
+    elif settings.auth_mode == "local":
+        token = _bearer(request, access_token)
+        if not token:
+            raise Unauthenticated()
+        if not settings.jwt_secret:
+            raise ApiError("AUTH_MISCONFIGURED", 503, "Authentication is not configured")
+        claims = verify_local_jwt(token, secret=settings.jwt_secret)
+        try:
+            user_id = uuid.UUID(str(claims["sub"]))
+        except ValueError as exc:
+            raise Unauthenticated("Invalid subject") from exc
+        # No auto-provisioning: accounts exist only via seeding/admin (there is no sign-up).
+        profile = await db.get(Profile, user_id)
+        if profile is None or profile.password_hash is None:
+            raise Unauthenticated("Unknown user")
     else:
         token = _bearer(request, access_token)
         if not token:
@@ -97,6 +112,23 @@ def require_role(role: AppRole):
     async def _dep(user: UserDep) -> Profile:
         if user.role != role:
             raise Forbidden()
+        return user
+
+    return _dep
+
+
+def has_permission(user: Profile, permission: Permission) -> bool:
+    return permission in ROLE_PERMISSIONS.get(user.role, frozenset())
+
+
+def require_permission(permission: Permission):
+    """403 PERMISSION_DENIED unless the user's role grants `permission` (see enums.ROLE_PERMISSIONS)."""
+
+    async def _dep(user: UserDep) -> Profile:
+        if not has_permission(user, permission):
+            raise ApiError(
+                "PERMISSION_DENIED", 403, "Your role does not allow this action", {"permission": permission.value}
+            )
         return user
 
     return _dep

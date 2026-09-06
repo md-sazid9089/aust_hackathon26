@@ -9,6 +9,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.ai.client import get_provider
 from app.artefacts.router import router as artefacts_router
 from app.auth.router import router as auth_router
+from app.auth.service import ensure_seed_users, sync_role_permissions
 from app.config import get_settings
 from app.courses.router import router as courses_router
 from app.db.session import get_engine, session_scope
@@ -49,6 +50,9 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
         async with session_scope() as db:
             swept = await RunRepo(db).sweep_stale()
             await ensure_program_outcomes(db)
+            await sync_role_permissions(db)
+            if settings.auth_mode == "local":
+                await ensure_seed_users(db, settings)
         if swept:
             log.warning("startup.swept_stale_runs", count=swept)
     except Exception:  # noqa: BLE001 - DB may be down; /readyz reports it

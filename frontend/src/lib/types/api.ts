@@ -30,6 +30,7 @@ export type FindingType =
   | 'duplicate'
   | 'fairness'
   | 'marks_total_mismatch'
+  | 'untagged_question'
   | 'suggestion'
   | 'co_underperformance'
   | 'po_underperformance'
@@ -123,6 +124,7 @@ export interface Artefact {
   label: string;
   year: number | null;
   term: string | null;
+  declared_total_marks?: number | null;
   mime: string | null;
   lang: TextLang;
   status: ExtractionStatus;
@@ -135,6 +137,7 @@ export interface ArtefactUpload {
   label: string;
   year?: number;
   term?: string;
+  declared_total_marks?: number;
   file?: File;
   text?: string;
   grader_labels?: string[];
@@ -228,13 +231,43 @@ export interface CoverageCell {
   share: number;
   expected_share: number;
   status: 'covered' | 'uncovered' | 'overweight';
+  questions?: string[];
 }
+/** Mirrors backend `modules/exam_audit/graph.py::_compute_and_build`. */
 export interface ExamAuditSummary {
+  draft_label?: string;
+  questions?: number;
+  past_questions?: number;
   coverage_pct: number;
   coverage: CoverageCell[];
-  bloom: Partial<Record<BloomLevel, number>>;
-  duplicates: { draft_number: string; past_label: string; past_number: string; similarity: number }[];
-  fairness: { deviation_score: number; notes: string };
+  bloom: {
+    counts: Partial<Record<BloomLevel | 'unclassified', number>>;
+    marks: Partial<Record<BloomLevel | 'unclassified', number>>;
+    lower_order_share: number;
+    higher_order_share: number;
+    unclassified: number;
+  };
+  marks_total?: { computed: number; declared: number | null; mismatch: boolean };
+  duplicates: {
+    draft_number?: string;
+    other_label?: string;
+    other_number?: string;
+    similarity: number;
+    confirmed?: boolean;
+    [k: string]: unknown;
+  }[];
+  fairness: { deviation_score: number; heavy_questions: { number: string; marks: number; share: number }[]; notes: string[] };
+  untagged?: string[];
+  findings?: number;
+  mapping?: {
+    number: string;
+    co_codes: string[];
+    topic_codes: string[];
+    bloom_level: BloomLevel | null;
+    source: string | null;
+    confidence: number | null;
+    rationale: string | null;
+  }[];
 }
 export interface AttainmentSummary {
   threshold: number;
@@ -285,8 +318,9 @@ export interface Run {
 export interface RunProgressEvent {
   seq: number;
   stage: string;
-  message: string;
-  pct: number;
+  message: string | null;
+  pct: number | null;
+  level?: 'info' | 'warning' | 'error';
   at: ISODate;
 }
 

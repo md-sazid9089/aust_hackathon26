@@ -7,11 +7,12 @@ from fastapi import APIRouter, Body, Depends, File, Form, Query, Response, Uploa
 
 from app.artefacts.schemas import ArtefactOut, ArtefactTextOut, QuestionCoMapIn, QuestionIn, QuestionOut
 from app.artefacts.service import ArtefactService
-from app.db.enums import ArtefactKind, ExtractionStatus
-from app.deps import DbDep, UserDep, uploads_rate_limit
+from app.db.enums import ArtefactKind, ExtractionStatus, Permission
+from app.deps import DbDep, UserDep, require_permission, uploads_rate_limit
 from app.schemas import ERROR_RESPONSES
 
 router = APIRouter(tags=["artefacts"])
+WRITE = [Depends(require_permission(Permission.artefacts_write))]
 
 
 @router.post(
@@ -25,7 +26,7 @@ router = APIRouter(tags=["artefacts"])
         "until `status` is `done` or `failed`. Supported kinds in this build: `question_paper`, `syllabus`."
     ),
     responses={**ERROR_RESPONSES, 413: {"description": "FILE_TOO_LARGE"}, 415: {"description": "UNSUPPORTED_FILE_TYPE"}},
-    dependencies=[Depends(uploads_rate_limit)],
+    dependencies=[Depends(require_permission(Permission.artefacts_write)), Depends(uploads_rate_limit)],
 )
 async def upload_artefact(
     course_id: uuid.UUID,
@@ -72,6 +73,7 @@ async def get_artefact_text(artefact_id: uuid.UUID, db: DbDep, user: UserDep) ->
     summary="Delete an artefact",
     description="`409 ARTEFACT_IN_USE` if a completed run references it.",
     responses=ERROR_RESPONSES,
+    dependencies=WRITE,
 )
 async def delete_artefact(artefact_id: uuid.UUID, db: DbDep, user: UserDep) -> Response:
     await ArtefactService(db, user).delete(artefact_id)
@@ -84,6 +86,7 @@ async def delete_artefact(artefact_id: uuid.UUID, db: DbDep, user: UserDep) -> R
     status_code=status.HTTP_202_ACCEPTED,
     summary="Re-run extraction",
     responses=ERROR_RESPONSES,
+    dependencies=WRITE,
 )
 async def reextract(artefact_id: uuid.UUID, db: DbDep, user: UserDep) -> ArtefactOut:
     return await ArtefactService(db, user).reextract(artefact_id)
@@ -100,6 +103,7 @@ async def questions(artefact_id: uuid.UUID, db: DbDep, user: UserDep) -> list[Qu
     summary="Confirm/edit extracted questions (replace-all)",
     description="The faculty confirmation step. Items without `id` are inserted; omitted existing questions are deleted.",
     responses=ERROR_RESPONSES,
+    dependencies=WRITE,
 )
 async def replace_questions(
     artefact_id: uuid.UUID, db: DbDep, user: UserDep, items: list[QuestionIn] = Body(max_length=200)
@@ -113,6 +117,7 @@ async def replace_questions(
     summary="Set faculty question→CO mapping",
     description="Faculty-confirmed mapping (source=faculty) overrides AI mapping for the listed questions.",
     responses=ERROR_RESPONSES,
+    dependencies=WRITE,
 )
 async def set_co_map(
     artefact_id: uuid.UUID, db: DbDep, user: UserDep, items: list[QuestionCoMapIn] = Body(max_length=200)
