@@ -115,4 +115,8 @@ class AuthService:
     async def change_password(self, user: Profile, current: str, new: str) -> None:
         if not verify_password(current, user.password_hash):
             raise Unauthenticated("Current password is incorrect")
+        if current == new:
+            raise ApiError("VALIDATION_ERROR", 422, "New password must be different from current password")
         user.password_hash = hash_password(new)
+        user.must_change_password = False
+        await self.db.flush()

@@ -74,10 +74,15 @@ export function AssistantWidget() {
     return (
       <Button
         onClick={() => setOpen(true)}
-        className="fixed bottom-5 right-5 z-40 h-12 rounded-full px-4 shadow-lg"
+        className="fixed bottom-5 right-5 z-40 h-12 rounded-full px-5 shadow-xl hover:shadow-2xl transition-all duration-fast hover:scale-105 active:scale-95 bg-gradient-to-r from-primary to-primary/90 text-primary-foreground font-semibold flex items-center gap-2 group"
         aria-label="Open assistant"
       >
-        <MessageSquare aria-hidden /> Assistant
+        <MessageSquare className="h-5 w-5 transition-transform duration-fast group-hover:rotate-6" aria-hidden />
+        <span>Assistant</span>
+        <span className="relative flex h-2 w-2">
+          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary-foreground opacity-75"></span>
+          <span className="relative inline-flex rounded-full h-2 w-2 bg-primary-foreground"></span>
+        </span>
       </Button>
     );
   }
@@ -86,10 +91,10 @@ export function AssistantWidget() {
     <section
       role="dialog"
       aria-label="Faculty Copilot assistant"
-      className="fixed bottom-5 right-5 z-40 flex h-[min(640px,calc(100dvh-2.5rem))] w-[min(420px,calc(100vw-2.5rem))] flex-col overflow-hidden rounded-xl border bg-card shadow-xl"
+      className="fixed bottom-5 right-5 z-40 flex h-[min(640px,calc(100dvh-2.5rem))] w-[min(420px,calc(100vw-2.5rem))] flex-col overflow-hidden rounded-2xl border border-border/80 bg-card/95 backdrop-blur-xl shadow-2xl ring-1 ring-black/5 dark:ring-white/10 animate-fade-in"
     >
-      <header className="flex items-center gap-2 border-b px-4 py-3">
-        <div className="flex h-8 w-8 items-center justify-center rounded-md bg-primary text-primary-foreground">
+      <header className="flex items-center gap-2 border-b border-border/70 px-4 py-3 bg-muted/30">
+        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground shadow-xs">
           <Bot className="h-4 w-4" aria-hidden />
         </div>
         <div className="min-w-0 flex-1 leading-tight">
@@ -112,7 +117,7 @@ export function AssistantWidget() {
             <p>I can do anything you can do here: create courses, upload and analyse papers, run exam audits, accept or dismiss findings, export reports.</p>
             <div className="flex flex-wrap gap-2">
               {SUGGESTIONS.map((s) => (
-                <button key={s} type="button" onClick={() => void send(s)} className="rounded-full border px-3 py-1 text-xs hover:bg-muted">
+                <button key={s} type="button" onClick={() => void send(s)} className="rounded-full border border-border/70 px-3 py-1 text-xs hover:bg-muted transition-all active:scale-95">
                   {s}
                 </button>
               ))}

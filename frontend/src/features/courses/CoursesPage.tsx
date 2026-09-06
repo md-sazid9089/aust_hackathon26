@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input, Field } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { preloadCourse } from '@/router';
 import { Card } from '@/components/ui/card';
 
 function NewCourseDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (v: boolean) => void }) {
@@ -117,8 +118,19 @@ export function CoursesPage() {
           <ul className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
             {d.items.map((c) => (
               <li key={c.id}>
-                <Card className="group h-full transition-[border-color,box-shadow] duration-fast hover:border-primary/60 hover:shadow-md">
-                  <Link to={`/courses/${c.id}`} onMouseEnter={() => prefetch(c.id)} onFocus={() => prefetch(c.id)} className="flex h-full flex-col p-5 focus-visible:outline-none">
+                <Card className="group h-full transition-all duration-fast hover-lift hover:border-primary/60 hover:shadow-lg">
+                  <Link
+                    to={`/courses/${c.id}`}
+                    onMouseEnter={() => {
+                      prefetch(c.id);
+                      preloadCourse();
+                    }}
+                    onFocus={() => {
+                      prefetch(c.id);
+                      preloadCourse();
+                    }}
+                    className="flex h-full flex-col p-5 focus-visible:outline-none"
+                  >
                     <div className="flex items-start justify-between gap-2">
                       <p className="font-mono text-sm font-semibold text-primary">{c.code}</p>
                       {c.is_demo && <Badge variant="secondary">Demo</Badge>}
@@ -131,7 +143,7 @@ export function CoursesPage() {
                       <div><dt className="text-muted-foreground">Runs</dt><dd className="font-semibold tabular">{c.counts?.runs ?? 0}</dd></div>
                     </dl>
                     <span className="mt-auto flex items-center gap-1 pt-4 text-sm font-semibold text-primary">
-                      Open <ArrowRight className="h-4 w-4 transition-transform duration-fast group-hover:translate-x-0.5" aria-hidden />
+                      Open <ArrowRight className="h-4 w-4 transition-transform duration-fast group-hover:translate-x-1" aria-hidden />
                     </span>
                   </Link>
                 </Card>

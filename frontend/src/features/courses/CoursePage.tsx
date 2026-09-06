@@ -13,6 +13,7 @@ import { EditableTable, type Column } from '@/components/data/EditableTable';
 import { ArtefactUploader } from '@/components/domain/ArtefactUploader';
 import { StatusBadge } from '@/components/domain/RunProgress';
 import { BLOOM_LABEL, BLOOM_ORDER, MODULE_DESC, MODULE_LABEL, MODULE_PATH, cn, formatDate } from '@/lib/format';
+import { preloadNewRun, preloadRun } from '@/router';
 
 const MODULE_ICON = { exam_audit: ClipboardCheck, attainment: Target, syllabus_check: GitCompare, calibration: Scale } as const;
 
@@ -154,7 +155,13 @@ function RunsList({ courseId }: { courseId: string }) {
                 <TableCell className="text-right tabular">{Math.round(r.progress_pct)}%</TableCell>
                 <TableCell className="text-right">
                   <Button asChild variant="ghost" size="sm">
-                    <Link to={`/courses/${courseId}/${MODULE_PATH[r.module]}/${r.id}`}>Open <ArrowRight aria-hidden /></Link>
+                    <Link
+                      to={`/courses/${courseId}/${MODULE_PATH[r.module]}/${r.id}`}
+                      onMouseEnter={preloadRun}
+                      onFocus={preloadRun}
+                    >
+                      Open <ArrowRight aria-hidden />
+                    </Link>
                   </Button>
                 </TableCell>
               </TableRow>
@@ -188,11 +195,16 @@ export function CoursePage() {
                 const Icon = MODULE_ICON[m];
                 return (
                   <li key={m}>
-                    <Link to={`/courses/${id}/${MODULE_PATH[m]}/new`} className="group flex h-full flex-col gap-2 rounded-lg border bg-card p-4 transition-[border-color,box-shadow] duration-fast hover:border-primary/60 hover:shadow-md">
-                      <span className="flex h-9 w-9 items-center justify-center rounded-md bg-primary/10 text-primary"><Icon className="h-5 w-5" aria-hidden /></span>
+                    <Link
+                      to={`/courses/${id}/${MODULE_PATH[m]}/new`}
+                      onMouseEnter={preloadNewRun}
+                      onFocus={preloadNewRun}
+                      className="group flex h-full flex-col gap-2 rounded-xl border bg-card p-4 transition-all duration-fast hover-lift hover:border-primary/60 hover:shadow-md"
+                    >
+                      <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10 text-primary"><Icon className="h-5 w-5" aria-hidden /></span>
                       <span className="font-semibold">{MODULE_LABEL[m]}</span>
                       <span className="text-sm text-muted-foreground">{MODULE_DESC[m]}</span>
-                      <span className="mt-auto flex items-center gap-1 pt-1 text-sm font-semibold text-primary">Start <ArrowRight className="h-4 w-4 transition-transform duration-fast group-hover:translate-x-0.5" aria-hidden /></span>
+                      <span className="mt-auto flex items-center gap-1 pt-1 text-sm font-semibold text-primary">Start <ArrowRight className="h-4 w-4 transition-transform duration-fast group-hover:translate-x-1" aria-hidden /></span>
                     </Link>
                   </li>
                 );

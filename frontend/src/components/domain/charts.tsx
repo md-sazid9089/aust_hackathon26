@@ -52,12 +52,12 @@ export function BarWithTable({
       {view === 'chart' ? (
         <div style={{ height }} role="img" aria-label={`${title}: ${data.map((d) => `${d.label} ${fmt(d.value)}`).join(', ')}`}>
           <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={data} margin={{ top: 20, right: 8, left: 0, bottom: 0 }}>
+            <BarChart data={data} margin={{ top: 20, right: 16, left: 0, bottom: 0 }}>
               <CartesianGrid vertical={false} stroke="hsl(var(--border))" />
               <XAxis dataKey="label" tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 13 }} axisLine={false} tickLine={false} />
               <YAxis tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 13 }} axisLine={false} tickLine={false} width={36} tickFormatter={(v: number) => `${v}${unit}`} />
               <RTooltip cursor={{ fill: 'hsl(var(--muted))' }} contentStyle={{ background: 'hsl(var(--popover))', border: '1px solid hsl(var(--border))', borderRadius: 8, color: 'hsl(var(--popover-foreground))', fontSize: 14 }} formatter={(v: number) => fmt(v)} />
-              {reference !== undefined && <ReferenceLine y={reference} stroke="hsl(var(--foreground))" strokeDasharray="4 4" label={{ value: `target ${reference}${unit}`, position: 'insideTopRight', fill: 'hsl(var(--muted-foreground))', fontSize: 12 }} />}
+              {reference !== undefined && <ReferenceLine y={reference} stroke="hsl(var(--foreground))" strokeDasharray="4 4" label={{ value: `target ${reference}${unit}`, position: 'insideBottomLeft', fill: 'hsl(var(--foreground))', fontSize: 12, fontWeight: 600 }} />}
               <Bar dataKey="value" name={valueLabel} radius={[4, 4, 0, 0]} label={{ position: 'top', fill: 'hsl(var(--foreground))', fontSize: 13, formatter: (v: number) => fmt(v) }} isAnimationActive={false}>
                 {data.map((d, i) => <Cell key={i} fill={TONE[d.tone ?? 'neutral']} />)}
               </Bar>

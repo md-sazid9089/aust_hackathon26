@@ -11,7 +11,7 @@ export function SyllabusCheckResults({ run, findings, readOnly }: { run: Run; fi
   return (
     <div className="flex flex-col gap-6">
       <section aria-label="Summary" className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-        <Stat label="Overlapping topics" value={`${Math.round(s.overlap_pct)}%`} hint="Share of syllabus topics with similarity ≥ 0.8" />
+        <Stat label="Overlapping topics" value={`${Math.round(s.overlap_pct)}%`} hint="Share of this syllabus's topics judged to overlap another course" />
         <Stat label="Matched pairs" value={s.matrix.length} hint={`Across ${courses.length} course${courses.length === 1 ? '' : 's'}`} />
         <Stat label="Prerequisite links" value={s.matrix.filter((m) => m.relation === 'prerequisite').length} hint="Not counted as overlap" />
         <Stat label="Open findings" value={findings.filter((f) => f.status === 'open').length} hint={`${findings.filter((f) => f.status === 'accepted').length} accepted`} />

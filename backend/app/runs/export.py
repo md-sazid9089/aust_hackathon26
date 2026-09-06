@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import UTC, datetime
 
 from app.db.models import Finding, Run
 
@@ -66,5 +66,5 @@ def render_markdown(run: Run, findings: list[Finding], *, course_code: str, cour
         if f.evidence_snippet:
             lines += ["- Evidence:", "", *(f"  > {ln}" for ln in f.evidence_snippet.splitlines())]
         lines.append("")
-    lines += ["---", f"_Generated {datetime.now().isoformat(timespec='seconds')} by Faculty Copilot. AI findings are advisory; decisions recorded above were made by faculty._"]
+    lines += ["---", f"_Generated {datetime.now(UTC).isoformat(timespec='seconds')} by Faculty Copilot. AI findings are advisory; decisions recorded above were made by faculty._"]
     return "\n".join(lines)

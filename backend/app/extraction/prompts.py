@@ -19,8 +19,9 @@ EXTRACT_QUESTIONS_SYSTEM = (
 Guidance:
 - Labels follow the paper: main questions '1', '2'; sub-parts '1(a)', '1(b)'; deeper parts '1(a)(i)'. Normalise to that
   form. Convert Bangla digits (১২ → 12) and Bangla part letters (ক, খ, গ → a, b, c) in the label only; keep the text as printed.
-- Emit the smallest gradable unit: if a main question only introduces sub-parts, do not emit it separately. If a main
-  question has its own text AND sub-parts, emit the main question with marks 0 and each sub-part with its own marks.
+- Emit the smallest gradable unit. Never emit a main question that only introduces sub-parts (no marks of its own, no
+  task of its own). Emit a main question alongside its sub-parts ONLY if it carries its own marks or a task that is not
+  repeated in the sub-parts (e.g. a shared scenario paragraph is NOT a task).
 - Marks usually appear as '[5]', '(5 marks)', '5' at the end of the line, or in a right-hand column. Compound forms:
   '2×5=10' or '5+5' mean the total for that unit (10); '2 × 5' next to 'Answer any two' means 5 each. If a mark is printed
   once for a group of sub-parts, divide equally only when the paper says 'each'; otherwise put the group total on the

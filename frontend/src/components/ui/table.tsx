@@ -42,7 +42,7 @@ export { Table, TableHeader, TableBody, TableHead, TableRow, TableCell, TableCap
 
 /* ---------- Skeleton ---------- */
 export function Skeleton({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) {
-  return <div className={cn('animate-pulse rounded-md bg-muted', className)} aria-hidden {...props} />;
+  return <div className={cn('animate-shimmer rounded-md bg-muted/60', className)} aria-hidden {...props} />;
 }
 
 /* ---------- Progress ---------- */
@@ -54,9 +54,12 @@ export function Progress({ value, label, className }: { value: number; label?: s
       aria-valuemax={100}
       aria-valuenow={Math.round(value)}
       aria-label={label}
-      className={cn('h-2 w-full overflow-hidden rounded-full bg-muted', className)}
+      className={cn('h-2 w-full overflow-hidden rounded-full bg-muted/80', className)}
     >
-      <div className="h-full bg-primary transition-[width] duration-300 ease-out" style={{ width: `${Math.min(100, Math.max(0, value))}%` }} />
+      <div
+        className="h-full bg-gradient-to-r from-primary via-brand to-primary bg-[length:200%_100%] animate-shimmer transition-[width] duration-500 ease-out"
+        style={{ width: `${Math.min(100, Math.max(0, value))}%` }}
+      />
     </div>
   );
 }

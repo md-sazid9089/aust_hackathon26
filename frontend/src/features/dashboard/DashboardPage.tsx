@@ -7,6 +7,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 
+import { preloadCourse, preloadRun } from '@/router';
+
 export function DashboardPage() {
   const q = useDashboard();
   return (
@@ -15,7 +17,7 @@ export function DashboardPage() {
       <QueryBoundary
         query={q}
         isEmpty={(d) => d.courses.length === 0}
-        empty={<EmptyState icon={LayoutDashboard} title="Nothing to show yet" description="Run an exam audit or attainment analysis and the results will appear here." action={<Button asChild><Link to="/courses">Go to courses</Link></Button>} />}
+        empty={<EmptyState icon={LayoutDashboard} title="Nothing to show yet" description="Run an exam audit or attainment analysis and the results will appear here." action={<Button asChild><Link to="/courses" onMouseEnter={preloadCourse} onFocus={preloadCourse}>Go to courses</Link></Button>} />}
       >
         {(d) => (
           <div className="flex flex-col gap-6">
@@ -42,7 +44,12 @@ export function DashboardPage() {
                       <TableCell><span className="font-mono font-semibold">{c.code}</span> <span className="text-muted-foreground">{c.title}</span></TableCell>
                       <TableCell>
                         {c.last_exam_audit ? (
-                          <Link to={`/courses/${c.course_id}/exam-audit/${c.last_exam_audit.run_id}`} className="underline-offset-4 hover:underline">
+                          <Link
+                            to={`/courses/${c.course_id}/exam-audit/${c.last_exam_audit.run_id}`}
+                            onMouseEnter={preloadRun}
+                            onFocus={preloadRun}
+                            className="underline-offset-4 hover:underline"
+                          >
                             <Badge variant={c.last_exam_audit.coverage_pct >= 80 ? 'success' : c.last_exam_audit.coverage_pct >= 60 ? 'medium' : 'high'}>{Math.round(c.last_exam_audit.coverage_pct)}% coverage</Badge>
                           </Link>
                         ) : <span className="text-muted-foreground">—</span>}
@@ -50,13 +57,22 @@ export function DashboardPage() {
                       <TableCell className="text-right tabular">{c.last_exam_audit?.open_findings ?? '—'}</TableCell>
                       <TableCell>
                         {c.last_attainment ? (
-                          <Link to={`/courses/${c.course_id}/attainment/${c.last_attainment.run_id}`} className="underline-offset-4 hover:underline">
+                          <Link
+                            to={`/courses/${c.course_id}/attainment/${c.last_attainment.run_id}`}
+                            onMouseEnter={preloadRun}
+                            onFocus={preloadRun}
+                            className="underline-offset-4 hover:underline"
+                          >
                             <Badge variant={c.last_attainment.cos_met === c.last_attainment.cos_total ? 'success' : 'medium'}>{c.last_attainment.cos_met}/{c.last_attainment.cos_total} COs</Badge>
                           </Link>
                         ) : <span className="text-muted-foreground">—</span>}
                       </TableCell>
                       <TableCell className="text-right">
-                        <Button asChild variant="ghost" size="sm"><Link to={`/courses/${c.course_id}`}>Open <ArrowRight aria-hidden /></Link></Button>
+                        <Button asChild variant="ghost" size="sm">
+                          <Link to={`/courses/${c.course_id}`} onMouseEnter={preloadCourse} onFocus={preloadCourse}>
+                            Open <ArrowRight aria-hidden />
+                          </Link>
+                        </Button>
                       </TableCell>
                     </TableRow>
                   ))}

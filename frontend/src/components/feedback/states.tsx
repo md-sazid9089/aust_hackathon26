@@ -72,10 +72,10 @@ export function ErrorState({ error, onRetry, title = 'Something went wrong', cla
 
 export function LoadingState({ rows = 4, label = 'Loading', className }: { rows?: number; label?: string; className?: string }) {
   return (
-    <div className={cn('flex flex-col gap-3', className)} role="status" aria-live="polite" aria-label={label}>
+    <div className={cn('flex flex-col gap-3 animate-fade-in', className)} role="status" aria-live="polite" aria-label={label}>
       <span className="sr-only">{label}…</span>
       {Array.from({ length: rows }).map((_, i) => (
-        <Skeleton key={i} className={cn('h-10 w-full', i === 0 && 'h-8 w-1/3')} />
+        <Skeleton key={i} className={cn('h-10 w-full rounded-lg', i === 0 && 'h-8 w-1/3')} />
       ))}
     </div>
   );

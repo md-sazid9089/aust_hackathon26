@@ -106,10 +106,14 @@ async def _extract_questions(db, artefact: Artefact, text: str, ctx: CallContext
     order = 0
     src = " ".join(text.lower().split())
     suspicious: list[str] = []
+    labels = {"".join(q.number.split()) for q in out.questions}
     for q in out.questions:
         number = "".join(q.number.split())
         body = q.text.strip()
         if not number or not body or number in seen:
+            continue
+        # A zero-mark parent whose sub-parts are also listed is a heading, not a gradable unit.
+        if float(q.marks) <= 0 and any(lbl != number and lbl.startswith(number) and not lbl[len(number)].isdigit() for lbl in labels):
             continue
         seen.add(number)
         marks = float(q.marks)

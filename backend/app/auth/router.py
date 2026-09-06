@@ -47,6 +47,7 @@ def profile_out(user: Profile) -> ProfileOut:
         full_name=user.full_name,
         role=user.role.value,
         is_active=user.is_active,
+        must_change_password=bool(getattr(user, "must_change_password", False)),
         created_at=user.created_at,
         permissions=permissions_for(user.role),
         dashboards=dashboards_for(user.role),

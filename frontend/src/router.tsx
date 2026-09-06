@@ -1,17 +1,17 @@
 import { lazy, Suspense, type ComponentType } from 'react';
 import { createBrowserRouter, Link, Navigate, RouterProvider, useRouteError } from 'react-router-dom';
-import { FileQuestion, Loader2 } from 'lucide-react';
+import { FileQuestion } from 'lucide-react';
 import { RequireAuth, RequireRole } from '@/auth/guards';
 import { AppShell } from '@/components/layout/AppShell';
 import { EmptyState, ErrorState } from '@/components/feedback/states';
 import { Button } from '@/components/ui/button';
 import { LoginPage } from '@/features/auth/LoginPage';
-import { CoursesPage } from '@/features/courses/CoursesPage';
 import { MODULE_PATH } from '@/lib/format';
 import type { RunModule } from '@/lib/types/api';
 
-// Route-level code splitting: only login + course list ship in the initial bundle.
+// Route-level code splitting: only login ships in the initial bundle.
 const LandingPage = lazy(() => import('@/features/landing/LandingPage'));
+const CoursesPage = lazy(() => import('@/features/courses/CoursesPage').then((m) => ({ default: m.CoursesPage })));
 const CoursePage = lazy(() => import('@/features/courses/CoursePage').then((m) => ({ default: m.CoursePage })));
 const NewRunPage = lazy(() => import('@/features/runs/NewRunPage').then((m) => ({ default: m.NewRunPage })));
 const RunPage = lazy(() => import('@/features/runs/RunPage').then((m) => ({ default: m.RunPage })));
@@ -24,11 +24,46 @@ const AdminUsagePage = lazy(() => adminPages().then((m) => ({ default: m.AdminUs
 const AdminSeedPage = lazy(() => adminPages().then((m) => ({ default: m.AdminSeedPage })));
 const AdminDepartmentPage = lazy(() => adminPages().then((m) => ({ default: m.AdminDepartmentPage })));
 
-function PageFallback() {
+import { Skeleton } from '@/components/ui/table';
+
+// Route preloaders for instant zero-latency navigation on hover/focus
+export const preloadLanding = () => import('@/features/landing/LandingPage');
+export const preloadCourses = () => import('@/features/courses/CoursesPage');
+export const preloadCourse = () => import('@/features/courses/CoursePage');
+export const preloadNewRun = () => import('@/features/runs/NewRunPage');
+export const preloadRun = () => import('@/features/runs/RunPage');
+export const preloadCompare = () => import('@/features/runs/ComparePage');
+export const preloadDashboard = () => import('@/features/dashboard/DashboardPage');
+export const preloadAdmin = () => import('@/features/admin/AdminPages');
+
+export function PageFallback() {
   return (
-    <div className="flex min-h-[40vh] items-center justify-center text-muted-foreground" role="status" aria-live="polite">
-      <Loader2 className="h-5 w-5 animate-spin" aria-hidden />
-      <span className="sr-only">Loading</span>
+    <div className="mx-auto max-w-7xl space-y-6 p-4 sm:p-6 lg:p-8 animate-fade-in" role="status" aria-live="polite">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="space-y-2">
+          <Skeleton className="h-8 w-48 sm:w-64" />
+          <Skeleton className="h-4 w-72 sm:w-96" />
+        </div>
+        <Skeleton className="h-10 w-28 rounded-lg" />
+      </div>
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        {[1, 2, 3, 4].map((i) => (
+          <div key={i} className="rounded-xl border bg-card/60 p-5 shadow-sm space-y-3">
+            <Skeleton className="h-4 w-20" />
+            <Skeleton className="h-8 w-32" />
+            <Skeleton className="h-3 w-40" />
+          </div>
+        ))}
+      </div>
+      <div className="rounded-xl border bg-card/60 p-6 shadow-sm space-y-4">
+        <Skeleton className="h-6 w-40" />
+        <div className="space-y-3 pt-2">
+          <Skeleton className="h-12 w-full rounded-lg" />
+          <Skeleton className="h-12 w-full rounded-lg" />
+          <Skeleton className="h-12 w-full rounded-lg" />
+        </div>
+      </div>
+      <span className="sr-only">Loading page...</span>
     </div>
   );
 }
@@ -73,7 +108,7 @@ export const router = createBrowserRouter([
           {
             element: <RequireRole role="faculty" />,
             children: [
-              { path: '/courses', element: <CoursesPage /> },
+              { path: '/courses', element: page(CoursesPage) },
               { path: '/dashboard', element: page(DashboardPage) },
               { path: '/courses/:id', element: page(CoursePage) },
               { path: '/courses/:id/exam-audit/compare', element: page(ComparePage) },

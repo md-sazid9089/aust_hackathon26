@@ -55,6 +55,7 @@ class ProfileOut(ApiModel):
     full_name: str | None
     role: str
     is_active: bool
+    must_change_password: bool = False
     created_at: datetime
     permissions: list[str] = Field(default_factory=list)
     dashboards: list[str] = Field(default_factory=list)

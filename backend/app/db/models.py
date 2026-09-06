@@ -78,6 +78,9 @@ class Profile(Base, TimestampMixin):
     is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
     # Local sign-in only (AUTH_MODE=local); NULL for Supabase/dev users. PBKDF2 string, see auth/passwords.py.
     password_hash: Mapped[str | None] = mapped_column(Text)
+    must_change_password: Mapped[bool] = mapped_column(
+        Boolean, default=False, server_default=text("false"), nullable=False
+    )
     last_login_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
 
 
