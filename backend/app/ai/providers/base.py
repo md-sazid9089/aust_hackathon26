@@ -2,16 +2,37 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
-from typing import Any
+from typing import Any, Literal
+
+
+ErrorKind = Literal[
+    "timeout",      # client-side timeout → try the next model immediately
+    "rate_limit",   # 429 → next model (same-model retry would just burn budget)
+    "server",       # 5xx / non-JSON body → next model
+    "transport",    # connection reset, DNS… → next model
+    "malformed",    # 200 but the response shape is wrong → next model
+    "truncated",    # finish_reason=length → caller shrinks the request; never retried as-is
+    "refusal",      # model refused → final, no retry anywhere
+    "auth",         # 401/403 → final, every model shares the key
+    "bad_request",  # other 4xx → final for this model (schema/param unsupported)
+]
 
 
 class ProviderError(Exception):
-    """Transport/HTTP failure talking to the model gateway."""
+    """Transport/HTTP/model failure talking to the gateway. `kind` drives the retry policy."""
 
-    def __init__(self, message: str, *, retryable: bool = True, status: int | None = None) -> None:
+    def __init__(
+        self, message: str, *, retryable: bool = True, status: int | None = None, kind: ErrorKind = "transport"
+    ) -> None:
         super().__init__(message)
         self.retryable = retryable
         self.status = status
+        self.kind = kind
+
+    @property
+    def final(self) -> bool:
+        """No model in the fallback chain can fix this."""
+        return self.kind in ("refusal", "auth")
 
 
 @dataclass
@@ -20,6 +41,7 @@ class ChatResult:
     model: str
     tokens_in: int | None = None
     tokens_out: int | None = None
+    finish_reason: str | None = None
     raw: dict[str, Any] = field(default_factory=dict)
 
 
@@ -34,6 +56,7 @@ class AIProvider(ABC):
     """Interface every LLM backend implements. Callers never see HTTP details."""
 
     name: str = "base"
+    embed_model_name: str = "base-embed"  # canonical id stored next to vectors; a change forces re-embedding
 
     @abstractmethod
     async def chat_json(
@@ -47,6 +70,7 @@ class AIProvider(ABC):
         model: str | None = None,
         temperature: float = 0.0,
         timeout_s: float = 60.0,
+        max_completion_tokens: int | None = None,
         context: dict[str, Any] | None = None,
     ) -> ChatResult:
         """`context` is the structured payload the prompt was built from; real providers ignore it."""
