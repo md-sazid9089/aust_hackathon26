@@ -51,7 +51,8 @@ aust_hackathon26/
 ├── AGENTS.md                     # generic agent rules (points here)
 ├── CLAUDE.md                     # Claude entry point, imports AGENTS.md
 ├── PROJECT_CONTEXT.md            # this file — single source of truth
-└── architecture.md               # approved architecture: API §19, schema §21, contracts §38, plan §39, ADRs §42
+├── architecture.md               # approved architecture: API §19, schema §21, contracts §38, plan §39, ADRs §42
+└── database_implementation_plan.md  # DB engineer's ordered build plan: migrations 0001–0012, RLS matrix, seeds, tests, gates
 ```
 
 Planned, not yet created (`architecture.md` §9–10): `frontend/`, `backend/`, `database/`, `docker-compose.yml`, `.env.example`, `.github/workflows/ci.yml`.
@@ -172,4 +173,5 @@ Planned, not yet created (`architecture.md` §9–10): `frontend/`, `backend/`, 
 | 2026-09-06 | Copilot | Wrote `architecture.md` (React/FastAPI/Supabase/LangGraph/OpenRouter); filled Tech Stack, conventions, D-011–D-016 |
 | 2026-09-06 | Copilot | Merge audit vs external versioned-assessment design: provenance/copy-at-write columns, `marks_total_mismatch`, `SCORES_EXCEED_RUBRIC` (D-017, ADR-13); filled §3 stack table + env names; added `architecture.md` to §4 |
 | 2026-09-06 | Copilot | Multi-agent DB review (security/integrity/pragmatist) → ADR-14 / D-018: RLS hardening, `run_inputs` redesign, `normalize_qnum`, `target_code`, IDENTITY, phase re-sequencing, fixture plan; fixed `compute_co_attainment` signature + removed `alembic/` |
+| 2026-09-06 | Copilot | Added `database_implementation_plan.md` (user-requested): per-migration contents, RLS policy matrix, seed spec, SQL test list, phase gates, BE contracts |
 | 2026-09-06 | Copilot | `edge_cases.md`: added §14 access-pattern queries Q1–Q16 with volume/latency budgets and per-query edge cases |
