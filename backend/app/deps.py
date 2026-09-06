@@ -20,9 +20,18 @@ from app.errors import ApiError, Forbidden, Unauthenticated
 SettingsDep = Annotated[Settings, Depends(get_settings)]
 
 
-async def get_db() -> AsyncIterator[AsyncSession]:
-    """One transaction per request; commit on success, rollback on error."""
+async def get_db(request: Request) -> AsyncIterator[AsyncSession]:
+    """One transaction per request; commit on success, rollback on error.
+
+    Read requests (GET/HEAD/OPTIONS) run the connection in AUTOCOMMIT so they skip the
+    BEGIN/COMMIT round-trips — a large saving against the remote Supabase pooler. Writes
+    keep a real transaction. SQLAlchemy resets the isolation level when the connection
+    returns to the pool, so AUTOCOMMIT never leaks into a later write request.
+    """
+    read_only = request.method in ("GET", "HEAD", "OPTIONS")
     async with get_sessionmaker()() as session:
+        if read_only:
+            await session.connection(execution_options={"isolation_level": "AUTOCOMMIT"})
         try:
             yield session
             await session.commit()

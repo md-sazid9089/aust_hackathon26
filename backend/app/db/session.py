@@ -13,14 +13,16 @@ _sessionmaker: async_sessionmaker[AsyncSession] | None = None
 
 
 def _build_engine(url: str) -> AsyncEngine:
-    kwargs: dict = {"pool_pre_ping": True}
+    kwargs: dict = {}
     if url.startswith("sqlite"):
         kwargs = {}
     else:
         # Supabase transaction pooler (6543) needs no prepared-statement cache.
         kwargs["connect_args"] = {"statement_cache_size": 0}
         # Remote DB: keep warm connections so concurrent page loads don't pay a TLS handshake each.
-        kwargs.update(pool_size=10, max_overflow=10, pool_recycle=300, pool_timeout=10)
+        # No pool_pre_ping — against the remote pooler its liveness check adds ~200ms to every request;
+        # pool_recycle keeps connections fresh instead, and the frontend retries the rare stale-connection error.
+        kwargs.update(pool_size=10, max_overflow=10, pool_recycle=180, pool_timeout=10)
     engine = create_async_engine(url, **kwargs)
     if url.startswith("sqlite"):
 

@@ -21,20 +21,22 @@ type ORow = CourseOutcome & Record<string, unknown>;
 function OutcomesEditor({ courseId }: { courseId: string }) {
   const q = useOutcomes(courseId);
   const save = usePutOutcomes(courseId);
-  const [rows, setRows] = useState<ORow[]>([]);
-  useEffect(() => { if (q.data) setRows(q.data as ORow[]); }, [q.data]);
-  const dirty = JSON.stringify(rows) !== JSON.stringify(q.data ?? []);
+  // `null` = not yet synced from the server; never render or save an empty draft in that state.
+  const [draft, setDraft] = useState<ORow[] | null>(null);
+  useEffect(() => { if (q.data) setDraft(q.data as ORow[]); }, [q.data]);
+  const rows = draft ?? ((q.data as ORow[] | undefined) ?? []);
+  const dirty = draft !== null && JSON.stringify(draft) !== JSON.stringify(q.data ?? []);
   const cols: Column<ORow>[] = [
     { key: 'code', label: 'Code', width: '90px' },
     { key: 'text', label: 'Outcome statement', type: 'textarea' },
     { key: 'bloom_level', label: 'Bloom', type: 'select', width: '160px', options: BLOOM_ORDER.map((b) => ({ value: b, label: BLOOM_LABEL[b] })) },
     { key: 'weight', label: 'Weight', type: 'number', width: '100px' },
   ];
-  if (q.isPending) return <LoadingState />;
+  if (q.isPending || (!q.isError && draft === null)) return <LoadingState />;
   if (q.isError) return <ErrorState error={q.error} onRetry={() => q.refetch()} />;
   return (
     <div className="flex flex-col gap-3">
-      <EditableTable rows={rows} columns={cols} onChange={setRows} rowLabel="outcome" newRow={() => ({ id: `new-${Date.now()}`, code: `CO${rows.length + 1}`, text: '', bloom_level: null, weight: 1 })} />
+      <EditableTable rows={rows} columns={cols} onChange={setDraft} rowLabel="outcome" newRow={() => ({ id: `new-${Date.now()}`, code: `CO${rows.length + 1}`, text: '', bloom_level: null, weight: 1 })} />
       <div className="flex justify-end">
         <Button
           disabled={!dirty}
@@ -53,14 +55,16 @@ function CoPoEditor({ courseId }: { courseId: string }) {
   const pos = useProgramOutcomes();
   const map = useCoPoMap(courseId);
   const save = usePutCoPoMap(courseId);
-  const [cells, setCells] = useState<CoPoCell[]>([]);
-  useEffect(() => { if (map.data) setCells(map.data); }, [map.data]);
+  const [draft, setDraft] = useState<CoPoCell[] | null>(null);
+  useEffect(() => { if (map.data) setDraft(map.data); }, [map.data]);
+  const cells = draft ?? map.data ?? [];
+  const dirty = draft !== null && JSON.stringify(draft) !== JSON.stringify(map.data ?? []);
   const get = (co: string, po: string) => cells.find((c) => c.co_id === co && c.po_id === po)?.strength ?? 0;
   const cycle = (co: string, po: string) => {
     const next = ((get(co, po) + 1) % 4) as CoPoCell['strength'];
-    setCells((prev) => [...prev.filter((c) => !(c.co_id === co && c.po_id === po)), ...(next ? [{ co_id: co, po_id: po, strength: next }] : [])]);
+    setDraft((prev) => [...(prev ?? map.data ?? []).filter((c) => !(c.co_id === co && c.po_id === po)), ...(next ? [{ co_id: co, po_id: po, strength: next }] : [])]);
   };
-  if (cos.isPending || pos.isPending || map.isPending) return <LoadingState />;
+  if (cos.isPending || pos.isPending || map.isPending || (!map.isError && draft === null)) return <LoadingState />;
   if (cos.isError || pos.isError || map.isError) return <ErrorState error={cos.error ?? pos.error ?? map.error} onRetry={() => { void cos.refetch(); void pos.refetch(); void map.refetch(); }} />;
   if (cos.data.length === 0) return <EmptyState title="Add course outcomes first" description="The CO→PO map needs at least one CO." />;
   return (
@@ -106,7 +110,7 @@ function CoPoEditor({ courseId }: { courseId: string }) {
         </TableBody>
       </Table>
       <div className="flex justify-end">
-        <Button loading={save.isPending} onClick={() => save.mutate(cells, { onSuccess: () => toast.success('CO→PO map saved') })}>
+        <Button disabled={!dirty} loading={save.isPending} onClick={() => save.mutate(cells, { onSuccess: () => toast.success('CO→PO map saved') })}>
           <Save aria-hidden /> Save mapping
         </Button>
       </div>
