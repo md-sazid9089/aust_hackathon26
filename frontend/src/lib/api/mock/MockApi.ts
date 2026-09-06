@@ -35,7 +35,29 @@ export class MockApi implements Api {
 
   constructor(userId: string) {
     this.me_ = F.profiles[userId];
+    this.load();
     (window as unknown as { __fcDemo: MockApi }).__fcDemo = this;
+  }
+
+  /** Finished runs survive reloads/HMR so a demo cannot lose its results. */
+  private static STORE = 'fc-mock-runs';
+  private load() {
+    try {
+      const raw = localStorage.getItem(MockApi.STORE);
+      if (!raw) return;
+      const arr = JSON.parse(raw) as RunRecord[];
+      for (const rec of arr) if (['completed', 'partial', 'failed'].includes(rec.run.status)) this.runs.set(rec.run.id, rec);
+    } catch {
+      /* ignore corrupt storage */
+    }
+  }
+  private persist() {
+    try {
+      const arr = [...this.runs.values()].filter((r) => ['completed', 'partial', 'failed'].includes(r.run.status));
+      localStorage.setItem(MockApi.STORE, JSON.stringify(arr));
+    } catch {
+      /* quota or private mode */
+    }
   }
 
   private notFound(code: string, what: string): never {
@@ -266,6 +288,7 @@ export class MockApi implements Api {
           rec.run.status = 'failed';
           rec.run.error = 'LLM_UNAVAILABLE: gateway returned 503 twice';
           rec.run.finished_at = new Date().toISOString();
+          this.persist();
           return;
         }
         this.finish(rec, 'partial');
@@ -307,6 +330,7 @@ export class MockApi implements Api {
     run.progress_pct = 100;
     run.finished_at = new Date().toISOString();
     if (status === 'partial') run.error = 'One stage failed after retry; results from completed stages are shown.';
+    this.persist();
   }
 
   async getRun(runId: string) {
@@ -348,6 +372,7 @@ export class MockApi implements Api {
         if (this.me_.role === 'admin') throw new ApiError(403, 'FORBIDDEN', 'Admins are read-only', uid('req'));
         f.status = status;
         f.decided_at = status === 'open' ? null : new Date().toISOString();
+        this.persist();
         return clone(f);
       }
     }
@@ -406,6 +431,7 @@ export class MockApi implements Api {
     const rec = this.runs.get(runId) ?? this.notFound('RUN_NOT_FOUND', 'Run');
     const s = E.suggestions(runId, coIds);
     rec.findings.push(...s);
+    this.persist();
     return clone(s);
   }
   async getAttainment(runId: string) {
@@ -463,6 +489,7 @@ export class MockApi implements Api {
   async adminDemoReset() {
     await wait(900);
     this.runs.clear();
+    this.persist();
     this.courses = clone(F.courses);
     this.artefacts = clone(F.artefacts);
     this.outcomes = clone(F.courseOutcomes);
