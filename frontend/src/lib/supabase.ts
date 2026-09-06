@@ -19,10 +19,15 @@ if (!supabaseUrl || !supabaseKey) {
  * In Faculty Assessment Copilot, Supabase JS is used strictly for Auth.
  * Business queries and mutations flow through the FastAPI backend at /api/v1.
  */
-export const supabase = createClient(supabaseUrl, supabaseKey, {
-  auth: {
-    persistSession: true,
-    autoRefreshToken: true,
-    detectSessionInUrl: true,
+// createClient throws on empty args; placeholders keep the SPA rendering when env is unset (mock mode, misconfigured deploy)
+export const supabase = createClient(
+  supabaseUrl || 'https://placeholder.supabase.co',
+  supabaseKey || 'placeholder-anon-key',
+  {
+    auth: {
+      persistSession: true,
+      autoRefreshToken: true,
+      detectSessionInUrl: true,
+    },
   },
-});
+);
