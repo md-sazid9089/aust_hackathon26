@@ -1,0 +1,33 @@
+{
+  "inputs": [
+    {
+      "id": "supabase-project-ref",
+      "type": "promptString",
+      "description": "Supabase project ref (from Project Settings → General)",
+      "password": false
+    },
+    {
+      "id": "supabase-access-token",
+      "type": "promptString",
+      "description": "Supabase personal access token (supabase.com/dashboard/account/tokens)",
+      "password": true
+    }
+  ],
+  "servers": {
+    "supabase": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@supabase/mcp-server-supabase@latest",
+        "--project-ref=${input:supabase-project-ref}"
+      ],
+      "env": {
+        "SUPABASE_ACCESS_TOKEN": "${input:supabase-access-token}"
+      }
+    },
+    "context7": {
+      "command": "npx",
+      "args": ["-y", "@context7/mcp-server"]
+    }
+  }
+}

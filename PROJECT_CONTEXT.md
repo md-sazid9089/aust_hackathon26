@@ -7,31 +7,39 @@
 
 - **Name:** aust_hackathon26 — working title **Faculty Assessment & Curriculum Copilot**
 - **Purpose:** AI tool for AUST faculty (AI Build Hackathon final, theme "AI for Academic Life"). Faculty upload syllabi, question papers, marks sheets, rubrics + answers → AI evaluates/compares → evidence-backed findings faculty accept or dismiss. AI advises; faculty decide.
-- **Status:** Requirements locked (see §12); architecture design next; no source code yet
+- **Status:** Architecture designed (`architecture.md`, v1.0); implementation not started
 - **Repository:** md-sazid9089/aust_hackathon26 (branch `main`)
 
 ## 2. Goals & Non-Goals
 
 **Goals**
+
 - Judges see: problem → input → what the AI does → useful result, live.
 - One shared Course workspace (syllabus + Course Outcomes) reused by four modules: P1 Exam Paper Auditor, P4 CO–PO Attainment Analyst, P3 Syllabus Overlap/Gap Analyzer, P2 Grading Consistency Calibrator.
 - Every finding carries rationale + evidence snippet; faculty accept/dismiss; export accepted findings.
 
 **Non-goals**
+
 - Student-facing views, LMS/Moodle integration, handwriting OCR, "ask anything" chatbot, fine-tuning, attendance/timetable, internet plagiarism checks, full academic management platform.
 
 ## 3. Tech Stack
 
-| Layer | Choice | Notes |
-|-------|--------|-------|
-| Language | _TODO (architect)_ | |
-| Frontend | _TODO (architect)_ | web app, desktop-first responsive |
-| Backend | _TODO (architect)_ | server-side LLM calls, SSE progress |
-| Database / Auth / Storage | **Supabase** (Postgres + pgvector, Auth, Storage) | D-004; RLS on `owner_id` |
-| AI | Hosted LLM with JSON-schema output + embeddings (vendor TBD, A-005) | D-007 |
-| Tooling | _TODO (architect)_ | package manager, linter, test runner |
+| Layer                     | Choice                                                              | Notes                                |
+| ------------------------- | ------------------------------------------------------------------- | ------------------------------------ |
+| Language                  | _TODO (architect)_                                                  |                                      |
+| Frontend                  | _TODO (architect)_                                                  | web app, desktop-first responsive    |
+| Backend                   | _TODO (architect)_                                                  | server-side LLM calls, SSE progress  |
+| Database / Auth / Storage | **Supabase** (Postgres + pgvector, Auth, Storage)                   | D-004; RLS on `owner_id`             |
+| AI                        | Hosted LLM with JSON-schema output + embeddings (vendor TBD, A-005) | D-007                                |
+| Tooling                   | _TODO (architect)_                                                  | package manager, linter, test runner |
 
 Environment variables (names only): `SUPABASE_URL`, `SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, `LLM_API_KEY`.
+
+**MCP servers (dev tooling, `.vscode/mcp.json`):**
+
+- `supabase` — schema inspection, SQL, migrations, RLS/advisor checks against the project DB. Prompts for project ref + personal access token on first start (never stored in the file).
+- `context7` — version-accurate docs lookup for whatever frontend/backend libs the architect picks. No secrets.
+- Add nothing else unless needed (keep ≤5 servers). Playwright MCP is optional later for E2E of the demo flow.
 
 ## 4. Project Structure
 
@@ -39,6 +47,8 @@ Environment variables (names only): `SUPABASE_URL`, `SUPABASE_ANON_KEY`, `SUPABA
 aust_hackathon26/
 ├── .github/
 │   └── copilot-instructions.md   # Copilot-specific rules (points here)
+├── .vscode/
+│   └── mcp.json                  # MCP servers: supabase, context7 (secrets via ${input:…})
 ├── AGENTS.md                     # generic agent rules (points here)
 ├── CLAUDE.md                     # Claude entry point, imports AGENTS.md
 └── PROJECT_CONTEXT.md            # this file — single source of truth
@@ -47,48 +57,67 @@ aust_hackathon26/
 ## 5. How to Run
 
 ```bash
-# install
-# TODO
-
-# dev
-# TODO
-
-# test
-# TODO
+# planned (architecture.md §31, §5) — not yet scaffolded
+# database: supabase start (or linked project) && database/scripts/apply.sh && psql -f database/seeds/seed_admin.sql
+# backend:  cd backend && uv sync && uvicorn app.main:app --reload   (port 8000)
+# frontend: cd frontend && npm i && npm run dev                      (port 5173)
+# all:      docker compose up   (optional profile `free` starts freellmpool on 127.0.0.1:8080)
+# test:     npm test / pytest / database/scripts/run_tests.sh
 ```
+
+**MCP server setup (once per machine, VS Code + Copilot Chat):**
+
+1. Requires Node.js ≥ 18 (`npx`). Open the repo; VS Code detects `.vscode/mcp.json` and asks to trust/start the servers — accept.
+2. `supabase` prompts for **project ref** (Supabase dashboard → Project Settings → General) and a **personal access token** (dashboard → Account → Access Tokens). Values are kept in VS Code's secret store, never in the repo.
+3. `context7` starts with no input.
+4. Check status: Command Palette → `MCP: List Servers` (restart/stop from there). Tools appear in Chat under the tools picker.
+5. Reuse guidance: ask the agent to inspect schema / write migrations via the Supabase tools rather than pasting SQL by hand; ask for library docs via Context7 before guessing APIs.
 
 ## 6. Architecture & Key Decisions
 
-| ID | Date | Decision | Why |
-|----|------|----------|-----|
-| D-001 | 2026-09-06 | Keep a single `PROJECT_CONTEXT.md` as the shared source of truth for agents | Avoids context loss between sessions and contributors |
-| D-002 | 2026-09-06 | Agent instruction files (`copilot-instructions.md`, `AGENTS.md`, `CLAUDE.md`) stay thin and only redirect to `PROJECT_CONTEXT.md` | One place to maintain; works across Copilot, Claude, and other tools |
-| D-003 | 2026-09-06 | Single unified app with a shared Course core; four modules layered in order P1 → P4 → P3 → P2 | P1/P4/P3 all reuse the same CO list; P2 has highest data-prep risk; each module droppable at demo time |
-| D-004 | 2026-09-06 | Supabase for auth, DB, storage and vector search; RLS is the authorization layer | Cheapest way to get login + pgvector in one day |
-| D-005 | 2026-09-06 | Findings are first-class rows (`status`, `rationale`, `evidence_snippet`), not JSON blobs | Enables accept/dismiss, export of accepted findings, explainability |
-| D-006 | 2026-09-06 | All arithmetic (attainment %, marks stats, divergence) is deterministic code; LLM only classifies, maps, explains | Correctness and verifiability over LLM output |
-| D-007 | 2026-09-06 | Hosted LLM API with native structured output + embeddings endpoint; vendor left to architect | One-day build; reliability > token cost |
-| D-008 | 2026-09-06 | Tiered build order (Tier 0–3, §12); Tier 3 must be droppable without core changes | User selected all optional features; brief warns against slide-only features |
-| D-009 | 2026-09-06 | Admin actor added (system + department views); role in Supabase `app_metadata.role`, enforced by RLS; admin is read-only over faculty data | User request CF-001; keeps faculty as sole decision-maker |
+| ID    | Date       | Decision                                                                                                                                     | Why                                                                                                                 |
+| ----- | ---------- | -------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------- |
+| D-001 | 2026-09-06 | Keep a single `PROJECT_CONTEXT.md` as the shared source of truth for agents                                                                  | Avoids context loss between sessions and contributors                                                               |
+| D-002 | 2026-09-06 | Agent instruction files (`copilot-instructions.md`, `AGENTS.md`, `CLAUDE.md`) stay thin and only redirect to `PROJECT_CONTEXT.md`            | One place to maintain; works across Copilot, Claude, and other tools                                                |
+| D-003 | 2026-09-06 | Single unified app with a shared Course core; four modules layered in order P1 → P4 → P3 → P2                                                | P1/P4/P3 all reuse the same CO list; P2 has highest data-prep risk; each module droppable at demo time              |
+| D-004 | 2026-09-06 | Supabase for auth, DB, storage and vector search; RLS is the authorization layer                                                             | Cheapest way to get login + pgvector in one day                                                                     |
+| D-005 | 2026-09-06 | Findings are first-class rows (`status`, `rationale`, `evidence_snippet`), not JSON blobs                                                    | Enables accept/dismiss, export of accepted findings, explainability                                                 |
+| D-006 | 2026-09-06 | All arithmetic (attainment %, marks stats, divergence) is deterministic code; LLM only classifies, maps, explains                            | Correctness and verifiability over LLM output                                                                       |
+| D-007 | 2026-09-06 | Hosted LLM API with native structured output + embeddings endpoint; vendor left to architect                                                 | One-day build; reliability > token cost                                                                             |
+| D-008 | 2026-09-06 | Tiered build order (Tier 0–3, §12); Tier 3 must be droppable without core changes                                                            | User selected all optional features; brief warns against slide-only features                                        |
+| D-009 | 2026-09-06 | Admin actor added (system + department views); role in Supabase `app_metadata.role`, enforced by RLS; admin is read-only over faculty data   | User request CF-001; keeps faculty as sole decision-maker                                                           |
+| D-010 | 2026-09-06 | Two MCP servers only: Supabase (DB/migrations/RLS from the agent) + Context7 (docs). Secrets via VS Code `${input:}` prompts, never literals | Supabase is the whole data layer, so agent-driven schema work saves the most time; more servers cost context window |
+| D-011 | 2026-09-06 | Modular monolith: FastAPI + React SPA + one Supabase Postgres; asyncio background runs with `run_events` table + SSE (no Redis/Celery) | One day, one team; queue seam kept in `RunOrchestrator.enqueue` (architecture.md ADR-01/04/10) |
+| D-012 | 2026-09-06 | Role lives in `profiles.role` (DB), not JWT claims; backend connects as `app_backend` (NOBYPASSRLS) and sets `SET LOCAL app.user_id/app.role` per tx; RLS enforces. Supersedes D-009 wording | Single source of truth; no bypass path (ADR-02/11) |
+| D-013 | 2026-09-06 | SQL-file migrations owned by DB engineer (no Alembic); ORM↔DDL parity test in CI | Clear ownership, DB marks focus (ADR-03) |
+| D-014 | 2026-09-06 | LLM via OpenAI-compatible adapter: OpenRouter primary (`require_parameters`, fallback models); freellmpool optional local proxy for free dev; `LLM_PROVIDER=mock` for tests/demo fallback | Resolves A-005; env-only switching (ADR-05) |
+| D-015 | 2026-09-06 | Embeddings `text-embedding-3-small`, `vector(1536)` fixed; pgvector HNSW cosine | Verified OpenRouter `/embeddings`; no local model download (ADR-06) |
+| D-016 | 2026-09-06 | Findings first-class table; module aggregates in `runs.summary` jsonb; numeric results in `attainment_results` / `answer_prescores` tables | Queryable for views, flexible per module (ADR-07) |
 
 ## 7. Conventions
 
-- Commits: Conventional Commits (`feat:`, `fix:`, `docs:`, `chore:` ...)
-- Branches: `feat/<name>`, `fix/<name>`
-- _TODO — code style, naming, folder rules_
+- Commits: Conventional Commits with scope `feat(fe|be|db): …`; branches `fe/<task>`, `be/<task>`, `db/<task>`; one task ID per PR; squash-merge (architecture.md §40)
+- Ownership: `frontend/**` FE, `backend/**` + compose/CI/.env.example BE, `database/**` DB. Never edit another engineer's files; contract artefacts (`backend/openapi.json`, `backend/app/db/models.py`) have single writers (§37)
+- API: `/api/v1`, error envelope `{error:{code,message,details,request_id}}`, pagination `items/page/page_size/total` (§19)
+- DB: snake_case, plural tables, uuid PKs, `created_at/updated_at`, every table RLS-enabled, FKs with explicit ON DELETE (§20–§21)
+- AI: all calls via `ai/client.structured_call`, documents wrapped by `ai/guard.wrap_untrusted`, temperature 0, every output has `rationale`
 
 ## 8. Current State / What's Done
 
 - [x] Repository initialised
 - [x] Project context + agent instructions added
 - [x] `AGENTS.md` + `CLAUDE.md` added for non-Copilot agents
+- [x] Requirements locked (§12)
+- [x] `architecture.md` written: stack, 45 sections, API contract, DB schema (24 tables, RLS, functions, views), file-level plan for 3 engineers
+- [x] `.vscode/mcp.json` with Supabase + Context7 MCP servers
 
 ## 9. Next Steps / TODO
 
 - [x] Lock requirements (Prompt 1)
-- [ ] Architecture design (Prompt 2): choose stack/LLM vendor, schema, folder structure
-- [ ] Scaffold app + Supabase project, auth, Course workspace
-- [ ] Tier 0: ingestion/extraction, P1 Exam Auditor, findings + accept/dismiss, demo seed + admin seed-reset
+- [x] Architecture design (Prompt 2) → `architecture.md`
+- [ ] Phase 0 contracts: Supabase project (Auth providers, `artefacts` bucket), `database/migrations/0001–0008`, backend Pydantic schemas + `openapi.json`
+- [ ] Phase 1 foundation: FE scaffold + auth, BE skeleton + `/me` + ORM parity, DB indexes/RLS/functions/views
+- [ ] Phase 2–3 (Tier 0): ingestion/extraction, P1 Exam Auditor, findings + accept/dismiss, demo seed → W1 live
 - [ ] Tier 1: P4, P3, P2, export, question suggestion
 - [ ] Tier 2: SSE progress, Bangla support, system-admin panel (users, runs, LLM usage)
 - [ ] Tier 3: dashboard, paper version compare, department-admin views
@@ -99,6 +128,9 @@ aust_hackathon26/
 - Demo depends on venue network (Supabase + LLM API). Keep the one-click demo seed and partial-result fallback working.
 - Scanned/image PDFs are unsupported — prompt faculty to paste text.
 - Demo data is on the critical path: 1 course, 5–6 COs, 2 past papers, 1 draft paper with deliberate gaps/duplicates, marks CSV with one weak CO, rubric + 6 typed answers × 2 graders (2 divergent). Seed both a faculty and an admin account. Cache last successful analysis JSON for the seed course as offline fallback. Watch LLM quota during the pitch.
+- Transaction pooler (6543): use `SET LOCAL` (never `SET`) for RLS vars; asyncpg `statement_cache_size=0`.
+- Supabase JWT may be ES256 (JWKS) or HS256 (legacy secret) — verify in Phase 1.
+- WeasyPrint needs system libs; run backend in Docker or accept md-only export locally.
 
 ## 12. Locked Product Scope (Prompt 1 output, 2026-09-06)
 
@@ -106,7 +138,7 @@ aust_hackathon26/
 
 **Mandatory (Core):** REQ-F-001–004 (submit artefact, AI evaluates not generates, useful result, faculty decides); REQ-F-010 Course workspace (syllabus + CO list + CO→PO map); F-011 PDF/DOCX/TXT/CSV/XLSX ingestion + paste; F-012 structured extraction (questions w/ marks, topics, COs) with faculty confirm/edit step; F-013 per-item evidence; F-014 loading/failure/empty states; F-020 login; F-021 export accepted findings (MD/PDF); F-022 accept/dismiss finding; DATA-001 persist courses/artefacts/runs/findings; NF-003 <30 s per analysis; NF-004 one-click demo seed; AI-001 JSON-schema outputs; AI-002 retry once → partial; AI-003 rationale + evidence_snippet on every finding; AI-004 deterministic arithmetic; SEC-001 untrusted-document prompt delimiting; SEC-002 keys server-side; SEC-003 upload allow-list/size cap; SEC-004 no raw-HTML rendering; SEC-005 RLS by owner_id; SEC-006 per-user rate limit; SEC-007 anonymised student IDs; SEC-008 service-role key never client-side.
 
-**P1 Exam Auditor:** F-101 extract questions; F-102 question→topic/CO map w/ confidence; F-103 coverage/uncovered/over-weighted; F-104 Bloom's level (6-level enum) + diversity; F-105 near-duplicate vs past papers (pgvector cosine, LLM confirms); F-106 marks fairness; F-107 bounded question *suggestion* for uncovered COs; F-108 diff two runs.
+**P1 Exam Auditor:** F-101 extract questions; F-102 question→topic/CO map w/ confidence; F-103 coverage/uncovered/over-weighted; F-104 Bloom's level (6-level enum) + diversity; F-105 near-duplicate vs past papers (pgvector cosine, LLM confirms); F-106 marks fairness; F-107 bounded question _suggestion_ for uncovered COs; F-108 diff two runs.
 **P4 Attainment:** F-401 marks CSV/XLSX; F-402 question→CO + CO→PO mapping (reuse P1); F-403 deterministic attainment; F-404 AI explanation + actions.
 **P3 Syllabus:** F-301 draft syllabus + comparison courses; F-302 overlap matrix; F-303 gaps/prerequisites; F-304 repositioning notes.
 **P2 Calibration:** F-201 rubric + typed answers (+ ≥2 graders' scores); F-202 divergence report + explanation; F-203 AI pre-score w/ rationale; F-204 rubric v2 proposal; NF-201 no OCR.
@@ -119,13 +151,15 @@ aust_hackathon26/
 
 **Build tiers:** T0 auth + workspace + ingestion + P1 + findings + seed · T1 P4, P3, P2, export, suggestions · T2 SSE, Bangla · T3 dashboard, compare.
 
-**Assumptions:** A-001 superseded by login; A-002 web app; A-003/A-005 hosted LLM API; A-004 module order. Open for architect: LLM vendor/model, PDF export lib, embedding dimension.
+**Assumptions:** A-001 superseded by login; A-002 web app; A-003/A-005 resolved by D-014; A-004 module order. Open for architect: none — see `architecture.md`.
 
 ## 11. Changelog
 
-| Date | Who | Change |
-|------|-----|--------|
-| 2026-09-06 | Copilot | Created PROJECT_CONTEXT.md and agent instructions |
-| 2026-09-06 | Copilot | Added AGENTS.md and CLAUDE.md pointing agents to PROJECT_CONTEXT.md |
+| Date       | Who     | Change                                                                                         |
+| ---------- | ------- | ---------------------------------------------------------------------------------------------- |
+| 2026-09-06 | Copilot | Created PROJECT_CONTEXT.md and agent instructions                                              |
+| 2026-09-06 | Copilot | Added AGENTS.md and CLAUDE.md pointing agents to PROJECT_CONTEXT.md                            |
 | 2026-09-06 | Copilot | Requirements locked: 4-module Faculty Copilot scope, Supabase, tiered build (D-003–D-008, §12) |
-| 2026-09-06 | Copilot | Added admin panel CF-001 (system + department views, D-009), demo-data critical-path notes |
+| 2026-09-06 | Copilot | Added admin panel CF-001 (system + department views, D-009), demo-data critical-path notes     |
+| 2026-09-06 | Copilot | Added `.vscode/mcp.json` (Supabase + Context7 MCP servers, D-010)                              |
+| 2026-09-06 | Copilot | Wrote `architecture.md` (React/FastAPI/Supabase/LangGraph/OpenRouter); filled Tech Stack, conventions, D-011–D-016 |
