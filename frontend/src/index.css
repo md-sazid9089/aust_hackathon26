@@ -1,0 +1,142 @@
+@import '@fontsource/atkinson-hyperlegible/400.css';
+@import '@fontsource/atkinson-hyperlegible/700.css';
+@import '@fontsource-variable/crimson-pro';
+@import '@fontsource-variable/noto-sans-bengali';
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Design tokens — see design-system/faculty-copilot/MASTER.md (DESIGN RATIONALE) */
+@layer base {
+  :root {
+    /* Scholarly navy + single amber accent (MASTER.md palette, expressed as HSL triplets) */
+    --background: 210 40% 98%;          /* #F8FAFC */
+    --foreground: 222 47% 11%;          /* #0F172A */
+    --card: 0 0% 100%;
+    --card-foreground: 222 47% 11%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 222 47% 11%;
+    --primary: 214 52% 25%;             /* #1E3A5F */
+    --primary-foreground: 0 0% 100%;
+    --secondary: 215 25% 27%;           /* #334155 */
+    --secondary-foreground: 0 0% 100%;
+    --accent: 26 91% 37%;               /* #B45309 amber — decisions only */
+    --accent-foreground: 0 0% 100%;
+    --muted: 214 35% 94%;               /* #E9EEF5 */
+    --muted-foreground: 215 19% 35%;    /* #475569 */
+    --border: 213 27% 84%;              /* #CBD5E1 */
+    --input: 213 27% 84%;
+    --ring: 214 52% 25%;
+    --destructive: 0 72% 51%;           /* #DC2626 */
+    --destructive-foreground: 0 0% 100%;
+    --success: 152 60% 30%;
+    --success-foreground: 0 0% 100%;
+
+    /* Trust encoding */
+    --measure: 214 52% 25%;             /* deterministic numbers */
+    --ai-surface: 36 60% 96%;           /* LLM explanation surface */
+    --ai-border: 26 91% 37%;
+    --ai-foreground: 24 45% 22%;
+
+    /* Severity — always paired with label + icon */
+    --sev-info: 215 25% 92%;   --sev-info-fg: 215 25% 27%;
+    --sev-low: 210 90% 93%;    --sev-low-fg: 213 70% 30%;
+    --sev-medium: 40 95% 90%;  --sev-medium-fg: 26 91% 30%;
+    --sev-high: 0 85% 94%;     --sev-high-fg: 0 72% 38%;
+
+    --radius-sm: 6px;
+    --radius: 8px;
+    --radius-lg: 12px;
+    --dur-fast: 150ms;
+    --dur: 200ms;
+    --ease: cubic-bezier(0.2, 0, 0, 1);
+  }
+
+  .dark {
+    --background: 222 40% 8%;
+    --foreground: 210 40% 96%;
+    --card: 222 35% 11%;
+    --card-foreground: 210 40% 96%;
+    --popover: 222 35% 11%;
+    --popover-foreground: 210 40% 96%;
+    --primary: 213 70% 72%;
+    --primary-foreground: 222 47% 11%;
+    --secondary: 215 20% 22%;
+    --secondary-foreground: 210 40% 96%;
+    --accent: 32 95% 62%;
+    --accent-foreground: 24 45% 12%;
+    --muted: 218 25% 17%;
+    --muted-foreground: 215 20% 72%;
+    --border: 218 20% 24%;
+    --input: 218 20% 24%;
+    --ring: 213 70% 72%;
+    --destructive: 0 80% 68%;
+    --destructive-foreground: 0 0% 10%;
+    --success: 152 55% 55%;
+    --success-foreground: 0 0% 10%;
+
+    --measure: 213 70% 80%;
+    --ai-surface: 30 30% 14%;
+    --ai-border: 32 95% 62%;
+    --ai-foreground: 36 60% 88%;
+
+    --sev-info: 215 20% 22%;   --sev-info-fg: 215 25% 85%;
+    --sev-low: 213 50% 22%;    --sev-low-fg: 210 90% 85%;
+    --sev-medium: 30 50% 20%;  --sev-medium-fg: 40 95% 78%;
+    --sev-high: 0 45% 22%;     --sev-high-fg: 0 85% 82%;
+  }
+
+  * {
+    @apply border-border;
+  }
+
+  html {
+    font-size: 16px;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  body {
+    @apply bg-background text-foreground font-sans antialiased;
+    font-feature-settings: 'kern' 1;
+  }
+
+  h1, h2, h3, h4 {
+    @apply font-heading font-semibold tracking-tight text-foreground;
+  }
+  h1 { @apply text-3xl leading-tight; }
+  h2 { @apply text-2xl leading-snug; }
+  h3 { @apply text-xl leading-snug; }
+
+  /* Bengali content: taller line boxes for matras */
+  [lang='bn'], [lang='bn'] * {
+    line-height: 1.7;
+  }
+
+  :focus-visible {
+    @apply outline-none ring-2 ring-ring ring-offset-2 ring-offset-background;
+  }
+
+  ::selection {
+    background: hsl(var(--accent) / 0.25);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+}
+
+@layer components {
+  .tabular {
+    font-variant-numeric: tabular-nums;
+  }
+  .skip-link {
+    @apply sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[100] focus:rounded-md focus:bg-primary focus:px-4 focus:py-2 focus:text-primary-foreground;
+  }
+}
