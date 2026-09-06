@@ -1,0 +1,16 @@
+[
+  {
+    "rubric_id": "RUB-001",
+    "question_id": "Q-2025F-6",
+    "paper_id": "QP-2025-FIN-01",
+    "course_id": "C-CSE3103",
+    "co_id": "CO4",
+    "bloom_id": "L4",
+    "total_marks": 20,
+    "title": "Normalisation of Enrollment relation to 3NF",
+    "created_by": "F-001",
+    "created_at": "2025-05-28T16:00:00+06:00",
+    "version": 2,
+    "question_text": "Analyse the relation Enrollment(student_id, course_code, course_title, instructor, grade) for update, insertion and deletion anomalies. Identify the functional dependencies and normalise it to 3NF, justifying each decomposition step."
+  }
+]

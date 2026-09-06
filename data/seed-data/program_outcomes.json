@@ -1,0 +1,86 @@
+[
+  {
+    "po_id": "PO1",
+    "code": "PO1",
+    "title": "Engineering Knowledge",
+    "statement": "Apply knowledge of mathematics, science and engineering fundamentals to the solution of complex engineering problems.",
+    "program_id": "PROG-BSC-CSE"
+  },
+  {
+    "po_id": "PO2",
+    "code": "PO2",
+    "title": "Problem Analysis",
+    "statement": "Identify, formulate, research literature and analyse complex engineering problems reaching substantiated conclusions.",
+    "program_id": "PROG-BSC-CSE"
+  },
+  {
+    "po_id": "PO3",
+    "code": "PO3",
+    "title": "Design/Development of Solutions",
+    "statement": "Design solutions for complex engineering problems and design systems, components or processes that meet specified needs.",
+    "program_id": "PROG-BSC-CSE"
+  },
+  {
+    "po_id": "PO4",
+    "code": "PO4",
+    "title": "Investigation",
+    "statement": "Conduct investigations of complex problems using research-based knowledge and research methods.",
+    "program_id": "PROG-BSC-CSE"
+  },
+  {
+    "po_id": "PO5",
+    "code": "PO5",
+    "title": "Modern Tool Usage",
+    "statement": "Create, select and apply appropriate techniques, resources and modern engineering and IT tools.",
+    "program_id": "PROG-BSC-CSE"
+  },
+  {
+    "po_id": "PO6",
+    "code": "PO6",
+    "title": "The Engineer and Society",
+    "statement": "Apply reasoning informed by contextual knowledge to assess societal, health, safety, legal and cultural issues.",
+    "program_id": "PROG-BSC-CSE"
+  },
+  {
+    "po_id": "PO7",
+    "code": "PO7",
+    "title": "Environment and Sustainability",
+    "statement": "Understand and evaluate the sustainability and impact of professional engineering work.",
+    "program_id": "PROG-BSC-CSE"
+  },
+  {
+    "po_id": "PO8",
+    "code": "PO8",
+    "title": "Ethics",
+    "statement": "Apply ethical principles and commit to professional ethics and responsibilities.",
+    "program_id": "PROG-BSC-CSE"
+  },
+  {
+    "po_id": "PO9",
+    "code": "PO9",
+    "title": "Individual Work and Teamwork",
+    "statement": "Function effectively as an individual, and as a member or leader in diverse teams.",
+    "program_id": "PROG-BSC-CSE"
+  },
+  {
+    "po_id": "PO10",
+    "code": "PO10",
+    "title": "Communication",
+    "statement": "Communicate effectively on complex engineering activities with the engineering community and society at large.",
+    "program_id": "PROG-BSC-CSE"
+  },
+  {
+    "po_id": "PO11",
+    "code": "PO11",
+    "title": "Project Management and Finance",
+    "statement": "Demonstrate knowledge and understanding of engineering management principles and economic decision-making.",
+    "program_id": "PROG-BSC-CSE"
+  },
+  {
+    "po_id": "PO12",
+    "code": "PO12",
+    "title": "Life-long Learning",
+    "statement": "Recognise the need for, and have the preparation and ability to engage in independent and life-long learning.",
+    "program_id": "PROG-BSC-CSE"
+  }
+]

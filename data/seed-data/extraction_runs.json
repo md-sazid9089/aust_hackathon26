@@ -1,0 +1,19 @@
+[
+  {
+    "run_id": "EXT-RUN-001",
+    "paper_id": "QP-2026-DRAFT-01",
+    "source_file": "CSE3103_Final_Spring2026_DRAFT.pdf",
+    "page_count": 2,
+    "extractor": "pdfplumber+llm-structurer",
+    "model": "claude-sonnet-4-6",
+    "started_at": "2026-09-06T09:12:47+06:00",
+    "finished_at": "2026-09-06T09:13:09+06:00",
+    "duration_ms": 22140,
+    "status": "needs_review",
+    "questions_detected": 9,
+    "questions_confirmed": 0,
+    "low_confidence_count": 3,
+    "mean_confidence": 0.81,
+    "requires_human_confirmation": true
+  }
+]

@@ -1,0 +1,16 @@
+[
+  {
+    "quota_id": "Q-DEMO-001",
+    "provider": "anthropic",
+    "key_label": "demo_primary",
+    "window": "per_minute",
+    "limit_requests": 50,
+    "used_requests": 12,
+    "limit_input_tokens": 40000,
+    "used_input_tokens": 14160,
+    "reserve_key_label": "demo_backup",
+    "mock_mode_available": true,
+    "cache_hit_rate": 0.4,
+    "note": "Freeze all live calls 30 minutes before judging. Cached analysis covers the full demo path."
+  }
+]

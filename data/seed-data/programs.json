@@ -1,0 +1,10 @@
+[
+  {
+    "program_id": "PROG-BSC-CSE",
+    "department_id": "DEPT-CSE",
+    "name": "B.Sc. in Computer Science and Engineering",
+    "duration_years": 4,
+    "total_credits": 160.0,
+    "po_count": 12
+  }
+]

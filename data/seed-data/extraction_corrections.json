@@ -1,0 +1,38 @@
+[
+  {
+    "correction_id": "COR-001",
+    "raw_id": "EXR-006",
+    "run_id": "EXT-RUN-001",
+    "field": "marks",
+    "old_value": 1,
+    "new_value": 10,
+    "corrected_by": "F-004",
+    "corrected_at": "2026-09-06T09:15:02+06:00",
+    "reason": "OCR misread '10' as '1'.",
+    "is_demo_scripted": true
+  },
+  {
+    "correction_id": "COR-002",
+    "raw_id": "EXR-004",
+    "run_id": "EXT-RUN-001",
+    "field": "co_id",
+    "old_value": "CO1",
+    "new_value": "CO3",
+    "corrected_by": "F-004",
+    "corrected_at": "2026-09-06T09:15:31+06:00",
+    "reason": "Question asks for SQL formulation, which maps to CO3.",
+    "is_demo_scripted": true
+  },
+  {
+    "correction_id": "COR-003",
+    "raw_id": "EXR-007",
+    "run_id": "EXT-RUN-001",
+    "field": "split",
+    "old_value": "4(a)+4(b) merged, 12 marks",
+    "new_value": "4(a) 7 marks CO3 L3 | 4(b) 5 marks CO5 L2",
+    "corrected_by": "F-004",
+    "corrected_at": "2026-09-06T09:16:10+06:00",
+    "reason": "Two separate parts merged during extraction.",
+    "is_demo_scripted": true
+  }
+]

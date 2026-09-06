@@ -1,0 +1,441 @@
+[
+  {
+    "curriculum_course_id": "CUR-1101",
+    "code": "CSE 1101",
+    "title": "Structured Programming",
+    "credit_hours": 3.0,
+    "level": 1,
+    "term": 1,
+    "prerequisite_codes": [],
+    "topic_keywords": [
+      "c programming",
+      "control flow",
+      "functions",
+      "arrays",
+      "pointers",
+      "structures",
+      "file io",
+      "recursion basics"
+    ],
+    "program_id": "PROG-BSC-CSE",
+    "status": "active",
+    "is_proposal": false
+  },
+  {
+    "curriculum_course_id": "CUR-1203",
+    "code": "CSE 1203",
+    "title": "Data Structures",
+    "credit_hours": 3.0,
+    "level": 1,
+    "term": 2,
+    "prerequisite_codes": [
+      "CSE 1101"
+    ],
+    "topic_keywords": [
+      "arrays",
+      "linked list",
+      "stack",
+      "queue",
+      "tree",
+      "binary search tree",
+      "heap",
+      "hashing",
+      "graph representation",
+      "sorting"
+    ],
+    "program_id": "PROG-BSC-CSE",
+    "status": "active",
+    "is_proposal": false
+  },
+  {
+    "curriculum_course_id": "CUR-1201",
+    "code": "CSE 1201",
+    "title": "Discrete Mathematics",
+    "credit_hours": 3.0,
+    "level": 1,
+    "term": 2,
+    "prerequisite_codes": [],
+    "topic_keywords": [
+      "set theory",
+      "relations",
+      "functions",
+      "logic",
+      "proof techniques",
+      "combinatorics",
+      "graph theory",
+      "recurrence"
+    ],
+    "program_id": "PROG-BSC-CSE",
+    "status": "active",
+    "is_proposal": false
+  },
+  {
+    "curriculum_course_id": "CUR-2101",
+    "code": "CSE 2101",
+    "title": "Object Oriented Programming",
+    "credit_hours": 3.0,
+    "level": 2,
+    "term": 1,
+    "prerequisite_codes": [
+      "CSE 1101"
+    ],
+    "topic_keywords": [
+      "classes",
+      "objects",
+      "inheritance",
+      "polymorphism",
+      "encapsulation",
+      "interfaces",
+      "exception handling",
+      "generics"
+    ],
+    "program_id": "PROG-BSC-CSE",
+    "status": "active",
+    "is_proposal": false
+  },
+  {
+    "curriculum_course_id": "CUR-2103",
+    "code": "CSE 2103",
+    "title": "Algorithms",
+    "credit_hours": 3.0,
+    "level": 2,
+    "term": 1,
+    "prerequisite_codes": [
+      "CSE 1203"
+    ],
+    "topic_keywords": [
+      "asymptotic analysis",
+      "divide and conquer",
+      "greedy",
+      "dynamic programming",
+      "graph algorithms",
+      "shortest path",
+      "np completeness",
+      "sorting"
+    ],
+    "program_id": "PROG-BSC-CSE",
+    "status": "active",
+    "is_proposal": false
+  },
+  {
+    "curriculum_course_id": "CUR-2201",
+    "code": "CSE 2201",
+    "title": "Digital Logic Design",
+    "credit_hours": 3.0,
+    "level": 2,
+    "term": 2,
+    "prerequisite_codes": [],
+    "topic_keywords": [
+      "boolean algebra",
+      "logic gates",
+      "combinational circuits",
+      "sequential circuits",
+      "flip flops",
+      "counters",
+      "registers"
+    ],
+    "program_id": "PROG-BSC-CSE",
+    "status": "active",
+    "is_proposal": false
+  },
+  {
+    "curriculum_course_id": "CUR-2203",
+    "code": "CSE 2203",
+    "title": "Computer Architecture",
+    "credit_hours": 3.0,
+    "level": 2,
+    "term": 2,
+    "prerequisite_codes": [
+      "CSE 2201"
+    ],
+    "topic_keywords": [
+      "instruction set",
+      "pipelining",
+      "cache memory",
+      "memory hierarchy",
+      "io organisation",
+      "parallelism"
+    ],
+    "program_id": "PROG-BSC-CSE",
+    "status": "active",
+    "is_proposal": false
+  },
+  {
+    "curriculum_course_id": "CUR-3101",
+    "code": "CSE 3101",
+    "title": "Operating Systems",
+    "credit_hours": 3.0,
+    "level": 3,
+    "term": 1,
+    "prerequisite_codes": [
+      "CSE 2203"
+    ],
+    "topic_keywords": [
+      "process management",
+      "scheduling",
+      "concurrency",
+      "deadlock",
+      "memory management",
+      "virtual memory",
+      "file systems",
+      "disk scheduling"
+    ],
+    "program_id": "PROG-BSC-CSE",
+    "status": "active",
+    "is_proposal": false
+  },
+  {
+    "curriculum_course_id": "CUR-3103",
+    "code": "CSE 3103",
+    "title": "Database Management Systems",
+    "credit_hours": 3.0,
+    "level": 3,
+    "term": 1,
+    "prerequisite_codes": [
+      "CSE 1203"
+    ],
+    "topic_keywords": [
+      "database concepts",
+      "dbms architecture",
+      "data independence",
+      "er model",
+      "relational model",
+      "relational algebra",
+      "sql",
+      "joins",
+      "aggregate functions",
+      "functional dependency",
+      "normalisation",
+      "bcnf",
+      "transactions",
+      "acid",
+      "concurrency control",
+      "two phase locking",
+      "recovery",
+      "logging",
+      "indexing",
+      "b+ tree",
+      "query optimisation"
+    ],
+    "program_id": "PROG-BSC-CSE",
+    "status": "active",
+    "is_proposal": false
+  },
+  {
+    "curriculum_course_id": "CUR-3105",
+    "code": "CSE 3105",
+    "title": "Software Engineering",
+    "credit_hours": 3.0,
+    "level": 3,
+    "term": 1,
+    "prerequisite_codes": [
+      "CSE 2101"
+    ],
+    "topic_keywords": [
+      "software process",
+      "requirements engineering",
+      "uml",
+      "design patterns",
+      "testing",
+      "agile",
+      "project estimation",
+      "maintenance"
+    ],
+    "program_id": "PROG-BSC-CSE",
+    "status": "active",
+    "is_proposal": false
+  },
+  {
+    "curriculum_course_id": "CUR-3201",
+    "code": "CSE 3201",
+    "title": "Computer Networks",
+    "credit_hours": 3.0,
+    "level": 3,
+    "term": 2,
+    "prerequisite_codes": [
+      "CSE 3101"
+    ],
+    "topic_keywords": [
+      "osi model",
+      "tcp ip",
+      "routing",
+      "switching",
+      "congestion control",
+      "application protocols",
+      "network security basics"
+    ],
+    "program_id": "PROG-BSC-CSE",
+    "status": "active",
+    "is_proposal": false
+  },
+  {
+    "curriculum_course_id": "CUR-3203",
+    "code": "CSE 3203",
+    "title": "Artificial Intelligence",
+    "credit_hours": 3.0,
+    "level": 3,
+    "term": 2,
+    "prerequisite_codes": [
+      "CSE 2103"
+    ],
+    "topic_keywords": [
+      "search algorithms",
+      "heuristics",
+      "knowledge representation",
+      "logic inference",
+      "planning",
+      "uncertainty",
+      "introductory learning"
+    ],
+    "program_id": "PROG-BSC-CSE",
+    "status": "active",
+    "is_proposal": false
+  },
+  {
+    "curriculum_course_id": "CUR-3205",
+    "code": "CSE 3205",
+    "title": "Compiler Design",
+    "credit_hours": 3.0,
+    "level": 3,
+    "term": 2,
+    "prerequisite_codes": [
+      "CSE 2103"
+    ],
+    "topic_keywords": [
+      "lexical analysis",
+      "parsing",
+      "syntax directed translation",
+      "intermediate code",
+      "code generation",
+      "code optimisation"
+    ],
+    "program_id": "PROG-BSC-CSE",
+    "status": "active",
+    "is_proposal": false
+  },
+  {
+    "curriculum_course_id": "CUR-4101",
+    "code": "CSE 4101",
+    "title": "Advanced Database Systems",
+    "credit_hours": 3.0,
+    "level": 4,
+    "term": 1,
+    "prerequisite_codes": [
+      "CSE 3103"
+    ],
+    "topic_keywords": [
+      "distributed databases",
+      "replication",
+      "sharding",
+      "nosql stores",
+      "key value stores",
+      "document stores",
+      "data warehousing",
+      "star schema",
+      "olap",
+      "etl",
+      "query optimisation",
+      "distributed transactions"
+    ],
+    "program_id": "PROG-BSC-CSE",
+    "status": "active",
+    "is_proposal": false
+  },
+  {
+    "curriculum_course_id": "CUR-4103",
+    "code": "CSE 4103",
+    "title": "Machine Learning",
+    "credit_hours": 3.0,
+    "level": 4,
+    "term": 1,
+    "prerequisite_codes": [
+      "CSE 3203"
+    ],
+    "topic_keywords": [
+      "supervised learning",
+      "regression",
+      "classification",
+      "clustering",
+      "neural networks",
+      "model evaluation",
+      "feature engineering",
+      "overfitting",
+      "data quality"
+    ],
+    "program_id": "PROG-BSC-CSE",
+    "status": "active",
+    "is_proposal": false
+  },
+  {
+    "curriculum_course_id": "CUR-4105",
+    "code": "CSE 4105",
+    "title": "Information Security",
+    "credit_hours": 3.0,
+    "level": 4,
+    "term": 1,
+    "prerequisite_codes": [
+      "CSE 3201"
+    ],
+    "topic_keywords": [
+      "cryptography",
+      "authentication",
+      "access control",
+      "network attacks",
+      "secure protocols",
+      "risk management"
+    ],
+    "program_id": "PROG-BSC-CSE",
+    "status": "active",
+    "is_proposal": false
+  },
+  {
+    "curriculum_course_id": "CUR-4201",
+    "code": "CSE 4201",
+    "title": "Distributed Systems",
+    "credit_hours": 3.0,
+    "level": 4,
+    "term": 2,
+    "prerequisite_codes": [
+      "CSE 3201"
+    ],
+    "topic_keywords": [
+      "distributed architecture",
+      "consistency models",
+      "consensus",
+      "replication",
+      "fault tolerance",
+      "distributed transactions",
+      "rpc",
+      "sharding"
+    ],
+    "program_id": "PROG-BSC-CSE",
+    "status": "active",
+    "is_proposal": false
+  },
+  {
+    "curriculum_course_id": "CUR-4203",
+    "code": "CSE 4203",
+    "title": "Cloud Computing",
+    "credit_hours": 3.0,
+    "level": 4,
+    "term": 2,
+    "prerequisite_codes": [
+      "CSE 4201"
+    ],
+    "topic_keywords": [
+      "virtualisation",
+      "containers",
+      "iaas paas saas",
+      "distributed storage",
+      "mapreduce",
+      "spark",
+      "elasticity",
+      "cloud security",
+      "replication",
+      "fault tolerance"
+    ],
+    "program_id": "PROG-BSC-CSE",
+    "status": "active",
+    "is_proposal": false
+  }
+]

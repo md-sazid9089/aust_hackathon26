@@ -1,0 +1,194 @@
+[
+  {
+    "overlap_id": "OVL-006",
+    "course_a_id": "CUR-4101",
+    "course_a_code": "CSE 4101",
+    "course_b_id": "PROP-001",
+    "course_b_code": "CSE 4109",
+    "jaccard": 0.381,
+    "coverage_of_a_by_b": 0.667,
+    "coverage_of_b_by_a": 0.471,
+    "max_directional_coverage": 0.667,
+    "shared_topics": [
+      "data warehousing",
+      "distributed databases",
+      "etl",
+      "nosql stores",
+      "olap",
+      "query optimisation",
+      "sharding",
+      "star schema"
+    ],
+    "shared_count": 8,
+    "involves_proposal": true,
+    "severity": "critical",
+    "verdict": "excessive_overlap"
+  },
+  {
+    "overlap_id": "OVL-004",
+    "course_a_id": "CUR-4101",
+    "course_a_code": "CSE 4101",
+    "course_b_id": "CUR-4201",
+    "course_b_code": "CSE 4201",
+    "jaccard": 0.176,
+    "coverage_of_a_by_b": 0.25,
+    "coverage_of_b_by_a": 0.375,
+    "max_directional_coverage": 0.375,
+    "shared_topics": [
+      "distributed transactions",
+      "replication",
+      "sharding"
+    ],
+    "shared_count": 3,
+    "involves_proposal": false,
+    "severity": "medium",
+    "verdict": "acceptable_reinforcement"
+  },
+  {
+    "overlap_id": "OVL-008",
+    "course_a_id": "CUR-4201",
+    "course_a_code": "CSE 4201",
+    "course_b_id": "CUR-4203",
+    "course_b_code": "CSE 4203",
+    "jaccard": 0.125,
+    "coverage_of_a_by_b": 0.25,
+    "coverage_of_b_by_a": 0.2,
+    "max_directional_coverage": 0.25,
+    "shared_topics": [
+      "fault tolerance",
+      "replication"
+    ],
+    "shared_count": 2,
+    "involves_proposal": false,
+    "severity": "low",
+    "verdict": "incidental"
+  },
+  {
+    "overlap_id": "OVL-007",
+    "course_a_id": "CUR-4103",
+    "course_a_code": "CSE 4103",
+    "course_b_id": "PROP-001",
+    "course_b_code": "CSE 4109",
+    "jaccard": 0.083,
+    "coverage_of_a_by_b": 0.222,
+    "coverage_of_b_by_a": 0.118,
+    "max_directional_coverage": 0.222,
+    "shared_topics": [
+      "data quality",
+      "feature engineering"
+    ],
+    "shared_count": 2,
+    "involves_proposal": true,
+    "severity": "low",
+    "verdict": "incidental"
+  },
+  {
+    "overlap_id": "OVL-010",
+    "course_a_id": "CUR-4203",
+    "course_a_code": "CSE 4203",
+    "course_b_id": "PROP-001",
+    "course_b_code": "CSE 4109",
+    "jaccard": 0.08,
+    "coverage_of_a_by_b": 0.2,
+    "coverage_of_b_by_a": 0.118,
+    "max_directional_coverage": 0.2,
+    "shared_topics": [
+      "distributed storage",
+      "spark"
+    ],
+    "shared_count": 2,
+    "involves_proposal": true,
+    "severity": "low",
+    "verdict": "incidental"
+  },
+  {
+    "overlap_id": "OVL-001",
+    "course_a_id": "CUR-1101",
+    "course_a_code": "CSE 1101",
+    "course_b_id": "CUR-1203",
+    "course_b_code": "CSE 1203",
+    "jaccard": 0.059,
+    "coverage_of_a_by_b": 0.125,
+    "coverage_of_b_by_a": 0.1,
+    "max_directional_coverage": 0.125,
+    "shared_topics": [
+      "arrays"
+    ],
+    "shared_count": 1,
+    "involves_proposal": false,
+    "severity": "low",
+    "verdict": "incidental"
+  },
+  {
+    "overlap_id": "OVL-002",
+    "course_a_id": "CUR-1101",
+    "course_a_code": "CSE 1101",
+    "course_b_id": "CUR-1201",
+    "course_b_code": "CSE 1201",
+    "jaccard": 0.067,
+    "coverage_of_a_by_b": 0.125,
+    "coverage_of_b_by_a": 0.125,
+    "max_directional_coverage": 0.125,
+    "shared_topics": [
+      "functions"
+    ],
+    "shared_count": 1,
+    "involves_proposal": false,
+    "severity": "low",
+    "verdict": "incidental"
+  },
+  {
+    "overlap_id": "OVL-003",
+    "course_a_id": "CUR-1203",
+    "course_a_code": "CSE 1203",
+    "course_b_id": "CUR-2103",
+    "course_b_code": "CSE 2103",
+    "jaccard": 0.059,
+    "coverage_of_a_by_b": 0.1,
+    "coverage_of_b_by_a": 0.125,
+    "max_directional_coverage": 0.125,
+    "shared_topics": [
+      "sorting"
+    ],
+    "shared_count": 1,
+    "involves_proposal": false,
+    "severity": "low",
+    "verdict": "incidental"
+  },
+  {
+    "overlap_id": "OVL-009",
+    "course_a_id": "CUR-4201",
+    "course_a_code": "CSE 4201",
+    "course_b_id": "PROP-001",
+    "course_b_code": "CSE 4109",
+    "jaccard": 0.042,
+    "coverage_of_a_by_b": 0.125,
+    "coverage_of_b_by_a": 0.059,
+    "max_directional_coverage": 0.125,
+    "shared_topics": [
+      "sharding"
+    ],
+    "shared_count": 1,
+    "involves_proposal": true,
+    "severity": "low",
+    "verdict": "incidental"
+  },
+  {
+    "overlap_id": "OVL-005",
+    "course_a_id": "CUR-4101",
+    "course_a_code": "CSE 4101",
+    "course_b_id": "CUR-4203",
+    "course_b_code": "CSE 4203",
+    "jaccard": 0.048,
+    "coverage_of_a_by_b": 0.083,
+    "coverage_of_b_by_a": 0.1,
+    "max_directional_coverage": 0.1,
+    "shared_topics": [
+      "replication"
+    ],
+    "shared_count": 1,
+    "involves_proposal": false,
+    "severity": "low",
+    "verdict": "incidental"
+  }
+]

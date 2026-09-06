@@ -1,0 +1,68 @@
+[
+  {
+    "criterion_id": "RC-1",
+    "rubric_id": "RUB-001",
+    "code": "R1",
+    "sequence": 1,
+    "title": "Anomaly identification",
+    "max_marks": 4,
+    "descriptor": "All three anomaly types named and illustrated with a concrete tuple from the given relation.",
+    "band_descriptors": {
+      "4": "All three anomalies with correct concrete examples.",
+      "3": "All three named, examples partly correct.",
+      "2": "Two anomalies identified.",
+      "1": "One anomaly identified or examples missing.",
+      "0": "No anomaly correctly identified."
+    }
+  },
+  {
+    "criterion_id": "RC-2",
+    "rubric_id": "RUB-001",
+    "code": "R2",
+    "sequence": 2,
+    "title": "Functional dependency identification",
+    "max_marks": 5,
+    "descriptor": "Complete and minimal FD set derived from the semantics of the relation.",
+    "band_descriptors": {
+      "5": "Complete minimal FD set, no spurious dependencies.",
+      "4": "Complete set with one redundant FD.",
+      "3": "Main FDs present, one missing.",
+      "2": "Partial set, key dependency missing.",
+      "1": "Only trivial dependencies stated.",
+      "0": "No usable FD set."
+    }
+  },
+  {
+    "criterion_id": "RC-3",
+    "rubric_id": "RUB-001",
+    "code": "R3",
+    "sequence": 3,
+    "title": "Decomposition correctness",
+    "max_marks": 6,
+    "descriptor": "Resulting relations are in 3NF with correct primary and foreign keys.",
+    "band_descriptors": {
+      "6": "All resulting relations in 3NF, keys correct.",
+      "4-5": "Correct 3NF, minor key or naming error.",
+      "2-3": "Partial decomposition, one relation still violating 3NF.",
+      "1": "Decomposition attempted but incorrect.",
+      "0": "No decomposition."
+    },
+    "ambiguity_note": "The rubric does not state whether an alternative but equally valid decomposition earns full marks. This is the wording that caused divergence on ANS-05."
+  },
+  {
+    "criterion_id": "RC-4",
+    "rubric_id": "RUB-001",
+    "code": "R4",
+    "sequence": 4,
+    "title": "Justification and lossless-join argument",
+    "max_marks": 5,
+    "descriptor": "Each step justified and the lossless-join property demonstrated.",
+    "band_descriptors": {
+      "5": "Every step justified plus a correct lossless-join argument.",
+      "3-4": "Steps justified, lossless-join asserted without proof.",
+      "1-2": "Minimal justification.",
+      "0": "No justification."
+    },
+    "ambiguity_note": "Does not say whether a correct final answer with no justification scores zero here or is compensated under R3."
+  }
+]

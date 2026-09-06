@@ -1,0 +1,72 @@
+[
+  {
+    "pair_id": "SIM-001",
+    "source_question_id": "Q-2026D-2B",
+    "target_question_id": "Q-2024M-3A",
+    "source_paper_id": "QP-2026-DRAFT-01",
+    "target_paper_id": "QP-2024-MID-01",
+    "scope": "cross_paper",
+    "similarity": 0.94,
+    "method": "embedding_cosine+llm_verify",
+    "verdict": "near_duplicate",
+    "severity": "high",
+    "rationale": "Identical task: retrieve employees earning above their own department average. Only surface wording differs ('earn more than' vs 'salary exceeds').",
+    "recommendation": "Replace, or raise difficulty by requiring the department name and a correlated subquery with a HAVING clause."
+  },
+  {
+    "pair_id": "SIM-002",
+    "source_question_id": "Q-2026D-4A",
+    "target_question_id": "Q-2025F-1B",
+    "source_paper_id": "QP-2026-DRAFT-01",
+    "target_paper_id": "QP-2025-FIN-01",
+    "scope": "cross_paper",
+    "similarity": 0.87,
+    "method": "embedding_cosine+llm_verify",
+    "verdict": "near_duplicate",
+    "severity": "high",
+    "rationale": "Same GROUP BY / HAVING pattern over the same threshold of five employees; appeared in the immediately previous final.",
+    "recommendation": "Change the aggregate and the grouping attribute, or ask the student to justify why HAVING cannot be replaced by WHERE."
+  },
+  {
+    "pair_id": "SIM-003",
+    "source_question_id": "Q-2026D-3A",
+    "target_question_id": "Q-2026D-1A",
+    "source_paper_id": "QP-2026-DRAFT-01",
+    "target_paper_id": "QP-2026-DRAFT-01",
+    "scope": "intra_paper",
+    "similarity": 0.81,
+    "method": "embedding_cosine+llm_verify",
+    "verdict": "redundant_within_paper",
+    "severity": "high",
+    "rationale": "Both questions assess the same concept (physical vs logical data independence) under CO1; 12 of 58 marks are spent twice on one topic.",
+    "recommendation": "Drop 3(a) and reallocate 6 marks to CO6, which is currently unassessed."
+  },
+  {
+    "pair_id": "SIM-004",
+    "source_question_id": "Q-2026D-1A",
+    "target_question_id": "Q-2024M-1A",
+    "source_paper_id": "QP-2026-DRAFT-01",
+    "target_paper_id": "QP-2024-MID-01",
+    "scope": "cross_paper",
+    "similarity": 0.79,
+    "method": "embedding_cosine+llm_verify",
+    "verdict": "borderline",
+    "severity": "medium",
+    "rationale": "Same concept as the 2024 midterm question but phrased as a definition task rather than a comparison.",
+    "recommendation": "Acceptable if retained, but consider raising to Bloom L3 by asking for a scenario-based judgement."
+  },
+  {
+    "pair_id": "SIM-005",
+    "source_question_id": "Q-2026D-3B",
+    "target_question_id": "Q-2025F-3",
+    "source_paper_id": "QP-2026-DRAFT-01",
+    "target_paper_id": "QP-2025-FIN-01",
+    "scope": "cross_paper",
+    "similarity": 0.68,
+    "method": "embedding_cosine+llm_verify",
+    "verdict": "acceptable",
+    "severity": "low",
+    "rationale": "Same normalisation skill but a different dependency set and a lower target normal form (3NF vs BCNF).",
+    "recommendation": "No action required."
+  }
+]

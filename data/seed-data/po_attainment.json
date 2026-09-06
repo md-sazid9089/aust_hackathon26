@@ -1,0 +1,144 @@
+[
+  {
+    "po_attainment_id": "POATT-PO1",
+    "po_id": "PO1",
+    "course_id": "C-CSE3103",
+    "offering_id": "OFF-2025-SP",
+    "contributing_cos": [
+      {
+        "co_id": "CO1",
+        "strength": 3,
+        "co_attainment_percent": 100.0
+      },
+      {
+        "co_id": "CO2",
+        "strength": 1,
+        "co_attainment_percent": 70.0
+      },
+      {
+        "co_id": "CO3",
+        "strength": 2,
+        "co_attainment_percent": 80.0
+      },
+      {
+        "co_id": "CO4",
+        "strength": 1,
+        "co_attainment_percent": 40.0
+      },
+      {
+        "co_id": "CO5",
+        "strength": 1,
+        "co_attainment_percent": 40.0
+      }
+    ],
+    "weighted_attainment_percent": 76.2,
+    "threshold_percent": 60,
+    "status": "attained",
+    "is_weak": false
+  },
+  {
+    "po_attainment_id": "POATT-PO2",
+    "po_id": "PO2",
+    "course_id": "C-CSE3103",
+    "offering_id": "OFF-2025-SP",
+    "contributing_cos": [
+      {
+        "co_id": "CO4",
+        "strength": 3,
+        "co_attainment_percent": 40.0
+      },
+      {
+        "co_id": "CO5",
+        "strength": 2,
+        "co_attainment_percent": 40.0
+      },
+      {
+        "co_id": "CO6",
+        "strength": 1,
+        "co_attainment_percent": 63.3
+      }
+    ],
+    "weighted_attainment_percent": 43.9,
+    "threshold_percent": 60,
+    "status": "not_attained",
+    "is_weak": true
+  },
+  {
+    "po_attainment_id": "POATT-PO3",
+    "po_id": "PO3",
+    "course_id": "C-CSE3103",
+    "offering_id": "OFF-2025-SP",
+    "contributing_cos": [
+      {
+        "co_id": "CO2",
+        "strength": 3,
+        "co_attainment_percent": 70.0
+      },
+      {
+        "co_id": "CO3",
+        "strength": 2,
+        "co_attainment_percent": 80.0
+      }
+    ],
+    "weighted_attainment_percent": 74.0,
+    "threshold_percent": 60,
+    "status": "attained",
+    "is_weak": false
+  },
+  {
+    "po_attainment_id": "POATT-PO4",
+    "po_id": "PO4",
+    "course_id": "C-CSE3103",
+    "offering_id": "OFF-2025-SP",
+    "contributing_cos": [
+      {
+        "co_id": "CO6",
+        "strength": 2,
+        "co_attainment_percent": 63.3
+      }
+    ],
+    "weighted_attainment_percent": 63.3,
+    "threshold_percent": 60,
+    "status": "attained",
+    "is_weak": false
+  },
+  {
+    "po_attainment_id": "POATT-PO5",
+    "po_id": "PO5",
+    "course_id": "C-CSE3103",
+    "offering_id": "OFF-2025-SP",
+    "contributing_cos": [
+      {
+        "co_id": "CO3",
+        "strength": 1,
+        "co_attainment_percent": 80.0
+      },
+      {
+        "co_id": "CO6",
+        "strength": 1,
+        "co_attainment_percent": 63.3
+      }
+    ],
+    "weighted_attainment_percent": 71.7,
+    "threshold_percent": 60,
+    "status": "attained",
+    "is_weak": false
+  },
+  {
+    "po_attainment_id": "POATT-PO12",
+    "po_id": "PO12",
+    "course_id": "C-CSE3103",
+    "offering_id": "OFF-2025-SP",
+    "contributing_cos": [
+      {
+        "co_id": "CO1",
+        "strength": 1,
+        "co_attainment_percent": 100.0
+      }
+    ],
+    "weighted_attainment_percent": 100.0,
+    "threshold_percent": 60,
+    "status": "attained",
+    "is_weak": false
+  }
+]

@@ -1,0 +1,95 @@
+[
+  {
+    "version_id": "PV-001",
+    "paper_id": "QP-2026-DRAFT-01",
+    "version": 1,
+    "created_at": "2026-09-06T09:12:44+06:00",
+    "created_by": "F-004",
+    "label": "Original upload",
+    "total_marks": 58,
+    "quality_score": 54,
+    "open_finding_count": 9,
+    "co6_marks": 0,
+    "lower_order_percent": 48.3,
+    "duplicate_count": 3,
+    "change_summary": "Initial draft as submitted.",
+    "diff_from_previous": null
+  },
+  {
+    "version_id": "PV-002",
+    "paper_id": "QP-2026-DRAFT-01",
+    "version": 2,
+    "created_at": "2026-09-06T09:18:05+06:00",
+    "created_by": "F-004",
+    "label": "After accepting REC-001",
+    "total_marks": 58,
+    "quality_score": 68,
+    "open_finding_count": 6,
+    "co6_marks": 6,
+    "lower_order_percent": 38.0,
+    "duplicate_count": 2,
+    "change_summary": "Question 3(a) replaced with a CO6 index-selection evaluation question.",
+    "diff_from_previous": [
+      {
+        "op": "remove",
+        "question_id": "Q-2026D-3A",
+        "marks": 6
+      },
+      {
+        "op": "add",
+        "question_id": "Q-2026D-NEW-1",
+        "marks": 6,
+        "co_id": "CO6",
+        "bloom_id": "L5",
+        "from_recommendation_id": "REC-001"
+      }
+    ],
+    "findings_closed": [
+      "FND-001",
+      "FND-005",
+      "FND-009"
+    ]
+  },
+  {
+    "version_id": "PV-003",
+    "paper_id": "QP-2026-DRAFT-01",
+    "version": 3,
+    "created_at": "2026-09-06T09:19:40+06:00",
+    "created_by": "F-004",
+    "label": "After accepting REC-002 and REC-003",
+    "total_marks": 60,
+    "quality_score": 82,
+    "open_finding_count": 2,
+    "co6_marks": 6,
+    "lower_order_percent": 31.7,
+    "duplicate_count": 1,
+    "change_summary": "2(b) rewritten to remove the 2024 duplicate; 4(b) raised from recall to evaluation and increased to 9 marks; question 5 tagged to CO5. Marks now reconcile to 60.",
+    "diff_from_previous": [
+      {
+        "op": "rewrite",
+        "question_id": "Q-2026D-2B",
+        "from_recommendation_id": "REC-002"
+      },
+      {
+        "op": "rewrite",
+        "question_id": "Q-2026D-4B",
+        "marks_from": 5,
+        "marks_to": 9,
+        "from_recommendation_id": "REC-003"
+      },
+      {
+        "op": "tag",
+        "question_id": "Q-2026D-5",
+        "co_id": "CO5",
+        "from_recommendation_id": "REC-004"
+      }
+    ],
+    "findings_closed": [
+      "FND-003",
+      "FND-002",
+      "FND-007",
+      "FND-006",
+      "FND-008"
+    ]
+  }
+]

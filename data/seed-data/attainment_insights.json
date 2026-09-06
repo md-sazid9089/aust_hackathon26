@@ -1,0 +1,25 @@
+[
+  {
+    "insight_id": "INS-001",
+    "course_id": "C-CSE3103",
+    "offering_id": "OFF-2025-SP",
+    "generated_at": "2026-09-06T09:21:40+06:00",
+    "model": "claude-sonnet-4-6",
+    "headline": "2 of 6 course outcomes fell below the 60% attainment threshold, led by CO4.",
+    "weak_co_ids": [
+      "CO4",
+      "CO5"
+    ],
+    "narrative": "CO4 (analysis of functional dependencies and normalisation) is the weakest outcome. Both CO4 questions, 3 and 6, sit at Bloom level 4 and carry 20 of 60 marks, yet fewer than half the class reached the 60% mark on them. Scores on question 3, which required candidate-key discovery before decomposition, were markedly lower than on question 6, which supplied the anomalies. This points to candidate-key determination rather than normalisation itself as the underlying gap.",
+    "recommended_actions": [
+      "Add a guided tutorial on attribute-closure and candidate-key computation before the normalisation lecture.",
+      "Introduce a low-stakes class test on functional dependencies in week 9 to surface the gap earlier.",
+      "In the next final, split the CO4 assessment into a 4-mark key-finding part and a 6-mark decomposition part so the failure point becomes visible.",
+      "Carry CO4 forward as an action item into the CSE 4101 course file, since it is a prerequisite outcome."
+    ],
+    "linked_finding_ids": [
+      "FND-001",
+      "FND-008"
+    ]
+  }
+]

@@ -1,0 +1,29 @@
+[
+  {
+    "offering_id": "OFF-2024-SP",
+    "course_id": "C-CSE3103",
+    "session": "Spring 2024",
+    "academic_year": "2023-24",
+    "section": "A",
+    "teacher_id": "F-002",
+    "enrolled_count": 30
+  },
+  {
+    "offering_id": "OFF-2025-SP",
+    "course_id": "C-CSE3103",
+    "session": "Spring 2025",
+    "academic_year": "2024-25",
+    "section": "A",
+    "teacher_id": "F-002",
+    "enrolled_count": 30
+  },
+  {
+    "offering_id": "OFF-2026-SP",
+    "course_id": "C-CSE3103",
+    "session": "Spring 2026",
+    "academic_year": "2025-26",
+    "section": "A",
+    "teacher_id": "F-004",
+    "enrolled_count": 30
+  }
+]

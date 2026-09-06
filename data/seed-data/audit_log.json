@@ -1,0 +1,82 @@
+[
+  {
+    "log_id": "AL-001",
+    "timestamp": "2026-09-06T09:12:44+06:00",
+    "actor_id": "F-004",
+    "action": "upload_paper",
+    "entity_id": "QP-2026-DRAFT-01",
+    "detail": "CSE3103_Final_Spring2026_DRAFT.pdf uploaded (412 KB, 2 pages)."
+  },
+  {
+    "log_id": "AL-002",
+    "timestamp": "2026-09-06T09:12:47+06:00",
+    "actor_id": "system",
+    "action": "extraction_started",
+    "entity_id": "EXT-RUN-001",
+    "detail": "Structured extraction started."
+  },
+  {
+    "log_id": "AL-003",
+    "timestamp": "2026-09-06T09:13:09+06:00",
+    "actor_id": "system",
+    "action": "extraction_finished",
+    "entity_id": "EXT-RUN-001",
+    "detail": "9 questions detected, 3 below the confidence threshold. Human confirmation required."
+  },
+  {
+    "log_id": "AL-004",
+    "timestamp": "2026-09-06T09:15:02+06:00",
+    "actor_id": "F-004",
+    "action": "correct_extraction",
+    "entity_id": "EXR-006",
+    "detail": "marks 1 -> 10."
+  },
+  {
+    "log_id": "AL-005",
+    "timestamp": "2026-09-06T09:15:31+06:00",
+    "actor_id": "F-004",
+    "action": "correct_extraction",
+    "entity_id": "EXR-004",
+    "detail": "co_id CO1 -> CO3."
+  },
+  {
+    "log_id": "AL-006",
+    "timestamp": "2026-09-06T09:16:10+06:00",
+    "actor_id": "F-004",
+    "action": "correct_extraction",
+    "entity_id": "EXR-007",
+    "detail": "Split merged parts 4(a) and 4(b)."
+  },
+  {
+    "log_id": "AL-007",
+    "timestamp": "2026-09-06T09:16:22+06:00",
+    "actor_id": "F-004",
+    "action": "confirm_extraction",
+    "entity_id": "EXT-RUN-001",
+    "detail": "All 9 rows confirmed by faculty. Analysis unlocked."
+  },
+  {
+    "log_id": "AL-008",
+    "timestamp": "2026-09-06T09:17:22+06:00",
+    "actor_id": "system",
+    "action": "analysis_completed",
+    "entity_id": "AN-001",
+    "detail": "Quality score 54/100. 9 findings raised, 2 critical or high on coverage."
+  },
+  {
+    "log_id": "AL-009",
+    "timestamp": "2026-09-06T09:21:40+06:00",
+    "actor_id": "system",
+    "action": "attainment_computed",
+    "entity_id": "OFF-2025-SP",
+    "detail": "CO4 below threshold at 40.0%."
+  },
+  {
+    "log_id": "AL-010",
+    "timestamp": "2026-09-06T09:24:05+06:00",
+    "actor_id": "system",
+    "action": "consistency_report",
+    "entity_id": "GCR-001",
+    "detail": "2 of 6 scripts diverge beyond threshold."
+  }
+]

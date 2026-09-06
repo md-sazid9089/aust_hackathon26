@@ -1,0 +1,474 @@
+{
+  "dataset_name": "AUST CSE Carnival 8.0 - AI Build Hackathon seed dataset",
+  "version": "1.1.0",
+  "generated_at": "2026-09-06T04:23:39",
+  "seed_course": "CSE 3103 Database Management Systems",
+  "design_note": "Every defect in this dataset is deliberate so that each analysis feature has something real to detect during the demo.",
+  "planted_flaws": [
+    {
+      "id": "PF-01",
+      "where": "QP-2026-DRAFT-01",
+      "flaw": "CO6 receives zero marks",
+      "detected_by": "FND-001"
+    },
+    {
+      "id": "PF-02",
+      "where": "QP-2026-DRAFT-01",
+      "flaw": "48.3% lower-order marks against a 40% cap",
+      "detected_by": "FND-002"
+    },
+    {
+      "id": "PF-03",
+      "where": "Q-2026D-2B vs Q-2024M-3A",
+      "flaw": "0.94 cross-paper duplicate",
+      "detected_by": "FND-003 / SIM-001"
+    },
+    {
+      "id": "PF-04",
+      "where": "Q-2026D-4A vs Q-2025F-1B",
+      "flaw": "0.87 cross-paper duplicate",
+      "detected_by": "FND-004 / SIM-002"
+    },
+    {
+      "id": "PF-05",
+      "where": "Q-2026D-3A vs Q-2026D-1A",
+      "flaw": "0.81 intra-paper redundancy",
+      "detected_by": "FND-005 / SIM-003"
+    },
+    {
+      "id": "PF-06",
+      "where": "QP-2026-DRAFT-01",
+      "flaw": "Declared 60 marks, questions total 58",
+      "detected_by": "FND-006"
+    },
+    {
+      "id": "PF-07",
+      "where": "Q-2026D-5",
+      "flaw": "Question carries no CO tag",
+      "detected_by": "FND-007"
+    },
+    {
+      "id": "PF-08",
+      "where": "Q-2026D-4B",
+      "flaw": "CO5 assessed at Bloom L2 against a target of L5",
+      "detected_by": "FND-008"
+    },
+    {
+      "id": "PF-09",
+      "where": "EXR-006",
+      "flaw": "OCR read 10 marks as 1 (the on-stage edit)",
+      "detected_by": "confidence 0.42"
+    },
+    {
+      "id": "PF-10",
+      "where": "EXR-004",
+      "flaw": "Wrong CO suggested for an SQL question",
+      "detected_by": "confidence 0.55"
+    },
+    {
+      "id": "PF-11",
+      "where": "EXR-007",
+      "flaw": "Parts 4(a) and 4(b) merged into one row",
+      "detected_by": "confidence 0.51"
+    },
+    {
+      "id": "PF-12",
+      "where": "student_marks",
+      "flaw": "CO4 attainment below threshold",
+      "detected_by": "co_attainment"
+    },
+    {
+      "id": "PF-13",
+      "where": "ANS-03",
+      "flaw": "7-mark grader divergence caused by rubric criterion R3",
+      "detected_by": "DIV-001"
+    },
+    {
+      "id": "PF-14",
+      "where": "ANS-05",
+      "flaw": "6-mark grader divergence on a valid alternative decomposition",
+      "detected_by": "DIV-002"
+    },
+    {
+      "id": "PF-15",
+      "where": "PROP-001 vs CUR-4101",
+      "flaw": "66.7% topic overlap against a 40% limit",
+      "detected_by": "PFND-001"
+    },
+    {
+      "id": "PF-16",
+      "where": "PROP-001",
+      "flaw": "CSE 3103 is an undeclared prerequisite",
+      "detected_by": "PFND-002 / PRE-INF-001"
+    },
+    {
+      "id": "PF-17",
+      "where": "PROP-001",
+      "flaw": "Proposed CO4 maps to no programme outcome",
+      "detected_by": "PFND-003"
+    },
+    {
+      "id": "PF-18",
+      "where": "PROP-001",
+      "flaw": "No outcome above Bloom L4 in a level-4 course",
+      "detected_by": "PFND-004"
+    },
+    {
+      "id": "PF-19",
+      "where": "PROP-001",
+      "flaw": "No assessment plan supplied",
+      "detected_by": "PFND-005"
+    },
+    {
+      "id": "PF-20",
+      "where": "programme",
+      "flaw": "PO7 (environment and sustainability) addressed by no core course",
+      "detected_by": "po_course_coverage"
+    },
+    {
+      "id": "PF-21",
+      "where": "Q-2025F-1A",
+      "flaw": "Too easy and discriminates almost nothing: 5 wasted marks",
+      "detected_by": "item_analysis"
+    },
+    {
+      "id": "PF-22",
+      "where": "Q-2025F-4",
+      "flaw": "Poor discrimination at Bloom L5, suggesting an ambiguous question",
+      "detected_by": "item_analysis"
+    },
+    {
+      "id": "PF-23",
+      "where": "attainment_history",
+      "flaw": "CO4 and CO5 below threshold in two consecutive sessions",
+      "detected_by": "attainment_history.is_systemic"
+    },
+    {
+      "id": "PF-24",
+      "where": "QP-2026-DRAFT-01",
+      "flaw": "Six taught topics assessed by no question",
+      "detected_by": "FND-011"
+    },
+    {
+      "id": "PF-25",
+      "where": "REC-005",
+      "flaw": "A recommendation a faculty member should reject (off-syllabus schema)",
+      "detected_by": "recommendation_feedback"
+    }
+  ],
+  "tables": [
+    {
+      "file": "accreditation_standards.json",
+      "rows": 10
+    },
+    {
+      "file": "answer_scripts.json",
+      "rows": 6
+    },
+    {
+      "file": "api_quota.json",
+      "rows": 1
+    },
+    {
+      "file": "approval_workflow.json",
+      "rows": 2
+    },
+    {
+      "file": "assessment_plan.json",
+      "rows": 4
+    },
+    {
+      "file": "attainment_history.json",
+      "rows": 6
+    },
+    {
+      "file": "attainment_insights.json",
+      "rows": 1
+    },
+    {
+      "file": "audit_log.json",
+      "rows": 10
+    },
+    {
+      "file": "bloom_levels.json",
+      "rows": 6
+    },
+    {
+      "file": "co_attainment.json",
+      "rows": 6
+    },
+    {
+      "file": "co_po_map.json",
+      "rows": 14
+    },
+    {
+      "file": "course_offerings.json",
+      "rows": 3
+    },
+    {
+      "file": "course_outcomes.json",
+      "rows": 6
+    },
+    {
+      "file": "course_proposals.json",
+      "rows": 1
+    },
+    {
+      "file": "courses.json",
+      "rows": 3
+    },
+    {
+      "file": "curriculum_courses.json",
+      "rows": 18
+    },
+    {
+      "file": "curriculum_overlap.json",
+      "rows": 10
+    },
+    {
+      "file": "demo_script.json",
+      "rows": 10
+    },
+    {
+      "file": "departments.json",
+      "rows": 1
+    },
+    {
+      "file": "divergence_resolutions.json",
+      "rows": 2
+    },
+    {
+      "file": "exemplar_scripts.json",
+      "rows": 4
+    },
+    {
+      "file": "extracted_questions_raw.json",
+      "rows": 8
+    },
+    {
+      "file": "extraction_corrections.json",
+      "rows": 3
+    },
+    {
+      "file": "extraction_runs.json",
+      "rows": 1
+    },
+    {
+      "file": "faculty.json",
+      "rows": 5
+    },
+    {
+      "file": "faculty_preferences.json",
+      "rows": 2
+    },
+    {
+      "file": "file_assets.json",
+      "rows": 5
+    },
+    {
+      "file": "findings.json",
+      "rows": 11
+    },
+    {
+      "file": "grader_profiles.json",
+      "rows": 2
+    },
+    {
+      "file": "grader_scores.json",
+      "rows": 48
+    },
+    {
+      "file": "grading_consistency.json",
+      "rows": 1
+    },
+    {
+      "file": "grading_divergences.json",
+      "rows": 2
+    },
+    {
+      "file": "grading_sessions.json",
+      "rows": 2
+    },
+    {
+      "file": "item_analysis.json",
+      "rows": 7
+    },
+    {
+      "file": "item_analysis_summary.json",
+      "rows": 1
+    },
+    {
+      "file": "llm_calls.json",
+      "rows": 5
+    },
+    {
+      "file": "notifications.json",
+      "rows": 5
+    },
+    {
+      "file": "offline_cache.json",
+      "rows": 1
+    },
+    {
+      "file": "paper_analysis.json",
+      "rows": 1
+    },
+    {
+      "file": "paper_versions.json",
+      "rows": 3
+    },
+    {
+      "file": "po_attainment.json",
+      "rows": 6
+    },
+    {
+      "file": "po_course_coverage.json",
+      "rows": 12
+    },
+    {
+      "file": "policy.json",
+      "rows": 1
+    },
+    {
+      "file": "prerequisite_edges.json",
+      "rows": 16
+    },
+    {
+      "file": "program_outcomes.json",
+      "rows": 12
+    },
+    {
+      "file": "programs.json",
+      "rows": 1
+    },
+    {
+      "file": "proposal_findings.json",
+      "rows": 6
+    },
+    {
+      "file": "question_bank.json",
+      "rows": 6
+    },
+    {
+      "file": "question_papers.json",
+      "rows": 3
+    },
+    {
+      "file": "questions.json",
+      "rows": 21
+    },
+    {
+      "file": "recommendation_feedback.json",
+      "rows": 5
+    },
+    {
+      "file": "recommendations.json",
+      "rows": 5
+    },
+    {
+      "file": "review_comments.json",
+      "rows": 8
+    },
+    {
+      "file": "review_threads.json",
+      "rows": 3
+    },
+    {
+      "file": "rubric_amendments.json",
+      "rows": 3
+    },
+    {
+      "file": "rubric_criteria.json",
+      "rows": 4
+    },
+    {
+      "file": "rubrics.json",
+      "rows": 1
+    },
+    {
+      "file": "rule_catalog.json",
+      "rows": 23
+    },
+    {
+      "file": "script_totals.json",
+      "rows": 6
+    },
+    {
+      "file": "similarity_pairs.json",
+      "rows": 5
+    },
+    {
+      "file": "student_marks.json",
+      "rows": 210
+    },
+    {
+      "file": "students.json",
+      "rows": 30
+    },
+    {
+      "file": "syllabus_topics.json",
+      "rows": 14
+    }
+  ],
+  "journeys": [
+    {
+      "id": "J1",
+      "name": "Assessment quality",
+      "input": "Draft question paper PDF",
+      "output": "Findings, duplicate evidence and accepted revisions with a version trail",
+      "core_tables": [
+        "question_papers",
+        "questions",
+        "extracted_questions_raw",
+        "paper_analysis",
+        "findings",
+        "similarity_pairs",
+        "recommendations",
+        "paper_versions"
+      ]
+    },
+    {
+      "id": "J2",
+      "name": "Attainment and assessment fairness",
+      "input": "Marks for a past paper",
+      "output": "CO and PO attainment, multi-session trend, per-item difficulty and discrimination",
+      "core_tables": [
+        "student_marks",
+        "co_attainment",
+        "po_attainment",
+        "attainment_history",
+        "item_analysis"
+      ]
+    },
+    {
+      "id": "J3",
+      "name": "Grading consistency",
+      "input": "Rubric plus double-marked scripts",
+      "output": "Divergence diagnosis, third-examiner resolution and a rubric amendment",
+      "core_tables": [
+        "rubrics",
+        "rubric_criteria",
+        "answer_scripts",
+        "grader_scores",
+        "grading_divergences",
+        "divergence_resolutions",
+        "rubric_amendments",
+        "exemplar_scripts"
+      ]
+    },
+    {
+      "id": "J4",
+      "name": "Curriculum design against standards",
+      "input": "New course proposal",
+      "output": "Standards violations, computed overlap with existing courses, inferred prerequisites",
+      "core_tables": [
+        "course_proposals",
+        "accreditation_standards",
+        "curriculum_courses",
+        "curriculum_overlap",
+        "proposal_findings",
+        "prerequisite_edges"
+      ]
+    }
+  ]
+}

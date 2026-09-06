@@ -1,0 +1,46 @@
+[
+  {
+    "profile_id": "GP-001",
+    "grader_id": "F-002",
+    "rubric_id": "RUB-001",
+    "scripts_marked": 6,
+    "mean_awarded": 12.33,
+    "vs_panel_mean": 1.42,
+    "tendency": "lenient",
+    "criterion_bias": [
+      {
+        "criterion_id": "RC-3",
+        "mean_delta": 1.33,
+        "note": "Rewards the correct end state."
+      },
+      {
+        "criterion_id": "RC-1",
+        "mean_delta": 0.33
+      }
+    ],
+    "consistency_rank": 2,
+    "note": "Descriptive only. Intended to prompt calibration discussion, not to rank staff."
+  },
+  {
+    "profile_id": "GP-002",
+    "grader_id": "F-003",
+    "rubric_id": "RUB-001",
+    "scripts_marked": 6,
+    "mean_awarded": 10.17,
+    "vs_panel_mean": -0.75,
+    "tendency": "strict_on_method",
+    "criterion_bias": [
+      {
+        "criterion_id": "RC-3",
+        "mean_delta": -1.33,
+        "note": "Penalises departures from the model answer."
+      },
+      {
+        "criterion_id": "RC-2",
+        "mean_delta": -0.17
+      }
+    ],
+    "consistency_rank": 1,
+    "note": "Descriptive only. Intended to prompt calibration discussion, not to rank staff."
+  }
+]

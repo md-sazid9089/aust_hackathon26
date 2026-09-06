@@ -1,0 +1,70 @@
+[
+  {
+    "finding_id": "PFND-001",
+    "proposal_id": "PROP-001",
+    "standard_id": "STD-05",
+    "category": "curriculum",
+    "severity": "critical",
+    "title": "Topic overlap with CSE 4101 Advanced Database Systems exceeds the 40% limit",
+    "detail": "8 topics are shared: data warehousing, distributed databases, etl, nosql stores, olap, query optimisation, sharding, star schema. Directional coverage is 66.7%, against a permitted maximum of 40%.",
+    "evidence_overlap_ids": [
+      "OVL-006"
+    ],
+    "suggested_action": "Move data warehousing, star schema and OLAP out of the proposal and deepen stream processing and data-quality engineering instead, or merge the two courses."
+  },
+  {
+    "finding_id": "PFND-002",
+    "proposal_id": "PROP-001",
+    "standard_id": "STD-06",
+    "category": "curriculum",
+    "severity": "high",
+    "title": "CSE 3103 is an undeclared prerequisite",
+    "detail": "The proposal declares no prerequisite, yet most of its topics assume relational modelling and SQL from CSE 3103. Students could register without the required background.",
+    "evidence_overlap_ids": [],
+    "suggested_action": "Declare CSE 3103 as a prerequisite."
+  },
+  {
+    "finding_id": "PFND-003",
+    "proposal_id": "PROP-001",
+    "standard_id": "STD-03",
+    "category": "outcomes",
+    "severity": "critical",
+    "title": "Proposed CO4 maps to no programme outcome",
+    "detail": "CO4 has an empty PO mapping, so its contribution cannot enter the programme attainment calculation and the accreditation file will not reconcile.",
+    "evidence_overlap_ids": [],
+    "suggested_action": "Map CO4 to PO2, or rewrite it as an analysis outcome and map it to PO2 and PO4."
+  },
+  {
+    "finding_id": "PFND-004",
+    "proposal_id": "PROP-001",
+    "standard_id": "STD-04",
+    "category": "outcomes",
+    "severity": "high",
+    "title": "No outcome reaches Bloom level 5 in a level-4 course",
+    "detail": "The four proposed outcomes sit at L2, L3, L3 and L2. A final-year course is expected to demand evaluation or creation.",
+    "evidence_overlap_ids": [],
+    "suggested_action": "Raise CO3 to an evaluation outcome, for example comparing batch and stream architectures for a stated workload and justifying a recommendation."
+  },
+  {
+    "finding_id": "PFND-005",
+    "proposal_id": "PROP-001",
+    "standard_id": "STD-07",
+    "category": "assessment",
+    "severity": "high",
+    "title": "No assessment plan supplied",
+    "detail": "Without a component-to-outcome mapping there is no evidence that every outcome will be assessed.",
+    "evidence_overlap_ids": [],
+    "suggested_action": "Attach an assessment plan covering all four outcomes across class tests, midterm and final."
+  },
+  {
+    "finding_id": "PFND-006",
+    "proposal_id": "PROP-001",
+    "standard_id": "STD-02",
+    "category": "outcomes",
+    "severity": "low",
+    "title": "Outcome count is at the lower bound",
+    "detail": "Four outcomes is the minimum permitted. Splitting CO2 into modelling and pipeline construction would improve granularity.",
+    "evidence_overlap_ids": [],
+    "suggested_action": "Consider five or six outcomes."
+  }
+]

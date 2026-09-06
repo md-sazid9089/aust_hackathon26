@@ -1,0 +1,128 @@
+[
+  {
+    "topic_id": "T-01",
+    "course_id": "C-CSE3103",
+    "week": 1,
+    "title": "Introduction to database systems, file system vs DBMS",
+    "co_id": "CO1",
+    "contact_hours": 3,
+    "is_covered_in_draft_paper": true
+  },
+  {
+    "topic_id": "T-02",
+    "course_id": "C-CSE3103",
+    "week": 2,
+    "title": "Three-schema architecture, data independence, DBMS components",
+    "co_id": "CO1",
+    "contact_hours": 3,
+    "is_covered_in_draft_paper": true
+  },
+  {
+    "topic_id": "T-03",
+    "course_id": "C-CSE3103",
+    "week": 3,
+    "title": "Data models: hierarchical, network, relational, object-relational",
+    "co_id": "CO1",
+    "contact_hours": 3,
+    "is_covered_in_draft_paper": false
+  },
+  {
+    "topic_id": "T-04",
+    "course_id": "C-CSE3103",
+    "week": 4,
+    "title": "Entity-relationship model: entities, attributes, relationships, cardinality",
+    "co_id": "CO2",
+    "contact_hours": 3,
+    "is_covered_in_draft_paper": true
+  },
+  {
+    "topic_id": "T-05",
+    "course_id": "C-CSE3103",
+    "week": 5,
+    "title": "Enhanced ER: specialisation, generalisation, aggregation",
+    "co_id": "CO2",
+    "contact_hours": 3,
+    "is_covered_in_draft_paper": false
+  },
+  {
+    "topic_id": "T-06",
+    "course_id": "C-CSE3103",
+    "week": 6,
+    "title": "ER-to-relational mapping, integrity constraints",
+    "co_id": "CO2",
+    "contact_hours": 3,
+    "is_covered_in_draft_paper": false
+  },
+  {
+    "topic_id": "T-07",
+    "course_id": "C-CSE3103",
+    "week": 7,
+    "title": "Relational algebra; SQL DDL and DML; joins",
+    "co_id": "CO3",
+    "contact_hours": 3,
+    "is_covered_in_draft_paper": false
+  },
+  {
+    "topic_id": "T-08",
+    "course_id": "C-CSE3103",
+    "week": 8,
+    "title": "Nested subqueries, aggregate functions, GROUP BY, HAVING, views",
+    "co_id": "CO3",
+    "contact_hours": 3,
+    "is_covered_in_draft_paper": true
+  },
+  {
+    "topic_id": "T-09",
+    "course_id": "C-CSE3103",
+    "week": 9,
+    "title": "Functional dependencies, closure, candidate keys, 1NF-2NF-3NF",
+    "co_id": "CO4",
+    "contact_hours": 3,
+    "is_covered_in_draft_paper": true
+  },
+  {
+    "topic_id": "T-10",
+    "course_id": "C-CSE3103",
+    "week": 10,
+    "title": "BCNF, lossless-join and dependency-preserving decomposition",
+    "co_id": "CO4",
+    "contact_hours": 3,
+    "is_covered_in_draft_paper": false
+  },
+  {
+    "topic_id": "T-11",
+    "course_id": "C-CSE3103",
+    "week": 11,
+    "title": "Transactions, ACID properties, schedules, serialisability",
+    "co_id": "CO5",
+    "contact_hours": 3,
+    "is_covered_in_draft_paper": true
+  },
+  {
+    "topic_id": "T-12",
+    "course_id": "C-CSE3103",
+    "week": 12,
+    "title": "Concurrency control: two-phase locking, timestamp ordering, deadlock",
+    "co_id": "CO5",
+    "contact_hours": 3,
+    "is_covered_in_draft_paper": false
+  },
+  {
+    "topic_id": "T-13",
+    "course_id": "C-CSE3103",
+    "week": 13,
+    "title": "Recovery: logging, checkpointing, ARIES overview",
+    "co_id": "CO5",
+    "contact_hours": 3,
+    "is_covered_in_draft_paper": false
+  },
+  {
+    "topic_id": "T-14",
+    "course_id": "C-CSE3103",
+    "week": 14,
+    "title": "Indexing: B+ tree, hashing; query processing and optimisation",
+    "co_id": "CO6",
+    "contact_hours": 3,
+    "is_covered_in_draft_paper": false
+  }
+]

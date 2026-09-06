@@ -1,0 +1,10 @@
+[
+  {
+    "department_id": "DEPT-CSE",
+    "code": "CSE",
+    "name": "Department of Computer Science and Engineering",
+    "university": "Ahsanullah University of Science and Technology",
+    "accreditation_body": "BAETE",
+    "obe_enabled": true
+  }
+]

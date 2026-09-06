@@ -1,0 +1,78 @@
+[
+  {
+    "resolution_id": "RES-001",
+    "divergence_id": "DIV-001",
+    "script_id": "ANS-03",
+    "third_examiner_id": "F-001",
+    "resolved_at": "2025-06-11T10:15:00+06:00",
+    "grader1_total": 13,
+    "grader2_total": 6,
+    "ai_suggested_total": 11.5,
+    "final_total": 12.0,
+    "criterion_decisions": [
+      {
+        "criterion_id": "RC-1",
+        "final": 2,
+        "note": "Anomalies were never named, so R1 cannot be awarded in full."
+      },
+      {
+        "criterion_id": "RC-2",
+        "final": 4,
+        "note": "FD set is correct and minimal."
+      },
+      {
+        "criterion_id": "RC-3",
+        "final": 5,
+        "note": "Result is correct; one mark withheld for absent working."
+      },
+      {
+        "criterion_id": "RC-4",
+        "final": 1,
+        "note": "Capped rather than zeroed, so the omission is not penalised twice."
+      }
+    ],
+    "rationale": "Grader 2 penalised the missing working under both R1 and R3. The correct end state stands, but a mark is withheld under R3 for unshown reasoning.",
+    "rubric_change_raised": true,
+    "linked_rubric_amendment_id": "RAM-001",
+    "agreed_with_ai_suggestion": true,
+    "ai_delta": 0.5
+  },
+  {
+    "resolution_id": "RES-002",
+    "divergence_id": "DIV-002",
+    "script_id": "ANS-05",
+    "third_examiner_id": "F-005",
+    "resolved_at": "2025-06-11T11:40:00+06:00",
+    "grader1_total": 17,
+    "grader2_total": 11,
+    "ai_suggested_total": 16.0,
+    "final_total": 17.0,
+    "criterion_decisions": [
+      {
+        "criterion_id": "RC-1",
+        "final": 4,
+        "note": "All three anomalies with examples."
+      },
+      {
+        "criterion_id": "RC-2",
+        "final": 5,
+        "note": "Complete FD set."
+      },
+      {
+        "criterion_id": "RC-3",
+        "final": 5,
+        "note": "Alternative decomposition is valid; one mark withheld for unnecessary fragmentation."
+      },
+      {
+        "criterion_id": "RC-4",
+        "final": 3,
+        "note": "Losslessness argued, dependency preservation asserted."
+      }
+    ],
+    "rationale": "The three-relation decomposition satisfies every stated requirement. Departure from the model answer is not by itself an error.",
+    "rubric_change_raised": true,
+    "linked_rubric_amendment_id": "RAM-002",
+    "agreed_with_ai_suggestion": true,
+    "ai_delta": 1.0
+  }
+]

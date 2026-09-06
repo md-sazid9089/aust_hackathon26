@@ -1,0 +1,81 @@
+[
+  {
+    "workflow_id": "WF-001",
+    "entity_type": "paper",
+    "entity_id": "QP-2026-DRAFT-01",
+    "current_state": "moderation",
+    "states": [
+      {
+        "state": "drafted",
+        "actor_id": "F-004",
+        "at": "2026-09-06T09:12:44+06:00",
+        "status": "done"
+      },
+      {
+        "state": "ai_checked",
+        "actor_id": "system",
+        "at": "2026-09-06T09:17:22+06:00",
+        "status": "done",
+        "result": "9 findings"
+      },
+      {
+        "state": "revised",
+        "actor_id": "F-004",
+        "at": "2026-09-06T09:19:40+06:00",
+        "status": "done",
+        "result": "quality 54 to 82"
+      },
+      {
+        "state": "moderation",
+        "actor_id": "F-002",
+        "at": null,
+        "status": "in_progress"
+      },
+      {
+        "state": "chairman_approval",
+        "actor_id": "F-005",
+        "at": null,
+        "status": "pending"
+      },
+      {
+        "state": "printed",
+        "actor_id": null,
+        "at": null,
+        "status": "pending"
+      }
+    ]
+  },
+  {
+    "workflow_id": "WF-002",
+    "entity_type": "proposal",
+    "entity_id": "PROP-001",
+    "current_state": "committee_review",
+    "states": [
+      {
+        "state": "submitted",
+        "actor_id": "F-004",
+        "at": "2026-09-06T09:30:00+06:00",
+        "status": "done"
+      },
+      {
+        "state": "standards_checked",
+        "actor_id": "system",
+        "at": "2026-09-06T09:31:12+06:00",
+        "status": "done",
+        "result": "6 findings, 2 critical"
+      },
+      {
+        "state": "committee_review",
+        "actor_id": "F-005",
+        "at": null,
+        "status": "in_progress"
+      },
+      {
+        "state": "academic_council",
+        "actor_id": null,
+        "at": null,
+        "status": "pending"
+      }
+    ]
+  }
+]

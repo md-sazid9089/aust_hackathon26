@@ -1,0 +1,482 @@
+[
+  {
+    "score_id": "GSC-001",
+    "session_id": "GS-001",
+    "script_id": "ANS-01",
+    "rubric_id": "RUB-001",
+    "criterion_id": "RC-1",
+    "grader_id": "F-002",
+    "awarded_marks": 4,
+    "max_marks": 4
+  },
+  {
+    "score_id": "GSC-002",
+    "session_id": "GS-001",
+    "script_id": "ANS-01",
+    "rubric_id": "RUB-001",
+    "criterion_id": "RC-2",
+    "grader_id": "F-002",
+    "awarded_marks": 5,
+    "max_marks": 5
+  },
+  {
+    "score_id": "GSC-003",
+    "session_id": "GS-001",
+    "script_id": "ANS-01",
+    "rubric_id": "RUB-001",
+    "criterion_id": "RC-3",
+    "grader_id": "F-002",
+    "awarded_marks": 5,
+    "max_marks": 6
+  },
+  {
+    "score_id": "GSC-004",
+    "session_id": "GS-001",
+    "script_id": "ANS-01",
+    "rubric_id": "RUB-001",
+    "criterion_id": "RC-4",
+    "grader_id": "F-002",
+    "awarded_marks": 4,
+    "max_marks": 5
+  },
+  {
+    "score_id": "GSC-005",
+    "session_id": "GS-002",
+    "script_id": "ANS-01",
+    "rubric_id": "RUB-001",
+    "criterion_id": "RC-1",
+    "grader_id": "F-003",
+    "awarded_marks": 4,
+    "max_marks": 4
+  },
+  {
+    "score_id": "GSC-006",
+    "session_id": "GS-002",
+    "script_id": "ANS-01",
+    "rubric_id": "RUB-001",
+    "criterion_id": "RC-2",
+    "grader_id": "F-003",
+    "awarded_marks": 4,
+    "max_marks": 5
+  },
+  {
+    "score_id": "GSC-007",
+    "session_id": "GS-002",
+    "script_id": "ANS-01",
+    "rubric_id": "RUB-001",
+    "criterion_id": "RC-3",
+    "grader_id": "F-003",
+    "awarded_marks": 5,
+    "max_marks": 6
+  },
+  {
+    "score_id": "GSC-008",
+    "session_id": "GS-002",
+    "script_id": "ANS-01",
+    "rubric_id": "RUB-001",
+    "criterion_id": "RC-4",
+    "grader_id": "F-003",
+    "awarded_marks": 4,
+    "max_marks": 5
+  },
+  {
+    "score_id": "GSC-009",
+    "session_id": "GS-001",
+    "script_id": "ANS-02",
+    "rubric_id": "RUB-001",
+    "criterion_id": "RC-1",
+    "grader_id": "F-002",
+    "awarded_marks": 3,
+    "max_marks": 4
+  },
+  {
+    "score_id": "GSC-010",
+    "session_id": "GS-001",
+    "script_id": "ANS-02",
+    "rubric_id": "RUB-001",
+    "criterion_id": "RC-2",
+    "grader_id": "F-002",
+    "awarded_marks": 3,
+    "max_marks": 5
+  },
+  {
+    "score_id": "GSC-011",
+    "session_id": "GS-001",
+    "script_id": "ANS-02",
+    "rubric_id": "RUB-001",
+    "criterion_id": "RC-3",
+    "grader_id": "F-002",
+    "awarded_marks": 4,
+    "max_marks": 6
+  },
+  {
+    "score_id": "GSC-012",
+    "session_id": "GS-001",
+    "script_id": "ANS-02",
+    "rubric_id": "RUB-001",
+    "criterion_id": "RC-4",
+    "grader_id": "F-002",
+    "awarded_marks": 2,
+    "max_marks": 5
+  },
+  {
+    "score_id": "GSC-013",
+    "session_id": "GS-002",
+    "script_id": "ANS-02",
+    "rubric_id": "RUB-001",
+    "criterion_id": "RC-1",
+    "grader_id": "F-003",
+    "awarded_marks": 3,
+    "max_marks": 4
+  },
+  {
+    "score_id": "GSC-014",
+    "session_id": "GS-002",
+    "script_id": "ANS-02",
+    "rubric_id": "RUB-001",
+    "criterion_id": "RC-2",
+    "grader_id": "F-003",
+    "awarded_marks": 4,
+    "max_marks": 5
+  },
+  {
+    "score_id": "GSC-015",
+    "session_id": "GS-002",
+    "script_id": "ANS-02",
+    "rubric_id": "RUB-001",
+    "criterion_id": "RC-3",
+    "grader_id": "F-003",
+    "awarded_marks": 4,
+    "max_marks": 6
+  },
+  {
+    "score_id": "GSC-016",
+    "session_id": "GS-002",
+    "script_id": "ANS-02",
+    "rubric_id": "RUB-001",
+    "criterion_id": "RC-4",
+    "grader_id": "F-003",
+    "awarded_marks": 2,
+    "max_marks": 5
+  },
+  {
+    "score_id": "GSC-017",
+    "session_id": "GS-001",
+    "script_id": "ANS-03",
+    "rubric_id": "RUB-001",
+    "criterion_id": "RC-1",
+    "grader_id": "F-002",
+    "awarded_marks": 3,
+    "max_marks": 4
+  },
+  {
+    "score_id": "GSC-018",
+    "session_id": "GS-001",
+    "script_id": "ANS-03",
+    "rubric_id": "RUB-001",
+    "criterion_id": "RC-2",
+    "grader_id": "F-002",
+    "awarded_marks": 4,
+    "max_marks": 5
+  },
+  {
+    "score_id": "GSC-019",
+    "session_id": "GS-001",
+    "script_id": "ANS-03",
+    "rubric_id": "RUB-001",
+    "criterion_id": "RC-3",
+    "grader_id": "F-002",
+    "awarded_marks": 6,
+    "max_marks": 6
+  },
+  {
+    "score_id": "GSC-020",
+    "session_id": "GS-001",
+    "script_id": "ANS-03",
+    "rubric_id": "RUB-001",
+    "criterion_id": "RC-4",
+    "grader_id": "F-002",
+    "awarded_marks": 0,
+    "max_marks": 5
+  },
+  {
+    "score_id": "GSC-021",
+    "session_id": "GS-002",
+    "script_id": "ANS-03",
+    "rubric_id": "RUB-001",
+    "criterion_id": "RC-1",
+    "grader_id": "F-003",
+    "awarded_marks": 2,
+    "max_marks": 4
+  },
+  {
+    "score_id": "GSC-022",
+    "session_id": "GS-002",
+    "script_id": "ANS-03",
+    "rubric_id": "RUB-001",
+    "criterion_id": "RC-2",
+    "grader_id": "F-003",
+    "awarded_marks": 2,
+    "max_marks": 5
+  },
+  {
+    "score_id": "GSC-023",
+    "session_id": "GS-002",
+    "script_id": "ANS-03",
+    "rubric_id": "RUB-001",
+    "criterion_id": "RC-3",
+    "grader_id": "F-003",
+    "awarded_marks": 2,
+    "max_marks": 6
+  },
+  {
+    "score_id": "GSC-024",
+    "session_id": "GS-002",
+    "script_id": "ANS-03",
+    "rubric_id": "RUB-001",
+    "criterion_id": "RC-4",
+    "grader_id": "F-003",
+    "awarded_marks": 0,
+    "max_marks": 5
+  },
+  {
+    "score_id": "GSC-025",
+    "session_id": "GS-001",
+    "script_id": "ANS-04",
+    "rubric_id": "RUB-001",
+    "criterion_id": "RC-1",
+    "grader_id": "F-002",
+    "awarded_marks": 2,
+    "max_marks": 4
+  },
+  {
+    "score_id": "GSC-026",
+    "session_id": "GS-001",
+    "script_id": "ANS-04",
+    "rubric_id": "RUB-001",
+    "criterion_id": "RC-2",
+    "grader_id": "F-002",
+    "awarded_marks": 3,
+    "max_marks": 5
+  },
+  {
+    "score_id": "GSC-027",
+    "session_id": "GS-001",
+    "script_id": "ANS-04",
+    "rubric_id": "RUB-001",
+    "criterion_id": "RC-3",
+    "grader_id": "F-002",
+    "awarded_marks": 3,
+    "max_marks": 6
+  },
+  {
+    "score_id": "GSC-028",
+    "session_id": "GS-001",
+    "script_id": "ANS-04",
+    "rubric_id": "RUB-001",
+    "criterion_id": "RC-4",
+    "grader_id": "F-002",
+    "awarded_marks": 1,
+    "max_marks": 5
+  },
+  {
+    "score_id": "GSC-029",
+    "session_id": "GS-002",
+    "script_id": "ANS-04",
+    "rubric_id": "RUB-001",
+    "criterion_id": "RC-1",
+    "grader_id": "F-003",
+    "awarded_marks": 2,
+    "max_marks": 4
+  },
+  {
+    "score_id": "GSC-030",
+    "session_id": "GS-002",
+    "script_id": "ANS-04",
+    "rubric_id": "RUB-001",
+    "criterion_id": "RC-2",
+    "grader_id": "F-003",
+    "awarded_marks": 2,
+    "max_marks": 5
+  },
+  {
+    "score_id": "GSC-031",
+    "session_id": "GS-002",
+    "script_id": "ANS-04",
+    "rubric_id": "RUB-001",
+    "criterion_id": "RC-3",
+    "grader_id": "F-003",
+    "awarded_marks": 3,
+    "max_marks": 6
+  },
+  {
+    "score_id": "GSC-032",
+    "session_id": "GS-002",
+    "script_id": "ANS-04",
+    "rubric_id": "RUB-001",
+    "criterion_id": "RC-4",
+    "grader_id": "F-003",
+    "awarded_marks": 1,
+    "max_marks": 5
+  },
+  {
+    "score_id": "GSC-033",
+    "session_id": "GS-001",
+    "script_id": "ANS-05",
+    "rubric_id": "RUB-001",
+    "criterion_id": "RC-1",
+    "grader_id": "F-002",
+    "awarded_marks": 4,
+    "max_marks": 4
+  },
+  {
+    "score_id": "GSC-034",
+    "session_id": "GS-001",
+    "script_id": "ANS-05",
+    "rubric_id": "RUB-001",
+    "criterion_id": "RC-2",
+    "grader_id": "F-002",
+    "awarded_marks": 5,
+    "max_marks": 5
+  },
+  {
+    "score_id": "GSC-035",
+    "session_id": "GS-001",
+    "script_id": "ANS-05",
+    "rubric_id": "RUB-001",
+    "criterion_id": "RC-3",
+    "grader_id": "F-002",
+    "awarded_marks": 5,
+    "max_marks": 6
+  },
+  {
+    "score_id": "GSC-036",
+    "session_id": "GS-001",
+    "script_id": "ANS-05",
+    "rubric_id": "RUB-001",
+    "criterion_id": "RC-4",
+    "grader_id": "F-002",
+    "awarded_marks": 3,
+    "max_marks": 5
+  },
+  {
+    "score_id": "GSC-037",
+    "session_id": "GS-002",
+    "script_id": "ANS-05",
+    "rubric_id": "RUB-001",
+    "criterion_id": "RC-1",
+    "grader_id": "F-003",
+    "awarded_marks": 3,
+    "max_marks": 4
+  },
+  {
+    "score_id": "GSC-038",
+    "session_id": "GS-002",
+    "script_id": "ANS-05",
+    "rubric_id": "RUB-001",
+    "criterion_id": "RC-2",
+    "grader_id": "F-003",
+    "awarded_marks": 4,
+    "max_marks": 5
+  },
+  {
+    "score_id": "GSC-039",
+    "session_id": "GS-002",
+    "script_id": "ANS-05",
+    "rubric_id": "RUB-001",
+    "criterion_id": "RC-3",
+    "grader_id": "F-003",
+    "awarded_marks": 2,
+    "max_marks": 6
+  },
+  {
+    "score_id": "GSC-040",
+    "session_id": "GS-002",
+    "script_id": "ANS-05",
+    "rubric_id": "RUB-001",
+    "criterion_id": "RC-4",
+    "grader_id": "F-003",
+    "awarded_marks": 2,
+    "max_marks": 5
+  },
+  {
+    "score_id": "GSC-041",
+    "session_id": "GS-001",
+    "script_id": "ANS-06",
+    "rubric_id": "RUB-001",
+    "criterion_id": "RC-1",
+    "grader_id": "F-002",
+    "awarded_marks": 1,
+    "max_marks": 4
+  },
+  {
+    "score_id": "GSC-042",
+    "session_id": "GS-001",
+    "script_id": "ANS-06",
+    "rubric_id": "RUB-001",
+    "criterion_id": "RC-2",
+    "grader_id": "F-002",
+    "awarded_marks": 2,
+    "max_marks": 5
+  },
+  {
+    "score_id": "GSC-043",
+    "session_id": "GS-001",
+    "script_id": "ANS-06",
+    "rubric_id": "RUB-001",
+    "criterion_id": "RC-3",
+    "grader_id": "F-002",
+    "awarded_marks": 2,
+    "max_marks": 6
+  },
+  {
+    "score_id": "GSC-044",
+    "session_id": "GS-001",
+    "script_id": "ANS-06",
+    "rubric_id": "RUB-001",
+    "criterion_id": "RC-4",
+    "grader_id": "F-002",
+    "awarded_marks": 0,
+    "max_marks": 5
+  },
+  {
+    "score_id": "GSC-045",
+    "session_id": "GS-002",
+    "script_id": "ANS-06",
+    "rubric_id": "RUB-001",
+    "criterion_id": "RC-1",
+    "grader_id": "F-003",
+    "awarded_marks": 2,
+    "max_marks": 4
+  },
+  {
+    "score_id": "GSC-046",
+    "session_id": "GS-002",
+    "script_id": "ANS-06",
+    "rubric_id": "RUB-001",
+    "criterion_id": "RC-2",
+    "grader_id": "F-003",
+    "awarded_marks": 2,
+    "max_marks": 5
+  },
+  {
+    "score_id": "GSC-047",
+    "session_id": "GS-002",
+    "script_id": "ANS-06",
+    "rubric_id": "RUB-001",
+    "criterion_id": "RC-3",
+    "grader_id": "F-003",
+    "awarded_marks": 2,
+    "max_marks": 6
+  },
+  {
+    "score_id": "GSC-048",
+    "session_id": "GS-002",
+    "script_id": "ANS-06",
+    "rubric_id": "RUB-001",
+    "criterion_id": "RC-4",
+    "grader_id": "F-003",
+    "awarded_marks": 0,
+    "max_marks": 5
+  }
+]

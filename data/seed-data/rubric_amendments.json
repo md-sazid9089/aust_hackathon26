@@ -1,0 +1,44 @@
+[
+  {
+    "amendment_id": "RAM-001",
+    "rubric_id": "RUB-001",
+    "criterion_id": "RC-4",
+    "version_from": 2,
+    "version_to": 3,
+    "raised_from_divergence_id": "DIV-001",
+    "proposed_by": "ai",
+    "approved_by": "F-001",
+    "old_text": "No justification: 0.",
+    "new_text": "A correct final schema presented without justification is capped at 1 of 5 rather than scored 0, so that unshown working is not penalised under both R3 and R4.",
+    "status": "approved",
+    "approved_at": "2025-06-12T09:00:00+06:00"
+  },
+  {
+    "amendment_id": "RAM-002",
+    "rubric_id": "RUB-001",
+    "criterion_id": "RC-3",
+    "version_from": 2,
+    "version_to": 3,
+    "raised_from_divergence_id": "DIV-002",
+    "proposed_by": "ai",
+    "approved_by": "F-005",
+    "old_text": "All resulting relations in 3NF, keys correct.",
+    "new_text": "Any decomposition that is lossless, dependency preserving and in 3NF receives full marks, whether or not it matches the model answer. See exemplar EX-004.",
+    "status": "approved",
+    "approved_at": "2025-06-12T09:05:00+06:00"
+  },
+  {
+    "amendment_id": "RAM-003",
+    "rubric_id": "RUB-001",
+    "criterion_id": "RC-3",
+    "version_from": 3,
+    "version_to": 4,
+    "raised_from_divergence_id": null,
+    "proposed_by": "ai",
+    "approved_by": null,
+    "old_text": "(band descriptors only)",
+    "new_text": "Attach worked exemplars at the full, middle and low bands so both markers anchor to the same standard before marking begins.",
+    "status": "pending",
+    "approved_at": null
+  }
+]

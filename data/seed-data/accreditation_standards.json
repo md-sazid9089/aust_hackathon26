@@ -1,0 +1,72 @@
+[
+  {
+    "standard_id": "STD-01",
+    "category": "structure",
+    "rule": "Theory course credit must be between 2.0 and 4.0.",
+    "severity": "high",
+    "auto_checkable": true
+  },
+  {
+    "standard_id": "STD-02",
+    "category": "outcomes",
+    "rule": "A course must define between 4 and 8 course outcomes.",
+    "severity": "high",
+    "auto_checkable": true
+  },
+  {
+    "standard_id": "STD-03",
+    "category": "outcomes",
+    "rule": "Every course outcome must map to at least one programme outcome.",
+    "severity": "critical",
+    "auto_checkable": true
+  },
+  {
+    "standard_id": "STD-04",
+    "category": "outcomes",
+    "rule": "A level-4 course must contain at least one outcome at Bloom level 5 or above.",
+    "severity": "high",
+    "auto_checkable": true
+  },
+  {
+    "standard_id": "STD-05",
+    "category": "curriculum",
+    "rule": "Topic overlap with any existing course must not exceed 40%.",
+    "severity": "critical",
+    "auto_checkable": true
+  },
+  {
+    "standard_id": "STD-06",
+    "category": "curriculum",
+    "rule": "A course whose topics depend on another course must declare it as a prerequisite.",
+    "severity": "high",
+    "auto_checkable": true
+  },
+  {
+    "standard_id": "STD-07",
+    "category": "assessment",
+    "rule": "An assessment plan mapping every outcome to at least one assessment component is mandatory.",
+    "severity": "high",
+    "auto_checkable": true
+  },
+  {
+    "standard_id": "STD-08",
+    "category": "structure",
+    "rule": "Contact hours must equal 14 weeks multiplied by the weekly contact hours.",
+    "severity": "medium",
+    "auto_checkable": true
+  },
+  {
+    "standard_id": "STD-09",
+    "category": "curriculum",
+    "rule": "Every programme outcome must be addressed by at least one course in the programme.",
+    "severity": "medium",
+    "auto_checkable": true
+  },
+  {
+    "standard_id": "STD-10",
+    "category": "outcomes",
+    "rule": "Outcome statements must begin with an observable action verb drawn from the Bloom taxonomy.",
+    "severity": "low",
+    "auto_checkable": true
+  }
+]

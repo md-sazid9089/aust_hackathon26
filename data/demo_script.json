@@ -1,0 +1,144 @@
+[
+  {
+    "step": 1,
+    "beat": "problem",
+    "duration_sec": 20,
+    "journey": "setup",
+    "action": "Open the CSE 3103 course file: six outcomes, the CO-PO matrix and 14 weeks of syllabus already on record.",
+    "tables_used": [
+      "courses",
+      "course_outcomes",
+      "co_po_map",
+      "syllabus_topics"
+    ],
+    "expected_screen": "Course overview"
+  },
+  {
+    "step": 2,
+    "beat": "input",
+    "duration_sec": 15,
+    "journey": "assessment",
+    "action": "Upload CSE3103_Final_Spring2026_DRAFT.pdf.",
+    "tables_used": [
+      "question_papers",
+      "file_assets",
+      "extraction_runs"
+    ],
+    "expected_screen": "Upload and extraction"
+  },
+  {
+    "step": 3,
+    "beat": "human_in_the_loop",
+    "duration_sec": 40,
+    "journey": "assessment",
+    "action": "Three low-confidence rows are highlighted. Edit EXR-006 marks 1 to 10, retag EXR-004 to CO3, split the merged EXR-007. Confirm.",
+    "tables_used": [
+      "extracted_questions_raw",
+      "extraction_corrections"
+    ],
+    "expected_screen": "Confirm table",
+    "is_key_moment": true,
+    "why": "Proves the faculty member stays in control and the AI only proposes."
+  },
+  {
+    "step": 4,
+    "beat": "what_the_ai_does",
+    "duration_sec": 35,
+    "journey": "assessment",
+    "action": "Run analysis. CO6 shows zero on the heatmap, Bloom bar shows 48.3% lower order, three duplicate pairs open side by side against their 2024 and 2025 sources.",
+    "tables_used": [
+      "paper_analysis",
+      "findings",
+      "similarity_pairs",
+      "rule_catalog"
+    ],
+    "expected_screen": "Analysis dashboard"
+  },
+  {
+    "step": 5,
+    "beat": "useful_result",
+    "duration_sec": 35,
+    "journey": "assessment",
+    "action": "Accept three recommendations. Quality score moves 54 to 68 to 82, marks reconcile to 60, six findings close. Reject REC-005 with a reason to show the feedback loop.",
+    "tables_used": [
+      "recommendations",
+      "recommendation_feedback",
+      "paper_versions"
+    ],
+    "expected_screen": "Version timeline"
+  },
+  {
+    "step": 6,
+    "beat": "second_journey",
+    "duration_sec": 30,
+    "journey": "attainment",
+    "action": "Switch to the attainment view. CO4 and CO5 are red and have now missed the threshold in two consecutive sessions, so the alert is systemic rather than a one-off.",
+    "tables_used": [
+      "co_attainment",
+      "po_attainment",
+      "attainment_history",
+      "attainment_insights"
+    ],
+    "expected_screen": "Attainment trend"
+  },
+  {
+    "step": 7,
+    "beat": "depth",
+    "duration_sec": 25,
+    "journey": "attainment",
+    "action": "Open item analysis. Question 1(a) has a facility index of 0.857 and a discrimination index of 0.1: five marks that separate nobody. Question 4 is the same problem at Bloom level 5.",
+    "tables_used": [
+      "item_analysis",
+      "item_analysis_summary"
+    ],
+    "expected_screen": "Item analysis",
+    "why": "Answers the brief's question of whether the assessment fairly measures what students were meant to learn."
+  },
+  {
+    "step": 8,
+    "beat": "third_journey",
+    "duration_sec": 35,
+    "journey": "grading",
+    "action": "Grading consistency report. ANS-03 and ANS-05 flagged, both tracing to criterion R3. The system proposes a rubric amendment rather than just a mark, and the third examiner accepts it.",
+    "tables_used": [
+      "grading_consistency",
+      "grading_divergences",
+      "divergence_resolutions",
+      "rubric_amendments",
+      "exemplar_scripts"
+    ],
+    "expected_screen": "Consistency report",
+    "why": "Diagnoses the rubric defect, not just the number gap."
+  },
+  {
+    "step": 9,
+    "beat": "fourth_journey",
+    "duration_sec": 40,
+    "journey": "curriculum",
+    "action": "Submit the CSE 4109 proposal. The standards checker returns six findings: 66.7% topic overlap with CSE 4101, an undeclared CSE 3103 prerequisite, an unmapped outcome and no outcome above Bloom level 4. The overlap map shows exactly which eight topics collide.",
+    "tables_used": [
+      "course_proposals",
+      "accreditation_standards",
+      "curriculum_overlap",
+      "proposal_findings",
+      "prerequisite_edges",
+      "po_course_coverage"
+    ],
+    "expected_screen": "Curriculum overlap map",
+    "why": "This is the problem statement's own opening example: a syllabus that meets standards and complements existing courses."
+  },
+  {
+    "step": 10,
+    "beat": "close",
+    "duration_sec": 20,
+    "journey": "close",
+    "action": "Show the moderation workflow, the review threads and the export. Mention the cached fallback and that no result on screen was hard-coded.",
+    "tables_used": [
+      "approval_workflow",
+      "review_threads",
+      "review_comments",
+      "offline_cache"
+    ],
+    "expected_screen": "Export"
+  }
+]

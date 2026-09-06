@@ -1,0 +1,89 @@
+[
+  {
+    "recommendation_id": "REC-001",
+    "analysis_id": "AN-001",
+    "type": "replace_question",
+    "target_question_id": "Q-2026D-3A",
+    "priority": 1,
+    "expected_quality_gain": 14,
+    "addresses_finding_ids": [
+      "FND-001",
+      "FND-005"
+    ],
+    "proposed_text": "A frequently executed report joins orders (2.4 million rows) with customers (5,200 rows) and filters on order_date within the last 30 days. Assess a composite index on (order_date, customer_id), a covering index and a partial index. Recommend one and justify your recommendation in terms of selectivity and maintenance cost.",
+    "proposed_marks": 6,
+    "proposed_co_id": "CO6",
+    "proposed_bloom_id": "L5",
+    "status": "pending",
+    "accepted_by": null
+  },
+  {
+    "recommendation_id": "REC-002",
+    "analysis_id": "AN-001",
+    "type": "rewrite_question",
+    "target_question_id": "Q-2026D-2B",
+    "priority": 2,
+    "expected_quality_gain": 9,
+    "addresses_finding_ids": [
+      "FND-003"
+    ],
+    "proposed_text": "For each department, list the department name together with the number of employees whose salary is above the median salary of that department. Order the result by that count in descending order.",
+    "proposed_marks": 7,
+    "proposed_co_id": "CO3",
+    "proposed_bloom_id": "L3",
+    "status": "pending",
+    "accepted_by": null
+  },
+  {
+    "recommendation_id": "REC-003",
+    "analysis_id": "AN-001",
+    "type": "raise_bloom_level",
+    "target_question_id": "Q-2026D-4B",
+    "priority": 3,
+    "expected_quality_gain": 8,
+    "addresses_finding_ids": [
+      "FND-002",
+      "FND-008"
+    ],
+    "proposed_text": "Given the interleaved schedule S below over transactions T1, T2 and T3, determine whether S is conflict serialisable. If it is not, evaluate whether strict two-phase locking or timestamp ordering would have prevented the anomaly, and justify which you would deploy for this workload.",
+    "proposed_marks": 9,
+    "proposed_co_id": "CO5",
+    "proposed_bloom_id": "L5",
+    "status": "pending",
+    "accepted_by": null
+  },
+  {
+    "recommendation_id": "REC-004",
+    "analysis_id": "AN-001",
+    "type": "tag_question",
+    "target_question_id": "Q-2026D-5",
+    "priority": 4,
+    "expected_quality_gain": 4,
+    "addresses_finding_ids": [
+      "FND-007"
+    ],
+    "proposed_text": null,
+    "proposed_marks": 5,
+    "proposed_co_id": "CO5",
+    "proposed_bloom_id": "L2",
+    "status": "pending",
+    "accepted_by": null
+  },
+  {
+    "recommendation_id": "REC-005",
+    "analysis_id": "AN-001",
+    "type": "rewrite_question",
+    "target_question_id": "Q-2026D-4A",
+    "priority": 5,
+    "expected_quality_gain": 7,
+    "addresses_finding_ids": [
+      "FND-004"
+    ],
+    "proposed_text": "Using the schema Sales(sale_id, branch_id, product_id, qty, sale_date), write a single SQL statement that returns the branches whose average monthly revenue in 2025 exceeded the overall company average, showing the branch name and the difference.",
+    "proposed_marks": 7,
+    "proposed_co_id": "CO3",
+    "proposed_bloom_id": "L3",
+    "status": "pending",
+    "accepted_by": null
+  }
+]

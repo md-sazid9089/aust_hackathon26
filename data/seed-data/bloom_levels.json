@@ -1,0 +1,92 @@
+[
+  {
+    "bloom_id": "L1",
+    "level": 1,
+    "name": "Remember",
+    "order_class": "lower",
+    "verbs": [
+      "define",
+      "list",
+      "state",
+      "name",
+      "recall",
+      "identify"
+    ],
+    "description": "Recall of facts and basic concepts."
+  },
+  {
+    "bloom_id": "L2",
+    "level": 2,
+    "name": "Understand",
+    "order_class": "lower",
+    "verbs": [
+      "explain",
+      "describe",
+      "compare",
+      "distinguish",
+      "summarize",
+      "interpret"
+    ],
+    "description": "Explain ideas or concepts."
+  },
+  {
+    "bloom_id": "L3",
+    "level": 3,
+    "name": "Apply",
+    "order_class": "middle",
+    "verbs": [
+      "apply",
+      "compute",
+      "write",
+      "draw",
+      "construct",
+      "solve",
+      "demonstrate"
+    ],
+    "description": "Use information in new situations."
+  },
+  {
+    "bloom_id": "L4",
+    "level": 4,
+    "name": "Analyze",
+    "order_class": "higher",
+    "verbs": [
+      "analyze",
+      "differentiate",
+      "determine",
+      "examine",
+      "decompose",
+      "diagnose"
+    ],
+    "description": "Draw connections among ideas."
+  },
+  {
+    "bloom_id": "L5",
+    "level": 5,
+    "name": "Evaluate",
+    "order_class": "higher",
+    "verbs": [
+      "evaluate",
+      "justify",
+      "critique",
+      "assess",
+      "recommend",
+      "defend"
+    ],
+    "description": "Justify a stand or decision."
+  },
+  {
+    "bloom_id": "L6",
+    "level": 6,
+    "name": "Create",
+    "order_class": "higher",
+    "verbs": [
+      "design",
+      "formulate",
+      "propose",
+      "develop",
+      "compose"
+    ],
+    "description": "Produce new or original work."
+  }
+]

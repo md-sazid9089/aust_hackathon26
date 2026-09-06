@@ -1,0 +1,139 @@
+[
+  {
+    "cache_id": "CACHE-SEED-001",
+    "course_id": "C-CSE3103",
+    "paper_id": "QP-2026-DRAFT-01",
+    "analysis_id": "AN-001",
+    "generated_at": "2026-09-06T09:17:22+06:00",
+    "expires_at": "2026-09-07T23:59:59+06:00",
+    "is_offline_fallback": true,
+    "covers": [
+      "extraction",
+      "paper_analysis",
+      "findings",
+      "recommendations",
+      "co_attainment",
+      "grading_consistency"
+    ],
+    "payload": {
+      "quality_score": 54,
+      "quality_band": "needs_revision",
+      "computed_total_marks": 58,
+      "declared_total_marks": 60,
+      "co_coverage": [
+        {
+          "co_id": "CO1",
+          "marks": 18,
+          "percent_of_paper": 31.0,
+          "target_percent": 15,
+          "deviation": 16.0,
+          "question_ids": [
+            "Q-2026D-1A",
+            "Q-2026D-1B",
+            "Q-2026D-3A"
+          ],
+          "status": "over_weighted",
+          "severity": "medium"
+        },
+        {
+          "co_id": "CO2",
+          "marks": 6,
+          "percent_of_paper": 10.3,
+          "target_percent": 20,
+          "deviation": -9.7,
+          "question_ids": [
+            "Q-2026D-2A"
+          ],
+          "status": "under_weighted",
+          "severity": "high"
+        },
+        {
+          "co_id": "CO3",
+          "marks": 14,
+          "percent_of_paper": 24.1,
+          "target_percent": 20,
+          "deviation": 4.1,
+          "question_ids": [
+            "Q-2026D-2B",
+            "Q-2026D-4A"
+          ],
+          "status": "balanced",
+          "severity": "none"
+        },
+        {
+          "co_id": "CO4",
+          "marks": 10,
+          "percent_of_paper": 17.2,
+          "target_percent": 20,
+          "deviation": -2.8,
+          "question_ids": [
+            "Q-2026D-3B"
+          ],
+          "status": "balanced",
+          "severity": "none"
+        },
+        {
+          "co_id": "CO5",
+          "marks": 5,
+          "percent_of_paper": 8.6,
+          "target_percent": 15,
+          "deviation": -6.4,
+          "question_ids": [
+            "Q-2026D-4B"
+          ],
+          "status": "under_weighted",
+          "severity": "high"
+        },
+        {
+          "co_id": "CO6",
+          "marks": 0,
+          "percent_of_paper": 0.0,
+          "target_percent": 10,
+          "deviation": -10.0,
+          "question_ids": [],
+          "status": "not_assessed",
+          "severity": "critical"
+        }
+      ],
+      "untagged_marks": 5,
+      "bloom_summary": {
+        "lower_order_marks": 28,
+        "lower_order_percent": 48.3,
+        "middle_order_marks": 20,
+        "middle_order_percent": 34.5,
+        "higher_order_marks": 10,
+        "higher_order_percent": 17.2,
+        "policy_max_lower_percent": 40,
+        "policy_min_higher_percent": 30,
+        "lower_order_violation": true,
+        "higher_order_violation": true
+      },
+      "finding_ids": [
+        "FND-001",
+        "FND-002",
+        "FND-003",
+        "FND-004",
+        "FND-005",
+        "FND-006",
+        "FND-007",
+        "FND-008",
+        "FND-009"
+      ],
+      "duplicate_pair_ids": [
+        "SIM-001",
+        "SIM-002",
+        "SIM-003",
+        "SIM-004"
+      ],
+      "weak_co_ids": [
+        "CO4",
+        "CO5"
+      ],
+      "divergent_script_ids": [
+        "ANS-03",
+        "ANS-05"
+      ]
+    },
+    "note": "Loaded automatically when the API is unreachable so the demo still renders results."
+  }
+]

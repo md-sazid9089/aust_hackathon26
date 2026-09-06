@@ -1,0 +1,48 @@
+[
+  {
+    "plan_id": "AP-01",
+    "course_id": "C-CSE3103",
+    "component": "Class Test",
+    "weight_percent": 20,
+    "co_ids": [
+      "CO1",
+      "CO2"
+    ],
+    "count": 3
+  },
+  {
+    "plan_id": "AP-02",
+    "course_id": "C-CSE3103",
+    "component": "Mid Term",
+    "weight_percent": 20,
+    "co_ids": [
+      "CO1",
+      "CO2",
+      "CO3"
+    ],
+    "count": 1
+  },
+  {
+    "plan_id": "AP-03",
+    "course_id": "C-CSE3103",
+    "component": "Attendance",
+    "weight_percent": 10,
+    "co_ids": [],
+    "count": 1
+  },
+  {
+    "plan_id": "AP-04",
+    "course_id": "C-CSE3103",
+    "component": "Final Examination",
+    "weight_percent": 50,
+    "co_ids": [
+      "CO1",
+      "CO2",
+      "CO3",
+      "CO4",
+      "CO5",
+      "CO6"
+    ],
+    "count": 1
+  }
+]

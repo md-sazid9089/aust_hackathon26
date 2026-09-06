@@ -1,0 +1,50 @@
+[
+  {
+    "paper_id": "QP-2024-MID-01",
+    "course_id": "C-CSE3103",
+    "offering_id": "OFF-2024-SP",
+    "title": "Mid Term Examination, Spring 2024",
+    "exam_type": "midterm",
+    "session": "Spring 2024",
+    "exam_date": "2024-03-18",
+    "duration_minutes": 90,
+    "declared_total_marks": 30,
+    "status": "archived",
+    "setter_id": "F-002",
+    "source_file": "CSE3103_Mid_Spring2024.pdf",
+    "is_draft": false
+  },
+  {
+    "paper_id": "QP-2025-FIN-01",
+    "course_id": "C-CSE3103",
+    "offering_id": "OFF-2025-SP",
+    "title": "Final Examination, Spring 2025",
+    "exam_type": "final",
+    "session": "Spring 2025",
+    "exam_date": "2025-06-02",
+    "duration_minutes": 180,
+    "declared_total_marks": 60,
+    "status": "archived",
+    "setter_id": "F-002",
+    "source_file": "CSE3103_Final_Spring2025.pdf",
+    "is_draft": false
+  },
+  {
+    "paper_id": "QP-2026-DRAFT-01",
+    "course_id": "C-CSE3103",
+    "offering_id": "OFF-2026-SP",
+    "title": "Final Examination, Spring 2026 (DRAFT)",
+    "exam_type": "final",
+    "session": "Spring 2026",
+    "exam_date": "2026-06-08",
+    "duration_minutes": 180,
+    "declared_total_marks": 60,
+    "status": "under_review",
+    "setter_id": "F-004",
+    "source_file": "CSE3103_Final_Spring2026_DRAFT.pdf",
+    "is_draft": true,
+    "uploaded_at": "2026-09-06T09:12:44+06:00",
+    "computed_total_marks": 58,
+    "note": "Seed draft. Flaws are intentional: CO6 uncovered, Bloom skew, 3 duplicate pairs, 1 untagged question, total mismatch 58 vs 60."
+  }
+]
