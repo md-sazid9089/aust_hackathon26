@@ -26,14 +26,13 @@
 
 | Layer                     | Choice                                                              | Notes                                |
 | ------------------------- | ------------------------------------------------------------------- | ------------------------------------ |
-| Language                  | _TODO (architect)_                                                  |                                      |
-| Frontend                  | _TODO (architect)_                                                  | web app, desktop-first responsive    |
-| Backend                   | _TODO (architect)_                                                  | server-side LLM calls, SSE progress  |
-| Database / Auth / Storage | **Supabase** (Postgres + pgvector, Auth, Storage)                   | D-004; RLS on `owner_id`             |
-| AI                        | Hosted LLM with JSON-schema output + embeddings (vendor TBD, A-005) | D-007                                |
-| Tooling                   | _TODO (architect)_                                                  | package manager, linter, test runner |
+| Frontend                  | React 18 + Vite 5 + TS 5, Tailwind + shadcn/ui, React Router v6, TanStack Query v5, RHF + zod, Recharts, native `EventSource` | SPA; Supabase JS used **only** for auth |
+| Backend                   | Python 3.12, FastAPI 0.115, SQLAlchemy 2 async + asyncpg, LangChain 0.3 + LangGraph 0.2, slowapi, structlog; pypdf / python-docx / openpyxl; Jinja2 + WeasyPrint (PDF optional) | REST `/api/v1` + SSE; runs = asyncio tasks + `run_events` |
+| Database / Auth / Storage | **Supabase** Postgres 15 + pgvector (1536-d HNSW), Auth, Storage    | SQL migrations `0001–0012`; RLS via `SET LOCAL app.user_id/app.role`; role `app_backend NOBYPASSRLS` |
+| AI                        | OpenAI-compatible gateway: OpenRouter (`openai/gpt-4o-mini`, fallback `google/gemini-2.5-flash`), freellmpool for dev, `mock` for tests; embeddings `text-embedding-3-small` | Strict JSON schema + Pydantic, temp 0, 60 s, 1 retry → `partial` |
+| Tooling                   | FE Vitest + RTL + MSW + Playwright · BE pytest + httpx + respx · DB SQL tests · GitHub Actions · docker-compose | |
 
-Environment variables (names only): `SUPABASE_URL`, `SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, `LLM_API_KEY`.
+Environment variables (names only): backend `DATABASE_URL`, `SUPABASE_URL`, `SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, `SUPABASE_JWT_SECRET` (opt), `STORAGE_BUCKET`, `LLM_PROVIDER`, `LLM_BASE_URL`, `LLM_API_KEY`, `LLM_MODEL`, `LLM_FALLBACK_MODELS`, `EMBED_BASE_URL` (opt), `EMBED_API_KEY` (opt), `EMBED_MODEL`, `MAX_UPLOAD_MB`, `CORS_ORIGINS`, `ENV` · frontend `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`, `VITE_API_BASE_URL` · db scripts `SUPABASE_DB_URL`, `DEMO_OWNER_EMAIL` (`architecture.md` §31).
 
 **MCP servers (dev tooling, `.vscode/mcp.json`):**
 
@@ -51,8 +50,11 @@ aust_hackathon26/
 │   └── mcp.json                  # MCP servers: supabase, context7 (secrets via ${input:…})
 ├── AGENTS.md                     # generic agent rules (points here)
 ├── CLAUDE.md                     # Claude entry point, imports AGENTS.md
-└── PROJECT_CONTEXT.md            # this file — single source of truth
+├── PROJECT_CONTEXT.md            # this file — single source of truth
+└── architecture.md               # approved architecture: API §19, schema §21, contracts §38, plan §39, ADRs §42
 ```
+
+Planned, not yet created (`architecture.md` §9–10): `frontend/`, `backend/`, `database/`, `docker-compose.yml`, `.env.example`, `.github/workflows/ci.yml`.
 
 ## 5. How to Run
 
@@ -93,6 +95,7 @@ aust_hackathon26/
 | D-014 | 2026-09-06 | LLM via OpenAI-compatible adapter: OpenRouter primary (`require_parameters`, fallback models); freellmpool optional local proxy for free dev; `LLM_PROVIDER=mock` for tests/demo fallback    | Resolves A-005; env-only switching (ADR-05)                                                                         |
 | D-015 | 2026-09-06 | Embeddings `text-embedding-3-small`, `vector(1536)` fixed; pgvector HNSW cosine                                                                                                              | Verified OpenRouter `/embeddings`; no local model download (ADR-06)                                                 |
 | D-016 | 2026-09-06 | Findings first-class table; module aggregates in `runs.summary` jsonb; numeric results in `attainment_results` / `answer_prescores` tables                                                   | Queryable for views, flexible per module (ADR-07)                                                                   |
+| D-017 | 2026-09-06 | Merge audit vs an external "versioned assessment platform" design: adopted copy-at-write + provenance columns (`runs.context_snapshot`, `runs.model`, `runs.prompt_versions`, `findings.provenance`, `findings.decided_by`, `questions/topics.embedding_model`, `artefacts.declared_total_marks`, finding `marks_total_mismatch`, `409 SCORES_EXCEED_RUBRIC`); rejected paper/CLO versioning tables, persisted similarity-match table, SIS/sections/released results/blind grading | Reproducible, defensible findings at column-level cost; rejected items violate §2 non-goals and would re-introduce the only partition-scale table (ADR-13) |
 
 ## 7. Conventions
 
@@ -108,7 +111,7 @@ aust_hackathon26/
 - [x] Project context + agent instructions added
 - [x] `AGENTS.md` + `CLAUDE.md` added for non-Copilot agents
 - [x] Requirements locked (§12)
-- [x] `architecture.md` written: stack, 45 sections, API contract, DB schema (24 tables, RLS, functions, views), file-level plan for 3 engineers
+- [x] `architecture.md` written: stack, 45 sections, API contract, DB schema (24 tables, RLS, functions, views), file-level plan for 3 engineers; merge-audit amendments applied (ADR-13 / D-017)
 - [x] `.vscode/mcp.json` with Supabase + Context7 MCP servers
 
 ## 9. Next Steps / TODO
@@ -128,6 +131,8 @@ aust_hackathon26/
 - Demo depends on venue network (Supabase + LLM API). Keep the one-click demo seed and partial-result fallback working.
 - Scanned/image PDFs are unsupported — prompt faculty to paste text.
 - Demo data is on the critical path: 1 course, 5–6 COs, 2 past papers, 1 draft paper with deliberate gaps/duplicates, marks CSV with one weak CO, rubric + 6 typed answers × 2 graders (2 divergent). Seed both a faculty and an admin account. Cache last successful analysis JSON for the seed course as offline fallback. Watch LLM quota during the pitch.
+- `grader_scores.score ≤ rubric_criteria.max_score` cannot be a DB CHECK (rubric and answers are separate artefacts) — enforced in backend at calibration run start (`409 SCORES_EXCEED_RUBRIC`).
+- Doc nits still open in `architecture.md`: `compute_co_attainment` signature differs between §11.3 and §21.3 (use §21.3); `backend/alembic/` should be removed from the tree listing; IDs `AI-005/006`, `DATA-002`, `NF-005`, `OPT-*` referenced there are not defined in §12 below.
 - Transaction pooler (6543): use `SET LOCAL` (never `SET`) for RLS vars; asyncpg `statement_cache_size=0`.
 - Supabase JWT may be ES256 (JWKS) or HS256 (legacy secret) — verify in Phase 1.
 - WeasyPrint needs system libs; run backend in Docker or accept md-only export locally.
@@ -163,3 +168,4 @@ aust_hackathon26/
 | 2026-09-06 | Copilot | Added admin panel CF-001 (system + department views, D-009), demo-data critical-path notes                         |
 | 2026-09-06 | Copilot | Added `.vscode/mcp.json` (Supabase + Context7 MCP servers, D-010)                                                  |
 | 2026-09-06 | Copilot | Wrote `architecture.md` (React/FastAPI/Supabase/LangGraph/OpenRouter); filled Tech Stack, conventions, D-011–D-016 |
+| 2026-09-06 | Copilot | Merge audit vs external versioned-assessment design: provenance/copy-at-write columns, `marks_total_mismatch`, `SCORES_EXCEED_RUBRIC` (D-017, ADR-13); filled §3 stack table + env names; added `architecture.md` to §4 |

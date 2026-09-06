@@ -898,7 +898,7 @@ FK `course_id → courses(id) ON DELETE CASCADE`; UNIQUE `(course_id, code)`; CH
 PK `(co_id, po_id)`. Reason: PO attainment weighting (F-403). No `updated_at` (replace-all).
 
 **topics** — syllabus topics per course.
-| id uuid PK | course_id uuid FK→courses CASCADE | code text NOT NULL | title text NOT NULL | source_artefact_id uuid FK→artefacts ON DELETE SET NULL | embedding vector(1536) NULL | sort_order int DEFAULT 0 |
+| id uuid PK | course_id uuid FK→courses CASCADE | code text NOT NULL | title text NOT NULL | source_artefact_id uuid FK→artefacts ON DELETE SET NULL | embedding vector(1536) NULL | embedding_model text NULL | sort_order int DEFAULT 0 |
 UNIQUE `(course_id, code)`. Reason: coverage targets (F-103), overlap analysis (F-302).
 
 **artefacts**
@@ -918,6 +918,7 @@ UNIQUE `(course_id, code)`. Reason: coverage targets (F-103), overlap analysis (
 | status | extraction_status | no | 'pending' |
 | error | text | yes | |
 | grader_labels | text[] | yes | (answer_set) |
+| declared_total_marks | numeric(6,2) | yes | (question_paper; faculty-entered; mismatch vs `SUM(questions.marks)` → finding `marks_total_mismatch`) |
 FK `course_id → courses CASCADE`; CHECK `size_bytes IS NULL OR size_bytes <= 10485760`; CHECK `(storage_path IS NOT NULL) OR (extracted_text IS NOT NULL)`. Reason: every input (F-011).
 
 **questions** — extracted from `question_paper` artefacts.
@@ -931,6 +932,7 @@ FK `course_id → courses CASCADE`; CHECK `size_bytes IS NULL OR size_bytes <= 1
 | bloom_level | bloom_level | yes | |
 | bloom_source | map_source | yes | |
 | embedding | vector(1536) | yes | |
+| embedding_model | text | yes | (model that produced `embedding`; re-embed when ≠ `EMBED_MODEL`) |
 | sort_order | int | no | 0 |
 FK `artefact_id → artefacts CASCADE`; UNIQUE `(artefact_id, number)`; CHECK `marks >= 0`. Reason: unit of analysis for P1/P4 (F-101).
 
@@ -969,9 +971,12 @@ PK `(answer_id, grader_label, criterion_code)`. Reason: F-202 divergence input.
 | error | text | yes | |
 | params | jsonb | no | '{}' |
 | summary | jsonb | yes | |
+| context_snapshot | jsonb | yes | (COs `{code,text}`, topics `{code,title}`, questions `{number,text,marks}` as loaded at run start) |
+| model | text | yes | (chat model actually used) |
+| prompt_versions | jsonb | no | '{}' (`{prompt_name: version}`) |
 | idempotency_key | text | yes | |
 | started_at / finished_at | timestamptz | yes | |
-FK `course_id → courses CASCADE`, `owner_id → profiles CASCADE`; UNIQUE `(owner_id, idempotency_key)` WHERE idempotency_key IS NOT NULL. Reason: DATA-001; `summary` holds module-specific aggregates (§28.6) — kept as jsonb because its shape differs per module and it is never queried by key except via views.
+FK `course_id → courses CASCADE`, `owner_id → profiles CASCADE`; UNIQUE `(owner_id, idempotency_key)` WHERE idempotency_key IS NOT NULL. Reason: DATA-001; `summary` holds module-specific aggregates (§28.6) — kept as jsonb because its shape differs per module and it is never queried by key except via views. `context_snapshot` makes a run's findings reproducible after COs/questions are edited (copy-at-write, ADR-13).
 
 **run_inputs**
 | run_id uuid FK→runs CASCADE | artefact_id uuid FK→artefacts ON DELETE RESTRICT | role text NOT NULL CHECK (role IN ('draft','past','marks','paper','syllabus','rubric','answer_set')) |
@@ -987,7 +992,7 @@ UNIQUE `(run_id, seq)`. No updated_at. Reason: SSE backlog + audit (F-024).
 | id | uuid | no | gen_random_uuid() |
 | run_id | uuid | no | |
 | owner_id | uuid | no | |
-| type | text | no | CHECK IN ('coverage_gap','overweight','bloom_imbalance','duplicate','fairness','suggestion','co_underperformance','po_underperformance','action','overlap','prerequisite_gap','missing_topic','repositioning','divergence','prescore_note','rubric_clarification') |
+| type | text | no | CHECK IN ('coverage_gap','overweight','bloom_imbalance','duplicate','fairness','marks_total_mismatch','suggestion','co_underperformance','po_underperformance','action','overlap','prerequisite_gap','missing_topic','repositioning','divergence','prescore_note','rubric_clarification') |
 | severity | finding_severity | no | 'medium' |
 | title | text | no | |
 | rationale | text | no | |
@@ -996,9 +1001,11 @@ UNIQUE `(run_id, seq)`. No updated_at. Reason: SSE backlog + audit (F-024).
 | target_id | uuid | yes | |
 | target_label | text | yes | |
 | payload | jsonb | no | '{}' |
+| provenance | jsonb | no | '{}' (`{model, prompt_version, input_hash}`; empty for deterministic findings) |
 | status | finding_status | no | 'open' |
+| decided_by | uuid | yes | FK→profiles SET NULL |
 | decided_at | timestamptz | yes | |
-FK `run_id → runs CASCADE`, `owner_id → profiles CASCADE`. Reason: D-005 first-class findings (F-013, F-022, AI-003). `target_id` is polymorphic (no FK) — `target_kind` disambiguates; `target_label` preserves meaning after deletes and drives run compare.
+FK `run_id → runs CASCADE`, `owner_id → profiles CASCADE`, `decided_by → profiles SET NULL`. CHECK `(status = 'open') = (decided_by IS NULL)`. Reason: D-005 first-class findings (F-013, F-022, AI-003); `provenance` lets a challenged finding be traced to model + prompt + input (ADR-13); `decided_by` records the human who accepted/dismissed (REQ-F-004). `target_id` is polymorphic (no FK) — `target_kind` disambiguates; `target_label` preserves meaning after deletes and drives run compare.
 
 **attainment_results**
 | run_id uuid FK CASCADE | target_kind target_kind NOT NULL CHECK IN ('course_outcome','program_outcome') | target_id uuid NOT NULL | attained_pct numeric(5,2) NOT NULL CHECK 0..100 | students int NOT NULL | target_pct numeric(5,2) NOT NULL | met boolean NOT NULL |
@@ -1057,7 +1064,8 @@ Reason: F-033 admin usage, AI monitoring.
 - API requests: single transaction (`READ COMMITTED`).
 - Replace-all PUTs: `DELETE … WHERE course_id=… AND id <> ALL(:keep)` + upsert in one tx; RESTRICT FKs raise → mapped to 409.
 - Analysis tasks: commit per stage; findings inserted in one batch tx at the end (no half-written results); `runs.status` updated last.
-- Embedding writes: `UPDATE questions SET embedding=… WHERE id=… AND embedding IS NULL` (idempotent).
+- Embedding writes: `UPDATE questions SET embedding=…, embedding_model=:m WHERE id=… AND (embedding IS NULL OR embedding_model IS DISTINCT FROM :m)` (idempotent; stale vectors from a previous model are re-embedded lazily).
+- Calibration run start: backend validates every `grader_scores.score <= rubric_criteria.max_score` for the selected rubric artefact; violation → `409 SCORES_EXCEED_RUBRIC` (cross-artefact check, not expressible as a DB CHECK).
 - Two concurrent runs on the same course are allowed; they only read shared data and write their own `run_id` rows.
 
 ## 22. ER Diagram
@@ -1227,7 +1235,7 @@ Temperature 0 everywhere. All outputs include `rationale` fields (AI-003).
 | Authentication   | 401             | `UNAUTHENTICATED`                                                                                                                                                           |
 | Authorization    | 403             | `FORBIDDEN`, `USER_INACTIVE`                                                                                                                                                |
 | Not found        | 404             | `COURSE_NOT_FOUND`, `ARTEFACT_NOT_FOUND`, `RUN_NOT_FOUND`, `FINDING_NOT_FOUND`                                                                                              |
-| Conflict         | 409             | `COURSE_CODE_EXISTS`, `OUTCOME_IN_USE`, `ARTEFACT_IN_USE`, `COURSE_HAS_NO_OUTCOMES`, `RUNS_NOT_COMPARABLE`, `ARTEFACT_NOT_READY`, `CANNOT_MODIFY_SELF`, `RUN_NOT_COMPLETED` |
+| Conflict         | 409             | `COURSE_CODE_EXISTS`, `OUTCOME_IN_USE`, `ARTEFACT_IN_USE`, `COURSE_HAS_NO_OUTCOMES`, `RUNS_NOT_COMPARABLE`, `ARTEFACT_NOT_READY`, `CANNOT_MODIFY_SELF`, `RUN_NOT_COMPLETED`, `SCORES_EXCEED_RUBRIC` |
 | Rate limit       | 429             | `RATE_LIMITED` (+ `Retry-After`)                                                                                                                                            |
 | Server           | 500             | `INTERNAL`                                                                                                                                                                  |
 | External         | 503             | `LLM_UNAVAILABLE`, `STORAGE_UNAVAILABLE`, `EXPORT_PDF_UNAVAILABLE`                                                                                                          |
@@ -1369,7 +1377,8 @@ Tasks: DB-01 `0001–0002` extensions, role, enums → DB-02 `0003` profiles + t
 - **Views BE reads:** §21.5 column lists are the contract.
 - **Constraint names** (for error mapping): `courses_owner_code_uniq`, `question_co_map_co_fk`, `run_inputs_artefact_fk`, `attainment_results_co_fk` (if added), `profiles_email_key`.
 - **Migrations:** BE never edits `database/`; schema requests go to DB engineer as an issue with desired columns/indexes; DB adds `NNNN_*.sql`.
-- **Vector dim:** 1536 fixed; changing `EMBED_MODEL` to another dimension requires a DB migration.
+- **Vector dim:** 1536 fixed; changing `EMBED_MODEL` to another dimension requires a DB migration. Changing to another 1536-d model needs no migration: `embedding_model` mismatch triggers lazy re-embedding.
+- **Provenance:** BE writes `runs.model`, `runs.prompt_versions`, `findings.provenance` and `runs.context_snapshot`; DB never derives them.
 
 ## 39. Parallel Implementation Plan
 
@@ -1533,6 +1542,7 @@ Detailed task items (Task ID · Engineer · File · Purpose · Depends · Input/
 | ADR-10 | SSE over polling `run_events`                                                                                                     | WebSocket, Redis pub/sub                                   | simplest; works through proxies; backlog replay for reconnect     |
 | ADR-11 | Role stored in `profiles`, not JWT claims                                                                                         | Supabase custom claims                                     | single source, no auth-hook setup time                            |
 | ADR-12 | Deferred: Sentry, CRLF/.gitattributes, PITR                                                                                       | —                                                          | unjustified for the day                                           |
+| ADR-13 | Copy-at-write + provenance: `runs.context_snapshot`, `runs.model/prompt_versions`, `findings.provenance`, `findings.decided_by`, `*.embedding_model`, `artefacts.declared_total_marks` | full paper/CLO versioning tables; persisted `question_similarity_match` table | Merge audit 2026-09-06: gives reproducibility and audit trail of the versioned design at column-level cost; rejected versioning tables and persisted similarity rows as out of scope (§12 non-goals) and the only growth/partitioning risk |
 
 ## 43. Architecture Validation
 
