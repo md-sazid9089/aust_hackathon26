@@ -170,7 +170,7 @@ async def test_calibration_end_to_end(client, user_a, ws, mock_provider):
     div = next(f for f in findings if f["type"] == "divergence")
     assert "AI explanation" in div["rationale"] and div["target_kind"] == "answer"
     rc = next(f for f in findings if f["type"] == "rubric_clarification")
-    assert rc["payload"]["proposed_levels"] and rc["payload"]["current_text"]
+    assert rc["payload"]["proposed"]["levels"] and rc["payload"]["current"]["text"]
     pre = (await client.get(f"/runs/{run['id']}/prescores", headers=user_a)).json()
     assert len(pre) == 9 and pre[0]["grader_scores"] and pre[0]["rationale"]
     assert {"explain_divergence", "prescore_answers", "propose_rubric_v2"} <= {c["purpose"] for c in mock_provider.calls}

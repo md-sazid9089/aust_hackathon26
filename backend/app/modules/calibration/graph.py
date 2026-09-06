@@ -253,6 +253,11 @@ async def _rubric_v2(ctx: RunContext, state: State, flagged: list[RubricCriterio
             continue
         for f in state.findings:
             if f.type == FindingType.rubric_clarification and f.target_label == c.code:
-                f.payload = {**f.payload, "proposed_text": it.proposed_text, "proposed_levels": [lv.model_dump() for lv in it.proposed_levels], "current_text": c.text, "current_levels": c.levels or []}
+                levels = [lv.model_dump() for lv in it.proposed_levels]
+                f.payload = {
+                    **f.payload,
+                    "proposed": {"id": str(c.id), "code": c.code, "text": it.proposed_text, "max_score": float(c.max_score), "levels": levels},
+                    "current": {"id": str(c.id), "code": c.code, "text": c.text, "max_score": float(c.max_score), "levels": c.levels or []},
+                }
                 f.rationale = f"{f.rationale}\n\nProposed v2: {it.proposed_text}\n{it.rationale}"
                 f.provenance = {"model": res.model, "prompt": "PROPOSE_RUBRIC_V2"}

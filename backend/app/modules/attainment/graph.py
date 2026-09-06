@@ -94,7 +94,7 @@ async def run_attainment(ctx: RunContext) -> dict[str, Any]:
         for c in co_stats
     ]
     return {
-        "threshold": threshold, "target_pct": target, "students": len(state.rows),
+        "threshold": threshold, "threshold_pct": round(threshold * 100), "target_pct": target, "students": len(state.rows),
         "cos_met": sum(1 for c in cos_out if c["met"]), "cos_total": len(cos_out),
         "pos_met": sum(1 for p in po_rows if p["met"]), "pos_total": len(po_rows),
         "cos": cos_out, "pos": po_rows, "unmatched_columns": unmatched, "findings": len(state.findings),

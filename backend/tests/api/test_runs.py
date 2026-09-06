@@ -82,7 +82,7 @@ async def test_finding_decisions_and_export(client, user_a, user_b, workspace):
     r = await client.get(f"/runs/{run['id']}/export?include=all", headers=user_a)
     assert f1["title"] in r.text
     r = await client.get(f"/runs/{run['id']}/export?format=pdf", headers=user_a)
-    assert r.status_code == 503 and r.json()["error"]["code"] == "PDF_UNAVAILABLE"
+    assert r.status_code == 503 and r.json()["error"]["code"] == "EXPORT_PDF_UNAVAILABLE"
 
 
 async def test_run_validation_errors(client, user_a, workspace):

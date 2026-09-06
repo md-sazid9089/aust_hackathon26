@@ -528,7 +528,7 @@ export class MockApi implements Api {
   async assistantChat(body: T.AssistantChatRequest): Promise<T.AssistantChatResponse> {
     await wait(400);
     const low = body.message.toLowerCase();
-    const mine = this.courses.filter((c) => c.owner_id === this.userId && !c.deleted_at);
+    const mine = this.courses;
     if (body.file) {
       return { reply: `In demo mode I can't upload **${body.file.name}**. Switch to the live API (VITE_API_MODE=live) to let the assistant upload and analyse files.`, actions: [], navigate: null, model: 'mock-fe' };
     }

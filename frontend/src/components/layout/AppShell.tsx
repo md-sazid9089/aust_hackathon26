@@ -5,6 +5,7 @@ import { useTheme } from '@/hooks/useTheme';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/primitives';
+import { AssistantWidget } from '@/components/assistant/AssistantWidget';
 import { cn } from '@/lib/format';
 
 const linkCls = ({ isActive }: { isActive: boolean }) =>
@@ -169,6 +170,7 @@ export function AppShell() {
           <Outlet />
         </main>
       </div>
+      <AssistantWidget />
     </div>
   );
 }

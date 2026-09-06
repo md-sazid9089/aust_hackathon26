@@ -271,6 +271,9 @@ export interface ExamAuditSummary {
 }
 export interface AttainmentSummary {
   threshold: number;
+  threshold_pct?: number;
+  target_pct?: number;
+  students?: number;
   cos_met: number;
   cos_total: number;
   pos_met: number;
@@ -286,12 +289,17 @@ export interface OverlapCell {
 export interface SyllabusCheckSummary {
   matrix: OverlapCell[];
   overlap_pct: number;
+  compare_courses?: string[];
+  overlaps?: number;
+  prerequisites?: number;
 }
 export interface CalibrationSummary {
   graders: string[];
   divergent_answers: number;
   mean_abs_dev: number;
   criteria_flagged: string[];
+  answers?: number;
+  criteria?: number;
 }
 export type RunSummary =
   | ExamAuditSummary

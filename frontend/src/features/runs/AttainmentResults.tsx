@@ -13,7 +13,7 @@ export function AttainmentResults({ run, findings, readOnly }: { run: Run; findi
   return (
     <div className="flex flex-col gap-6">
       <section aria-label="Summary" className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-        <Stat label="COs attained" value={`${s.cos_met}/${s.cos_total}`} hint={`Threshold ${s.threshold}%`} />
+        <Stat label="COs attained" value={`${s.cos_met}/${s.cos_total}`} hint={`Threshold ${s.threshold_pct ?? (s.threshold <= 1 ? Math.round(s.threshold * 100) : s.threshold)}% · target ${s.target_pct ?? 60}% of students`} />
         <Stat label="POs attained" value={`${s.pos_met}/${s.pos_total}`} hint="Weighted by CO→PO strength" />
         <Stat label="Students" value={att.data?.cos[0]?.students ?? '—'} hint="Anonymised marks sheet" />
         <Stat label="Open findings" value={findings.filter((f) => f.status === 'open').length} hint={`${findings.filter((f) => f.status === 'accepted').length} accepted`} />

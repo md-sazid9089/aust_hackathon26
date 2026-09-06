@@ -189,7 +189,7 @@ async def decide_finding(finding_id: uuid.UUID, data: FindingPatch, db: DbDep, u
     summary="Export findings as Markdown",
     description="Downloads a Markdown report. `include=accepted` (default) exports only faculty-accepted findings. `format=pdf` returns `503 PDF_UNAVAILABLE` on this build (clients fall back to Markdown).",
     response_class=PlainTextResponse,
-    responses={**ERROR_RESPONSES, 200: {"content": {"text/markdown": {}}}, 503: {"description": "PDF_UNAVAILABLE"}},
+    responses={**ERROR_RESPONSES, 200: {"content": {"text/markdown": {}}}, 503: {"description": "EXPORT_PDF_UNAVAILABLE"}},
 )
 async def export_run(
     run_id: uuid.UUID,
@@ -199,6 +199,6 @@ async def export_run(
     include: Annotated[Literal["accepted", "all"], Query()] = "accepted",
 ) -> Response:
     if format == "pdf":
-        raise ApiError("PDF_UNAVAILABLE", 503, "PDF export is not available on this server; use format=md")
+        raise ApiError("EXPORT_PDF_UNAVAILABLE", 503, "PDF export is not available on this server; use format=md")
     md, filename = await RunService(db, user).export_markdown(run_id, include)
     return Response(content=md, media_type="text/markdown; charset=utf-8", headers={"Content-Disposition": f'attachment; filename="{filename}"'})
