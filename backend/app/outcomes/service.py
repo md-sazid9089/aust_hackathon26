@@ -26,9 +26,13 @@ def _check_unique_codes(items: list, what: str) -> None:
 
 
 async def _park_codes(db: AsyncSession, rows: list) -> None:
-    """Temporarily rename kept rows so codes can be swapped without tripping the UNIQUE(course_id, code)."""
+    """Temporarily rename kept rows so codes can be swapped without tripping the UNIQUE(course_id, code).
+
+    User codes are capped at 20 chars, so a 37-char `~<uuid>` sentinel can never collide.
+    (A NUL prefix worked on SQLite but Postgres rejects 0x00 in text.)
+    """
     for row in rows:
-        row.code = f"\x00{row.id}"
+        row.code = f"~{row.id}"
     await db.flush()
 
 
