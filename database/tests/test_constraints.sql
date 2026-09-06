@@ -66,9 +66,10 @@ BEGIN
   INSERT INTO questions (artefact_id, number, text, marks) VALUES (art, '2b', 't', 5) RETURNING id INTO q;
   INSERT INTO question_co_map (question_id, co_id, source) VALUES (q, co, 'faculty');
 
-  -- CO referenced by a question cannot be deleted (RESTRICT)
+  -- CO referenced by a question cannot be deleted (deferred FK -> fails at constraint check)
   BEGIN
     DELETE FROM course_outcomes WHERE id = co;
+    SET CONSTRAINTS ALL IMMEDIATE;
     RAISE EXCEPTION 'expected foreign_key_violation (question_co_map_co_fk)';
   EXCEPTION WHEN foreign_key_violation THEN NULL; END;
 
@@ -102,9 +103,10 @@ BEGIN
 
   INSERT INTO run_inputs (run_id, role, artefact_id) VALUES (r, 'draft', art);
 
-  -- artefact referenced by run cannot be deleted (RESTRICT)
+  -- artefact referenced by run cannot be deleted (deferred FK)
   BEGIN
     DELETE FROM artefacts WHERE id = art;
+    SET CONSTRAINTS ALL IMMEDIATE;
     RAISE EXCEPTION 'expected foreign_key_violation (run_inputs_artefact_fk)';
   EXCEPTION WHEN foreign_key_violation THEN NULL; END;
 

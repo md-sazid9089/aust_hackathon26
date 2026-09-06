@@ -1,7 +1,7 @@
 # Project Context
 
 > Living document. Every agent and contributor MUST read this before working and update it after making changes.
-> Last updated: 2026-09-06
+> Last updated: 2026-09-06 (Render deploy config added)
 
 ## 1. Overview
 
@@ -52,6 +52,7 @@ aust_hackathon26/
 ├── AGENTS.md                     # generic agent rules (points here)
 ├── CLAUDE.md                     # Claude entry point, imports AGENTS.md
 ├── PROJECT_CONTEXT.md            # this file — single source of truth
+├── render.yaml                   # Render Blueprint: backend web service (rootDir backend, free tier, Supabase DB)
 ├── architecture.md               # approved architecture: API §19, schema §21, contracts §38, plan §39, ADRs §42
 ├── database_implementation_plan.md  # DB engineer's ordered build plan: migrations 0001–0012, RLS matrix, seeds, tests, gates
 └── database/                     # IMPLEMENTED — see database/README.md
@@ -85,6 +86,11 @@ pytest                                                   # 47 tests
 # demo: POST /api/v1/demo/seed → POST /api/v1/courses/{id}/runs {module: exam_audit, inputs:{draft_artefact_id, past_artefact_ids}} → GET /runs/{id}/findings
 # frontend: cd frontend && npm i && npm run dev           (port 5173; VITE_API_BASE_URL=http://localhost:8000/api/v1)
 # all:      docker compose up   (optional profile `free` starts freellmpool on 127.0.0.1:8080)
+
+# deploy backend to Render: Dashboard → New → Blueprint → this repo (uses render.yaml).
+#   Fill sync:false secrets in UI: DATABASE_URL (pooler 6543, asyncpg), CORS_ORIGINS, SUPABASE_URL,
+#   SUPABASE_PUBLISHABLE_KEY, SUPABASE_SECRET_KEY, LLM_API_KEY. Start cmd runs `alembic upgrade head` then uvicorn (1 worker).
+#   Health: https://<service>.onrender.com/api/v1/health
 ```
 
 **MCP server setup (once per machine):**
@@ -116,7 +122,9 @@ pytest                                                   # 47 tests
 | D-016 | 2026-09-06 | Findings first-class table; module aggregates in `runs.summary` jsonb; numeric results in `attainment_results` / `answer_prescores` tables                                                   | Queryable for views, flexible per module (ADR-07)                                                                   |
 | D-017 | 2026-09-06 | Merge audit vs an external "versioned assessment platform" design: adopted copy-at-write + provenance columns (`runs.context_snapshot`, `runs.model`, `runs.prompt_versions`, `findings.provenance`, `findings.decided_by`, `questions/topics.embedding_model`, `artefacts.declared_total_marks`, finding `marks_total_mismatch`, `409 SCORES_EXCEED_RUBRIC`); rejected paper/CLO versioning tables, persisted similarity-match table, SIS/sections/released results/blind grading | Reproducible, defensible findings at column-level cost; rejected items violate §2 non-goals and would re-introduce the only partition-scale table (ADR-13) |
 | D-018 | 2026-09-06 | Three-lens DB review (security / integrity / pragmatist) → ADR-14: `course_owner()` hides soft-deleted courses; functions SECURITY INVOKER, `seed_demo`/`reset_demo` assert owner-or-admin; explicit `run_events`/`usage_logs` RLS; `run_inputs` → nullable artefact/course + `run_input_role` enum; `attainment_results.target_code` copied; `normalize_qnum()` on both `questions.number` and `marks_rows.question_number` + `marks_question_mismatch` finding; IDENTITY not bigserial; final run stage single tx; RLS lands Phase 1 (app-layer ownership checks mandatory from Phase 0); hosted Supabase only (no local Docker); demo fixtures TXT/CSV-first + second course `CSE 2101`, authored in Phase 0; `0006` P2 tables may slip to Phase 4 | Fixes 3 High security findings (deleted-course leak, demo-fn abuse, cross-owner vector search), the silent marks-join drop, and the two biggest schedule risks (RLS in Phase 0, fixtures in Phase 2) without dropping the DB-as-authz principle |
+| D-020 | 2026-09-06 | Backend hosted on Render free tier via `render.yaml` Blueprint (Python 3.12, `rootDir: backend`, migrations in `startCommand`, `--workers 1`); DB stays on Supabase; uploads on ephemeral local disk | Zero-cost, git-push deploy; `preDeployCommand` is paid-only so migrations chain into start; single worker required by in-process runs/rate limiter; Supabase already holds the data |
 | D-019 | 2026-09-06 | `seed_demo()` inserts fully structured demo rows (questions, CO/topic maps, 280 marks rows, rubric, answers, grader scores) with `status='done'`; fixture files mirror them. Backend `POST /demo/seed` only pushes bytes to Storage and pre-runs P1/P4. `normalize_qnum` = lowercase, drop leading q/question, strip whitespace and `().-_` | Demo must not depend on LLM extraction succeeding; one normalisation rule shared by DB CHECK and backend |
+| D-020 | 2026-09-06 | In-use guard FKs (`question_co_map_co_fk`, `run_inputs_artefact_fk`, `run_inputs_course_fk`) are `NO ACTION DEFERRABLE INITIALLY DEFERRED`, not `RESTRICT` | `RESTRICT` broke `reset_demo()`'s cascading course delete (found by `test_functions.sql`); deferred check still yields 409 on direct deletes, evaluated at COMMIT — backend must catch `IntegrityError` on commit, not on flush |
 
 ## 7. Conventions
 
@@ -135,7 +143,7 @@ pytest                                                   # 47 tests
 - [x] `AGENTS.md` + `CLAUDE.md` added for non-Copilot agents
 - [x] Requirements locked (§12)
 - [x] `architecture.md` written: stack, 45 sections, API contract, DB schema (24 tables, RLS, functions, views), file-level plan for 3 engineers; merge-audit amendments applied (ADR-13 / D-017)
-- [x] `database/` implemented: 12 migrations, RLS on 21 tables, 8 helper fns, `similar_questions/topics`, `compute_co_attainment`, `reset_demo`, `seed_demo` (2 courses, planted defects), 4 views, 3 SQL test files, apply/test scripts (sh + ps1). **Not yet applied to a Supabase project or run in CI.**
+- [x] `database/` implemented: 12 migrations, RLS on 21 tables, 8 helper fns, `similar_questions/topics`, `compute_co_attainment`, `reset_demo`, `seed_demo` (2 courses, planted defects), 4 views, 3 SQL test files, apply/test scripts (sh + ps1). **Validated locally on `pgvector/pgvector:pg15`: apply ×2 idempotent, all 3 test suites green.** Not yet applied to a Supabase project.
 - [x] `.vscode/mcp.json` with Supabase + Context7 MCP servers
 - [x] Backend Supabase auth: `AUTH_MODE=supabase` verifies ES256/RS256 tokens via JWKS (HS256 fallback); `backend/.env` has `SUPABASE_URL`/`SUPABASE_PUBLISHABLE_KEY`/`SUPABASE_JWKS_URL` filled for project `etzxqeilgohiavdeybbw`, `SUPABASE_SECRET_KEY` left for the developer to paste locally
 - [x] **Backend Tier 0** (`backend/`): FastAPI app, config, structlog + request ids, error envelope, SQLite/Postgres ORM (15 tables) + Alembic initial migration, auth (dev/Supabase JWT), courses CRUD, COs/POs/CO–PO map/topics replace-all, artefact upload (pdf/docx/txt/paste, magic-byte + size validation) with background extraction, faculty confirm/edit of questions + CO map, `exam_audit` pipeline (embed → map & Bloom → duplicate confirm → deterministic stats → findings), runs + SSE events + idempotency, findings accept/dismiss/reopen, Markdown export, demo seed from `data/seed-data`, `/health` `/readyz`, Swagger/ReDoc. 47 tests green; live smoke test on demo data reproduces planted flaws (CO6 uncovered, 58 vs 60 marks, 3 duplicate pairs, Bloom skew).
@@ -165,6 +173,8 @@ pytest                                                   # 47 tests
 - `reset_demo`/`seed_demo` called by an admin switch `app.user_id` to the target owner for the rest of the transaction — backend must call them in a dedicated transaction.
 - `test_rls.sql` inserts directly into `auth.users` and does `SET ROLE app_backend`; both work on plain Postgres, verify on Supabase (auth.users NOT NULL columns; membership granted in `0001`).
 - Backend must normalise question numbers exactly like `normalize_qnum()` (`lower`, drop leading `q`/`question`, strip whitespace and `().-_`) or the CHECK rejects inserts.
+- `OUTCOME_IN_USE` / `ARTEFACT_IN_USE` FKs are deferred: the violation surfaces at `COMMIT`, so the backend's 409 mapping must wrap the commit, not just the statement.
+- Local validation: `database/scripts/ci_container.sh` runs inside a `pgvector/pgvector:pg15` container (`docker cp database <ctr>:/database`, strip CRLF with `sed`, then run). No local `psql` needed.
 - Transaction pooler (6543): use `SET LOCAL` (never `SET`) for RLS vars; asyncpg `statement_cache_size=0`.
 - Supabase project ref `etzxqeilgohiavdeybbw`, region ap-south-1. Prefer the IPv4 shared pooler `aws-0-ap-south-1.pooler.supabase.com` (user `postgres.etzxqeilgohiavdeybbw`): 6543 transaction mode for the app, 5432 session mode for migrations/psql. Direct host `db.etzxqeilgohiavdeybbw.supabase.co:5432` (user `postgres`) is IPv6-only. `DATABASE_URL` must use `postgresql+asyncpg://`, no `?pgbouncer=true` (Prisma-only); percent-encode special characters in the password. Password lives only in gitignored `backend/.env`.
 - Supabase dashboard's ORM quick-start suggests Prisma — **not used**; backend ORM is SQLAlchemy 2 + asyncpg (D-013). Ignore `npm install prisma` / `prisma init` steps.
@@ -176,6 +186,7 @@ pytest                                                   # 47 tests
 - SQLite is single-writer: never call `RunContext.emit/warn` while another `session_scope()` write is open (caused `database is locked` → run `failed`). Deferred-warnings pattern in `exam_audit/graph.py`.
 - Do not mutate ORM objects after `db.commit()` inside a request when a background task owns the row — the request's final commit overwrote the task's status (fixed in `ArtefactService`).
 - `MockProvider` heuristics are lexical; with `LLM_PROVIDER=mock` the demo still reproduces CO6-uncovered / marks mismatch / duplicates, but CO mapping quality is only indicative. Use a real key for judging.
+- Render free tier: instance sleeps after 15 min idle (cold start 30–60 s — warm it before the pitch); disk is ephemeral so uploaded files under `STORAGE_DIR` are lost on redeploy while DB rows persist. Attach a Render Disk + set `STORAGE_DIR` to its mount if needed. Render runs Python 3.12 (pinned), local dev is 3.14.
 - Python 3.14 venv: `ensurepip` may be missing → `python3 -m venv --without-pip .venv && pip3 --python .venv/bin/python install pip`.
 
 ## 12. Locked Product Scope (Prompt 1 output, 2026-09-06)
@@ -213,4 +224,6 @@ pytest                                                   # 47 tests
 | 2026-09-06 | Copilot | Multi-agent DB review (security/integrity/pragmatist) → ADR-14 / D-018: RLS hardening, `run_inputs` redesign, `normalize_qnum`, `target_code`, IDENTITY, phase re-sequencing, fixture plan; fixed `compute_co_attainment` signature + removed `alembic/` |
 | 2026-09-06 | Copilot | Added `database_implementation_plan.md` (user-requested): per-migration contents, RLS policy matrix, seed spec, SQL test list, phase gates, BE contracts |
 | 2026-09-06 | Copilot | Implemented `database/`: migrations 0001–0012, seed_demo + fixtures (2 courses), seed_admin, 3 SQL test suites, apply/test scripts; D-019 |
+| 2026-09-06 | Copilot | Validated `database/` on pgvector:pg15 (apply ×2 + 3 suites green); in-use FKs → deferred NO ACTION (D-020); added `scripts/ci_container.sh` |
 | 2026-09-06 | Copilot | `edge_cases.md`: added §14 access-pattern queries Q1–Q16 with volume/latency budgets and per-query edge cases |
+| 2026-09-06 | Copilot | Render deploy: `render.yaml` Blueprint + `backend/.python-version`, README deploy section (D-020) |

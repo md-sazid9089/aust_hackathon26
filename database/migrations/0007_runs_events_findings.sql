@@ -30,8 +30,9 @@ CREATE TABLE IF NOT EXISTS public.run_inputs (
   role         run_input_role NOT NULL,
   artefact_id  uuid,
   course_id    uuid,
-  CONSTRAINT run_inputs_artefact_fk FOREIGN KEY (artefact_id) REFERENCES public.artefacts(id) ON DELETE RESTRICT,
-  CONSTRAINT run_inputs_course_fk   FOREIGN KEY (course_id)   REFERENCES public.courses(id)   ON DELETE RESTRICT,
+  -- Deferred: blocks deleting an in-use artefact/course (error at COMMIT -> 409 ARTEFACT_IN_USE), allows course cascade
+  CONSTRAINT run_inputs_artefact_fk FOREIGN KEY (artefact_id) REFERENCES public.artefacts(id) ON DELETE NO ACTION DEFERRABLE INITIALLY DEFERRED,
+  CONSTRAINT run_inputs_course_fk   FOREIGN KEY (course_id)   REFERENCES public.courses(id)   ON DELETE NO ACTION DEFERRABLE INITIALLY DEFERRED,
   CONSTRAINT run_inputs_exactly_one_check CHECK ((artefact_id IS NOT NULL) <> (course_id IS NOT NULL)),
   CONSTRAINT run_inputs_role_course_check CHECK ((role = 'compare_course') = (course_id IS NOT NULL))
 );

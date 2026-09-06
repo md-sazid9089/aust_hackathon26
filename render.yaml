@@ -1,0 +1,61 @@
+# Render Blueprint — deploys the FastAPI backend (backend/) as a single web service.
+# Dashboard → New → Blueprint → pick this repo. Fill the `sync: false` secrets in the Render UI.
+# Postgres is Supabase (not a Render DB); migrations run at start (alembic upgrade head) so the free tier works.
+services:
+  - type: web
+    name: faculty-copilot-api
+    runtime: python
+    plan: free
+    region: singapore              # closest to Supabase ap-south-1
+    rootDir: backend
+    buildCommand: pip install --upgrade pip && pip install -r requirements.txt
+    # single worker: runs/extractions are in-process asyncio tasks + in-memory rate limiter
+    startCommand: alembic upgrade head && uvicorn app.main:app --host 0.0.0.0 --port $PORT --workers 1 --proxy-headers --forwarded-allow-ips="*"
+    healthCheckPath: /api/v1/health
+    autoDeploy: true
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.12.9
+      - key: ENV
+        value: prod
+      - key: LOG_LEVEL
+        value: INFO
+      - key: RATE_LIMIT_ENABLED
+        value: "true"
+      - key: MAX_UPLOAD_MB
+        value: "10"
+      # Ephemeral on the free plan (lost on redeploy). Attach a Render Disk and point this at its mount path to persist uploads.
+      - key: STORAGE_DIR
+        value: /opt/render/project/src/backend/storage
+      - key: SEED_DATA_DIR
+        value: /opt/render/project/src/data/seed-data
+      # Comma-separated frontend origins, e.g. https://faculty-copilot.vercel.app,http://localhost:5173
+      - key: CORS_ORIGINS
+        sync: false
+      # postgresql+asyncpg://postgres.<ref>:<pw>@aws-0-ap-south-1.pooler.supabase.com:6543/postgres  (percent-encode pw)
+      - key: DATABASE_URL
+        sync: false
+      - key: AUTH_MODE
+        value: supabase
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_PUBLISHABLE_KEY
+        sync: false
+      - key: SUPABASE_SECRET_KEY
+        sync: false
+      - key: LLM_PROVIDER
+        value: openrouter
+      - key: LLM_BASE_URL
+        value: https://openrouter.ai/api/v1
+      - key: LLM_API_KEY
+        sync: false
+      - key: LLM_MODEL
+        value: openai/gpt-4o-mini
+      - key: LLM_FALLBACK_MODELS
+        value: google/gemini-2.5-flash
+      - key: LLM_TIMEOUT_S
+        value: "60"
+      - key: LLM_MAX_RETRIES
+        value: "1"
+      - key: EMBED_MODEL
+        value: openai/text-embedding-3-small

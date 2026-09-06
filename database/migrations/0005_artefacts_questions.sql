@@ -68,7 +68,8 @@ CREATE TABLE IF NOT EXISTS public.question_co_map (
   source       map_source NOT NULL,
   created_at   timestamptz NOT NULL DEFAULT now(),
   PRIMARY KEY (question_id, co_id),
-  CONSTRAINT question_co_map_co_fk FOREIGN KEY (co_id) REFERENCES public.course_outcomes(id) ON DELETE RESTRICT,
+  -- Deferred: blocks deleting a mapped CO (error at COMMIT -> 409 OUTCOME_IN_USE), but lets a course delete cascade
+  CONSTRAINT question_co_map_co_fk FOREIGN KEY (co_id) REFERENCES public.course_outcomes(id) ON DELETE NO ACTION DEFERRABLE INITIALLY DEFERRED,
   CONSTRAINT question_co_map_confidence_check CHECK (confidence IS NULL OR confidence BETWEEN 0 AND 1)
 );
 

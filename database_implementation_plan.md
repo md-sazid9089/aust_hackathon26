@@ -11,7 +11,9 @@ Implementation notes (deviations from the original plan, all reflected in the SQ
 - `run_inputs` got a surrogate `id` (IDENTITY) plus two partial unique indexes, since a PK over nullable columns is impossible.
 - `0001` also creates the `artefacts` storage bucket when the `storage` schema exists, and grants `app_backend` membership to the migrating role so tests can `SET ROLE app_backend` on PG15.
 - `0003` creates a stub `auth.users` when absent (plain-Postgres CI); a no-op on Supabase.
-- Windows wrappers `apply.ps1` / `run_tests.ps1` added next to the bash scripts.
+- Windows wrappers `apply.ps1` / `run_tests.ps1` added next to the bash scripts; `scripts/ci_container.sh` = apply ×2 + tests, for running inside a `pgvector/pgvector:pg15` container (used for local validation and CI).
+- In-use guard FKs are `NO ACTION DEFERRABLE INITIALLY DEFERRED` (not `RESTRICT`): `RESTRICT` blocked `reset_demo()`'s cascading course delete. Direct deletes still fail (at COMMIT).
+- **Validation status:** all 12 migrations applied twice (idempotent) and `test_constraints`, `test_functions`, `test_rls` pass on `pgvector/pgvector:pg15`.
 
 This file turns the approved schema into an ordered, checkable build sequence. If anything here conflicts with `architecture.md`, `architecture.md` wins — fix this file.
 
